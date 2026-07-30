@@ -1,0 +1,26 @@
+# dependencias
+node_modules/
+
+# entorno local — nunca se commitea
+.env
+.env.local
+.env.*.local
+
+# builds
+.next/
+dist/
+build/
+out/
+
+# tests
+coverage/
+playwright-report/
+test-results/
+e2e/screenshots/
+
+# config personal de Claude Code (no compartida con el equipo)
+.claude/settings.local.json
+
+# sistema
+.DS_Store
+*.log
