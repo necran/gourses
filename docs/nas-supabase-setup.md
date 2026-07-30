@@ -1,6 +1,26 @@
 # Desplegar Supabase self-hosted en el NAS (UGREEN)
 
+> **Estado: ya desplegado** (HU-003, cerrada). Este documento queda como referencia de cómo se hizo y cómo repetirlo si hace falta reconstruirlo. Corre en `/volume1/docker/gourses-supabase` en el NAS (`192.168.1.139`), accesible por SSH con la clave `~/.ssh/gourses_nas`.
+
 Sigue la guía oficial de Supabase, no un `docker-compose.yml` hecho a mano — es la forma de no dejar secretos por defecto ni una configuración desactualizada. Esto se ejecuta en el NAS, no en este repositorio.
+
+## Puertos reales usados (remapeados)
+
+Este NAS ya tenía otros contenedores ocupando los puertos por defecto de Supabase (5432 y 8000). Los puertos finales son:
+
+- Kong (API gateway, lo que usa la app): **54321** (HTTP) / **54443** (HTTPS)
+- Postgres/pooler: **54322**
+- `NEXT_PUBLIC_SUPABASE_URL=http://192.168.1.139:54321`
+
+## Aviso sobre bind mounts de ficheros individuales
+
+En este NAS, montar un **fichero individual** (no un directorio) como bind mount dentro de un contenedor falla con `Permission denied`, aunque los permisos en el host sean 777 — es una particularidad del almacenamiento del NAS, no un error de configuración nuestro. Afectó al entrypoint de Kong y a los scripts SQL de init de Postgres.
+
+**Solución aplicada:** en vez de bind-montar esos ficheros sueltos, se empaquetan dentro de imágenes Docker personalizadas mediante `COPY` en un `Dockerfile`:
+- `kong-custom/Dockerfile` → imagen `gourses-kong-custom:3.9.1`
+- `db-custom/Dockerfile` → imagen `gourses-postgres-custom:17.6.1.136`
+
+Si en el futuro hay que reconstruir el stack desde cero y aparece el mismo `Permission denied` en algún otro servicio con ficheros bind-mounted, aplicar el mismo patrón: copiar el fichero a una carpeta `<servicio>-custom/`, escribir un `Dockerfile` mínimo `FROM <imagen original>` + `COPY`, construirlo con `docker build`, y apuntar `image:` a la imagen nueva en `docker-compose.yml`, quitando el bind mount de ese fichero.
 
 ## 1. Acceder al NAS
 

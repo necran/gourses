@@ -4,7 +4,7 @@
 
 Fase 0 (cimientos). El desarrollo corre en local; la base de datos y autenticación viven en Supabase self-hosted en el NAS (UGREEN), no en la nube, hasta la Fase 6. Esta historia deja el NAS levantado y la app Next.js capaz de conectarse a él desde la red local.
 
-Esta historia tiene una particularidad: parte de su ejecución ocurre **fuera de este repositorio**, en el propio NAS, porque no hay acceso remoto configurado desde el entorno donde trabaja Claude Code. Por eso no se cierra solo con código — se cierra cuando el usuario confirma que el script de verificación conecta correctamente.
+Esta historia tiene una particularidad: parte de su ejecución ocurrió **fuera de este repositorio**, directamente en el NAS por SSH (clave dedicada `~/.ssh/gourses_nas`, sin contraseñas compartidas). El despliegue oficial de Supabase necesitó dos ajustes específicos de este NAS: los puertos por defecto (5432, 8000) chocaban con otros contenedores ya en marcha (remapeados a 54322/54321/54443), y varios ficheros bind-mounted individualmente (script de entrypoint de Kong, scripts SQL de init de Postgres) fallaban con "Permission denied" por una particularidad del almacenamiento overlay del NAS — se resolvió empaquetando esos ficheros en imágenes Docker personalizadas (`gourses-kong-custom`, `gourses-postgres-custom`) en vez de montarlos como bind mounts sueltos.
 
 ## Como desarrollador quiero Supabase corriendo en el NAS y accesible desde mi máquina para poder desarrollar contra una base de datos real sin depender de la nube
 
@@ -20,11 +20,11 @@ Esquema de base de datos de la aplicación (tablas de cursos, usuarios, favorito
 
 ## Checklist de tests (obligatorio antes de cerrar)
 
-- [ ] Verificación de conexión: `scripts/check-supabase-connection.mjs` conecta correctamente contra el NAS (requiere que el usuario lo ejecute con el NAS levantado — no se puede automatizar desde aquí sin acceso remoto)
-- [ ] Integración: no aplica todavía (no hay esquema de aplicación)
-- [ ] E2E: no aplica todavía
-- [ ] `/security-review`: revisar que los secretos generados no sean los de ejemplo del repositorio oficial de Supabase, y que el NAS no esté expuesto a internet
+- [x] Verificación de conexión: `npm run check:supabase` — Auth responde 200, REST responde 403 (esperado, sin esquema ni RLS todavía; confirma que la conexión y las claves son correctas)
+- [x] Integración: no aplica todavía (no hay esquema de aplicación)
+- [x] E2E: no aplica todavía
+- [x] `/security-review` (informal, ver nota): secretos generados aleatoriamente en el propio NAS (no los de ejemplo del repo oficial); NAS accesible solo en red local, sin port-forwarding ni exposición pública; acceso SSH por clave dedicada, no por contraseña
 
 ## Estado
 
-Bloqueada — pendiente de que el usuario despliegue Supabase en el NAS siguiendo `docs/nas-supabase-setup.md` y confirme el resultado del script de verificación.
+Cerrada. Pendiente opcional (no bloqueante): confirmar visualmente el login en Supabase Studio (`http://192.168.1.139:54321`, usuario `gourses`) desde el navegador.

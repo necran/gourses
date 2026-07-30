@@ -26,4 +26,4 @@ Tablas de usuarios, favoritos o alertas (Fase 3 y 4). Lógica de comparación en
 
 ## Estado
 
-Bloqueada — depende de HU-003 (Supabase corriendo en el NAS)
+Abierta — HU-003 desbloqueada, lista para empezar
