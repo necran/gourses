@@ -1,0 +1,76 @@
+# Desplegar Supabase self-hosted en el NAS (UGREEN)
+
+Sigue la guía oficial de Supabase, no un `docker-compose.yml` hecho a mano — es la forma de no dejar secretos por defecto ni una configuración desactualizada. Esto se ejecuta en el NAS, no en este repositorio.
+
+## 1. Acceder al NAS
+
+Desde UGOS: abre **Container Manager** (o **SSH** si lo tienes habilitado en Panel de Control → Terminal & SNMP).
+
+Si usas SSH:
+
+```bash
+ssh tu_usuario@IP_DEL_NAS
+```
+
+## 2. Descargar la configuración oficial de Supabase
+
+En una carpeta de tu NAS con espacio suficiente (ej. un volumen compartido dedicado a Docker):
+
+```bash
+git clone --depth 1 https://github.com/supabase/supabase
+cd supabase/docker
+cp .env.example .env
+```
+
+## 3. Generar secretos propios (obligatorio — nunca usar los de ejemplo)
+
+El `.env` de ejemplo trae una clave JWT y contraseñas de muestra. Hay que sustituirlas antes de arrancar nada:
+
+- `POSTGRES_PASSWORD`: contraseña nueva y fuerte.
+- `JWT_SECRET`: cadena aleatoria de al menos 32 caracteres.
+- `ANON_KEY` y `SERVICE_ROLE_KEY`: se generan a partir del `JWT_SECRET` con el generador que Supabase enlaza en su propia documentación de self-hosting — no se inventan a mano.
+- `DASHBOARD_USERNAME` / `DASHBOARD_PASSWORD`: credenciales de acceso a Supabase Studio.
+
+Guarda estos valores en un gestor de contraseñas. Se necesitarán también en el `.env.local` del proyecto Next.js (paso 5).
+
+## 4. Levantar los servicios
+
+```bash
+docker compose up -d
+```
+
+Comprueba que todos los contenedores están sanos:
+
+```bash
+docker compose ps
+```
+
+Si prefieres hacerlo desde la interfaz gráfica: en Container Manager, usa "Crear proyecto" → apuntar al mismo `docker-compose.yml` y `.env` generados en el paso 2 y 3.
+
+## 5. Conectar el proyecto Next.js
+
+En tu máquina de desarrollo, copia `.env.example` a `.env.local` (si no lo has hecho ya) y rellena:
+
+```
+NEXT_PUBLIC_SUPABASE_URL=http://IP_DEL_NAS:8000
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<ANON_KEY del paso 3>
+SUPABASE_SERVICE_ROLE_KEY=<SERVICE_ROLE_KEY del paso 3>
+```
+
+`8000` es el puerto de Kong (el API gateway de Supabase) por defecto — ajusta si lo cambiaste en el `.env` del NAS.
+
+## 6. Verificar la conexión
+
+Desde la raíz del proyecto:
+
+```bash
+node scripts/check-supabase-connection.mjs
+```
+
+Debe confirmar conexión correcta a la base de datos y al servicio de autenticación. Si falla, revisa: que el NAS y tu máquina estén en la misma red, que el firewall del NAS permita el puerto de Kong, y que las claves en `.env.local` coincidan exactamente con las generadas en el paso 3.
+
+## Seguridad — no negociable
+
+- El NAS **no** se expone a internet (sin port-forwarding del puerto de Supabase, sin DDNS apuntando a él). Solo accesible en red local mientras estemos en Fase 0–5.
+- Nunca commitear `.env.local` ni el `.env` del NAS — ambos están para credenciales reales.
+- Antes de dar por cerrada esta historia, pasar `/security-review` sobre esta configuración.
