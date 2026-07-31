@@ -2,6 +2,7 @@
   "name": "gourses",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -12,6 +13,7 @@
     "test:e2e": "playwright test",
     "check:supabase": "node --env-file=.env.local scripts/check-supabase-connection.mjs",
     "migrate": "node --env-file=.env.local scripts/apply-migrations.mjs",
+    "ingest:coursera": "node --env-file=.env.local scripts/ingest-coursera.mjs",
     "test:integration": "node --env-file=.env.local node_modules/.bin/vitest run tests/integration"
   },
   "dependencies": {
