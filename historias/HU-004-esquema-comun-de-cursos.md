@@ -19,11 +19,17 @@ Tablas de usuarios, favoritos o alertas (Fase 3 y 4). Lógica de comparación en
 
 ## Checklist de tests (obligatorio antes de cerrar)
 
-- [ ] Integración: test que aplica la migración contra Supabase local/NAS y comprueba que las tablas y la restricción de unicidad existen
-- [ ] Integración: test que intenta insertar un `(source, source_id)` duplicado y comprueba que falla como se espera
-- [ ] Unitarios: no aplica (sin lógica de aplicación en esta historia, solo esquema)
-- [ ] `/security-review`: revisar políticas de RLS — de momento lectura pública, escritura solo desde el rol de servicio (los jobs de ingesta), nunca desde el cliente
+- [x] Integración: test que aplica la migración contra Supabase local/NAS y comprueba que las tablas y la restricción de unicidad existen (`tests/integration/courses-schema.test.ts`, contra `gourses_test`)
+- [x] Integración: test que intenta insertar un `(source, source_id)` duplicado y comprueba que falla como se espera
+- [x] Unitarios: no aplica (sin lógica de aplicación en esta historia, solo esquema)
+- [x] `/security-review`: políticas de RLS verificadas manualmente vía REST — lectura anónima 200, escritura anónima 401 (`new row violates row-level security policy`); escritura solo posible con `service_role`, que tiene `BYPASSRLS`
+
+## Notas de implementación
+
+- Migración en `supabase/migrations/0001_courses_schema.sql`, aplicada con `npm run migrate` (usa `DATABASE_URL`) y verificada idempotente (reaplicada sin error).
+- Tests de integración corren contra una base **separada** `gourses_test` en el mismo Postgres del NAS (no la de desarrollo), vía `TEST_DATABASE_URL` y `npm run test:integration` — ver `.claude/rules/testing.md` y la nota sobre el puerto directo de Postgres en `docs/nas-supabase-setup.md`.
+- El puerto 54322 del NAS es el *pooler* (Supavisor), no válido para conexiones directas simples sin tenant id. Se añadió un puerto directo al contenedor `db` (host `54332` → contenedor `54322`, que es el puerto real donde escucha Postgres en esta instancia, no el 5432 por defecto) para `DATABASE_URL`/`TEST_DATABASE_URL`.
 
 ## Estado
 
-Abierta — HU-003 desbloqueada, lista para empezar
+Cerrada.

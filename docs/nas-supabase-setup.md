@@ -9,8 +9,10 @@ Sigue la guía oficial de Supabase, no un `docker-compose.yml` hecho a mano — 
 Este NAS ya tenía otros contenedores ocupando los puertos por defecto de Supabase (5432 y 8000). Los puertos finales son:
 
 - Kong (API gateway, lo que usa la app): **54321** (HTTP) / **54443** (HTTPS)
-- Postgres/pooler: **54322**
+- Pooler (Supavisor, `POSTGRES_PORT` del `.env`): **54322** — requiere formato de conexión con tenant id (`postgres.<tenant>`), no válido para una conexión directa simple.
+- Postgres directo (añadido en HU-004 para scripts de migración/tests): host **54332** → contenedor **54322** (ojo: dentro del contenedor Postgres escucha en 54322, no en el 5432 por defecto, porque el `.env` del NAS fija `PGPORT=54322`). Mapeo añadido a mano en `docker-compose.yml`, servicio `db`, ya que por defecto ese servicio no publica ningún puerto al host.
 - `NEXT_PUBLIC_SUPABASE_URL=http://192.168.1.139:54321`
+- `DATABASE_URL` / `TEST_DATABASE_URL` (solo scripts, nunca cliente): `postgres://postgres:<POSTGRES_PASSWORD>@192.168.1.139:54332/postgres` y `.../gourses_test` respectivamente.
 
 ## Aviso sobre bind mounts de ficheros individuales
 
@@ -21,6 +23,16 @@ En este NAS, montar un **fichero individual** (no un directorio) como bind mount
 - `db-custom/Dockerfile` → imagen `gourses-postgres-custom:17.6.1.136`
 
 Si en el futuro hay que reconstruir el stack desde cero y aparece el mismo `Permission denied` en algún otro servicio con ficheros bind-mounted, aplicar el mismo patrón: copiar el fichero a una carpeta `<servicio>-custom/`, escribir un `Dockerfile` mínimo `FROM <imagen original>` + `COPY`, construirlo con `docker build`, y apuntar `image:` a la imagen nueva en `docker-compose.yml`, quitando el bind mount de ese fichero.
+
+## Base de datos de test
+
+Para no correr tests de integración contra la base de desarrollo (regla en `.claude/rules/testing.md`), se creó una base `gourses_test` en el mismo Postgres del NAS:
+
+```bash
+docker compose exec -T db psql -U postgres -c 'CREATE DATABASE gourses_test;'
+```
+
+Las migraciones (`supabase/migrations/`) se aplican por separado a cada una vía `DATABASE_URL`/`TEST_DATABASE_URL` y `npm run migrate`.
 
 ## 1. Acceder al NAS
 
