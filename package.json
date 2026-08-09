@@ -17,6 +17,7 @@
     "test:integration": "node --env-file=.env.local node_modules/.bin/vitest run tests/integration"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.112.2",
     "next": "16.2.12",
     "pg": "^8.22.0",
     "react": "19.2.4",
