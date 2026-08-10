@@ -1,142 +1,121 @@
-.page {
-  --background: #fafafa;
-  --foreground: #fff;
-
-  --text-primary: #000;
-  --text-secondary: #666;
-
-  --button-primary-hover: #383838;
-  --button-secondary-hover: #f2f2f2;
-  --button-secondary-border: #ebebeb;
-
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-geist-sans);
-  background-color: var(--background);
-}
-
 .main {
-  display: flex;
-  flex: 1;
-  width: 100%;
-  max-width: 800px;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: space-between;
-  background-color: var(--foreground);
-  padding: 120px 60px;
-}
+  --borde: rgba(0, 0, 0, 0.12);
+  --texto-suave: rgba(0, 0, 0, 0.62);
+  --fondo-suave: rgba(0, 0, 0, 0.04);
+  --acento: #6d28d9;
 
-.intro {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  text-align: left;
-  gap: 24px;
-}
-
-.intro h1 {
-  max-width: 320px;
-  font-size: 40px;
-  font-weight: 600;
-  line-height: 48px;
-  letter-spacing: -2.4px;
-  text-wrap: balance;
-  color: var(--text-primary);
-}
-
-.intro p {
-  max-width: 440px;
-  font-size: 18px;
-  line-height: 32px;
-  text-wrap: balance;
-  color: var(--text-secondary);
-}
-
-.intro a {
-  font-weight: 500;
-  color: var(--text-primary);
-}
-
-.ctas {
-  display: flex;
-  flex-direction: row;
-  width: 100%;
-  max-width: 440px;
-  gap: 16px;
-  font-size: 14px;
-}
-
-.ctas a {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 40px;
-  padding: 0 16px;
-  border-radius: 128px;
-  border: 1px solid transparent;
-  transition: 0.2s;
-  cursor: pointer;
-  width: fit-content;
-  font-weight: 500;
-}
-
-a.primary {
-  background: var(--text-primary);
-  color: var(--background);
-  gap: 8px;
-}
-
-a.secondary {
-  border-color: var(--button-secondary-border);
-}
-
-/* Enable hover only on non-touch devices */
-@media (hover: hover) and (pointer: fine) {
-  a.primary:hover {
-    background: var(--button-primary-hover);
-    border-color: transparent;
-  }
-
-  a.secondary:hover {
-    background: var(--button-secondary-hover);
-    border-color: transparent;
-  }
-}
-
-@media (max-width: 600px) {
-  .main {
-    padding: 48px 24px;
-  }
-
-  .intro {
-    gap: 16px;
-  }
-
-  .intro h1 {
-    font-size: 32px;
-    line-height: 40px;
-    letter-spacing: -1.92px;
-  }
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 3rem 1rem 4rem;
 }
 
 @media (prefers-color-scheme: dark) {
-  .logo {
-    filter: invert();
+  .main {
+    --borde: rgba(255, 255, 255, 0.16);
+    --texto-suave: rgba(255, 255, 255, 0.7);
+    --fondo-suave: rgba(255, 255, 255, 0.06);
+    --acento: #8b5cf6;
   }
+}
 
-  .page {
-    --background: #000;
-    --foreground: #000;
+.hero {
+  text-align: center;
+  margin-bottom: 3.5rem;
+}
 
-    --text-primary: #ededed;
-    --text-secondary: #999;
+.hero h1 {
+  font-size: clamp(1.8rem, 5vw, 2.6rem);
+  line-height: 1.15;
+  margin: 0 0 1rem;
+}
 
-    --button-primary-hover: #ccc;
-    --button-secondary-hover: #1a1a1a;
-    --button-secondary-border: #1a1a1a;
-  }
+.subtitulo {
+  color: var(--texto-suave);
+  font-size: 1.05rem;
+  line-height: 1.6;
+  max-width: 40rem;
+  margin: 0 auto 2rem;
+}
+
+.buscador {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  max-width: 34rem;
+  margin: 0 auto;
+}
+
+.campo {
+  flex: 1 1 16rem;
+  padding: 0.8rem 1rem;
+  font-size: 1rem;
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+}
+
+.boton {
+  padding: 0.8rem 1.4rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  background: var(--acento);
+  color: #fff;
+  cursor: pointer;
+}
+
+.boton:hover {
+  filter: brightness(1.1);
+}
+
+.cifras {
+  color: var(--texto-suave);
+  font-size: 0.95rem;
+  margin-top: 1rem;
+}
+
+.categorias {
+  margin-bottom: 3rem;
+}
+
+.categorias h2,
+.comoFunciona h2 {
+  font-size: 1.25rem;
+  margin: 0 0 1rem;
+}
+
+.listaCategorias {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.listaCategorias a {
+  display: inline-block;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+  text-decoration: none;
+  color: inherit;
+  font-size: 0.95rem;
+}
+
+.listaCategorias a:hover {
+  background: var(--fondo-suave);
+}
+
+.pasos {
+  padding-left: 1.2rem;
+  margin: 0;
+  line-height: 1.7;
+}
+
+.pasos li {
+  margin-bottom: 0.6rem;
 }
