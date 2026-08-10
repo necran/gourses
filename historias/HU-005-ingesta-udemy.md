@@ -25,6 +25,17 @@ Ingesta de Coursera (`HU-006`). Programación del job como cron recurrente en pr
 - [ ] Integración: caso de error de API simulado (mock de fallo/cuota excedida) y comprobación de que el job se detiene sin dejar datos parciales
 - [ ] `/security-review`: la clave de API de Udemy solo se usa en el job (server-side), nunca llega al cliente/frontend
 
+## Notas de implementación (pendiente)
+
+Acceso a catálogo verificado el 2026-08-10 con las credenciales aprobadas (ver la tabla de endpoints en `docs/checklist-alta-afiliados.md`). La ingesta tendrá dos pasos, porque el listado no trae precio:
+
+1. **Descubrimiento**: recorrer categorías (`/api-2.0/course-categories/`) y sus subcategorías, y para cada una paginar la unidad `bestseller` de `/api-2.0/discovery-units/`. De aquí salen ID, título, valoración, nivel, idioma, instructor e imagen.
+2. **Detalle**: por cada ID, `GET /api-2.0/courses/{id}/` para obtener `price_detail` (importe + moneda), que es lo que alimenta `course_price_history`.
+
+Ojo: el endpoint de listado clásico `/api-2.0/courses/` devuelve 403 con credenciales válidas — no es un fallo de configuración, es que esa ruta concreta ya no está disponible para afiliados. No perder tiempo depurándolo.
+
+Se reutiliza tal cual `src/lib/ingesta/upsert-course.ts` (upsert + histórico de precio) de `HU-006`, que se escribió justamente para esto.
+
 ## Estado
 
-Bloqueada — depende de HU-004 (esquema) y de tener la clave de Udemy Affiliate API (ver `docs/checklist-alta-afiliados.md`)
+Desbloqueada, pendiente de implementar — HU-004 (esquema) cerrada y credenciales de Udemy verificadas.

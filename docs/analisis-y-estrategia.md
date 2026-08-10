@@ -17,7 +17,7 @@ Estado actual:
 
 | Plataforma | Catálogo | Afiliación | Estado |
 |---|---|---|---|
-| Udemy | Affiliate API propia | Programa propio integrado | Viable — catálogo + comisión |
+| Udemy | Affiliate API propia — catálogo vía `discovery-units` por categoría/subcategoría + detalle por curso para el precio (el listado `/api-2.0/courses/` da 403; ver `docs/checklist-alta-afiliados.md`) | Programa propio integrado | Viable — catálogo + comisión (verificado 2026-08-10) |
 | Coursera | Catalog API pública (build.coursera.org, beta, sin auth) | Vía Impact | Viable — catálogo + comisión |
 | YouTube | YouTube Data API v3 | No aplica | Viable — solo catálogo |
 | Skillshare / Domestika / DataCamp / Codecademy | Sin API de catálogo pública | Vía Impact/redes, 15–45% comisión | Solo comisión — fase posterior, ficha manual |
