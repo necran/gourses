@@ -1,0 +1,106 @@
+.main {
+  --borde: rgba(0, 0, 0, 0.12);
+  --texto-suave: rgba(0, 0, 0, 0.62);
+  --fondo-suave: rgba(0, 0, 0, 0.04);
+
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .main {
+    --borde: rgba(255, 255, 255, 0.16);
+    --texto-suave: rgba(255, 255, 255, 0.7);
+    --fondo-suave: rgba(255, 255, 255, 0.06);
+  }
+}
+
+.volver {
+  margin: 0 0 1.5rem;
+  font-size: 0.9rem;
+}
+
+.cabecera {
+  display: flex;
+  gap: 1.25rem;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+}
+
+.cabecera h1 {
+  font-size: 1.6rem;
+  margin: 0 0 0.5rem;
+  line-height: 1.25;
+}
+
+.imagen {
+  width: 240px;
+  height: 135px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.fuente,
+.instructor {
+  color: var(--texto-suave);
+  font-size: 0.95rem;
+  margin: 0 0 0.35rem;
+}
+
+.etiqueta {
+  text-transform: capitalize;
+}
+
+.compra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border: 1px solid var(--borde);
+  background: var(--fondo-suave);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.precio {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.precioAnterior {
+  color: var(--texto-suave);
+  margin-right: 0.35rem;
+}
+
+.precioActual {
+  font-size: 1.35rem;
+}
+
+.sinPrecio {
+  color: var(--texto-suave);
+  font-size: 0.95rem;
+}
+
+.boton {
+  display: inline-block;
+  padding: 0.7rem 1.25rem;
+  border-radius: 6px;
+  background: #6d28d9;
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+  text-transform: capitalize;
+}
+
+.boton:hover {
+  background: #5b21b6;
+}
+
+.descripcion {
+  white-space: pre-line;
+  line-height: 1.6;
+}

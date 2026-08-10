@@ -65,7 +65,10 @@ describeIfConfigured("HU-005 — ingesta de Udemy", () => {
       expect(Number(row.price_amount)).toBeGreaterThan(0);
       expect(row.price_currency).toMatch(/^[A-Z]{3}$/);
     }
-  });
+    // Encadena ~8 llamadas de red reales (categorías, descubrimiento y una de
+    // detalle por curso): con el timeout por defecto de 5s se agotaba a veces,
+    // y al quedar trabajo en vuelo contaminaba el test siguiente.
+  }, 60_000);
 
   it("registra el precio inicial en el histórico y añade una fila solo cuando cambia", async () => {
     const store = createPostgresCourseStore(client);

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createSupabaseServerClient } from "../../lib/supabase/server-client";
 import { parseCourseSearchFilters, type RawSearchParams } from "../../lib/courses/search-filters";
 import { searchCourses } from "../../lib/courses/search-courses";
@@ -65,7 +66,9 @@ export default async function BuscarPage({ searchParams }: BuscarPageProps) {
                 <img src={course.imageUrl} alt="" className={styles.image} />
               )}
               <div>
-                <h2>{course.title}</h2>
+                <h2>
+                  <Link href={`/curso/${course.id}`}>{course.title}</Link>
+                </h2>
                 <p className={styles.meta}>
                   <span>{course.source}</span>
                   {course.priceAmount !== null && (

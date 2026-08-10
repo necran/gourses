@@ -37,7 +37,9 @@ describeIfConfigured("HU-006 — ingesta de Coursera", () => {
       expect(row.source).toBe("coursera");
       expect(row.title).toBeTruthy();
     }
-  });
+    // Llamada a la API real: el timeout por defecto de 5s depende demasiado de
+    // la latencia de red (ver la nota equivalente en udemy-ingest.test.ts).
+  }, 60_000);
 
   it("un curso de Udemy y uno de Coursera conviven sin colisión de (source, source_id)", async () => {
     await client.query(
