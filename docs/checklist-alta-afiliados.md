@@ -29,8 +29,19 @@ Parámetros obligatorios de `discovery-units` (si faltan, responde 400 indicando
 
 Conclusión: Udemy **cumple** la regla de admisión (catálogo oficial y consultable, sin scraping) y se queda en la ingesta automática.
 
-## Nota sobre el token de Impact.com (2026-07-31)
+## Nota sobre el token de afiliación (2026-07-31, **corregida el 2026-08-10**)
 
-Confirmado: es un token de **Impact.com** (red de afiliación de Coursera), para generar enlaces de tracking/comisión — no da acceso al catálogo de Coursera, que es público vía `build.coursera.org` y no necesita autenticación. Por tanto no bloquea HU-004 ni la ingesta de catálogo; solo hace falta para la parte de generación de enlaces de afiliado.
+Lo único seguro: **no da acceso al catálogo de Coursera**, que es público vía `build.coursera.org` y no necesita autenticación. Por eso no bloqueó `HU-004` ni `HU-006`.
 
-Variable correspondiente: `IMPACT_COURSERA_API_TOKEN` (añadida a `.env.example`). No se ha escrito en ningún fichero del repo — pendiente de que el usuario lo añada a `.env.local` (ver `env-local-impact-token.txt` en la raíz del proyecto).
+Lo que se dio por confirmado y no lo estaba: se anotó como "token de Impact.com" a partir de una respuesta del titular, sin comprobarlo contra ninguna API. El 2026-08-10, al intentar usarlo de verdad, **devuelve `401` contra `api.impact.com`**, y el titular precisa que lo obtuvo desde la web de Coursera / su programa de afiliados, no desde un panel de Impact.
+
+Estado real, sin adornos: **no sabemos qué es ese token ni si existe una cuenta de Impact.** Dos cosas encajan con lo observado y no se han distinguido todavía:
+
+1. El alta de afiliado de Coursera se hace en `about.coursera.org/affiliates`, cuyo formulario **es de Impact por debajo**: es posible que la cuenta de Impact se creara ahí sin que el titular lo percibiera, con las credenciales en su correo. En ese caso el `401` se explica por la falta del `AccountSID`, no por el token.
+2. El token es de otra cosa y la etiqueta lleva días equivocada.
+
+Cómo distinguirlo (acción manual, solo el titular): entrar en `app.impact.com`, usar **"Forgot Password or Username"** con el correo del alta de Coursera. Si Impact reconoce el correo, la cuenta existe (caso 1); si no, hay que darse de alta (caso 2).
+
+Variable correspondiente: `IMPACT_API_TOKEN` (renombrada desde `IMPACT_COURSERA_API_TOKEN`, porque una misma cuenta de Impact cubriría Udemy y Coursera). Vive solo en `.env.local`, nunca en el repo.
+
+**Lección, para no repetirla:** una credencial no se marca como "confirmada" hasta que una llamada real a su API responde algo distinto de `401`. Esta nota ya indujo a error una vez.
