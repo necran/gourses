@@ -81,14 +81,22 @@ export default async function CoursePage({ params }: CoursePageProps) {
           </p>
 
           {enlace && (
-            <a
-              className={styles.boton}
-              href={enlace}
-              target="_blank"
-              rel="noopener noreferrer nofollow sponsored"
-            >
-              Ver curso en {course.source}
-            </a>
+            <div className={styles.acciones}>
+              <a
+                className={styles.boton}
+                href={enlace}
+                target="_blank"
+                rel="noopener noreferrer nofollow sponsored"
+              >
+                Ver curso en {course.source}
+              </a>
+              {/* La divulgación va junto al enlace, no escondida en una página
+                  legal: es donde la persona decide si pulsa (HU-013). */}
+              <p className={styles.divulgacion}>
+                Enlace de afiliado: podemos cobrar comisión, sin coste extra para ti.{" "}
+                <Link href="/afiliacion">Más información</Link>
+              </p>
+            </div>
           )}
         </section>
 

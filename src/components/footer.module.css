@@ -1,0 +1,37 @@
+.footer {
+  --borde: rgba(0, 0, 0, 0.12);
+  --texto-suave: rgba(0, 0, 0, 0.62);
+
+  border-top: 1px solid var(--borde);
+  margin-top: 3rem;
+  padding: 1.5rem 1rem 2.5rem;
+  text-align: center;
+}
+
+@media (prefers-color-scheme: dark) {
+  .footer {
+    --borde: rgba(255, 255, 255, 0.16);
+    --texto-suave: rgba(255, 255, 255, 0.7);
+  }
+}
+
+.enlaces {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+  justify-content: center;
+  margin-bottom: 0.8rem;
+  font-size: 0.9rem;
+}
+
+.enlaces a {
+  color: inherit;
+}
+
+.nota {
+  color: var(--texto-suave);
+  font-size: 0.85rem;
+  max-width: 40rem;
+  margin: 0 auto;
+  line-height: 1.5;
+}

@@ -104,3 +104,19 @@
   white-space: pre-line;
   line-height: 1.6;
 }
+
+.acciones {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.divulgacion {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--texto-suave);
+  max-width: 22rem;
+  text-align: right;
+  line-height: 1.4;
+}
