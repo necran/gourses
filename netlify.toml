@@ -1,0 +1,27 @@
+# Configuración de despliegue (HU-014).
+# Netlify detecta Next.js y aplica su adaptador automáticamente; aquí solo se
+# fija lo que no conviene dejar al azar.
+
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  # Los scripts de ingesta ejecutan TypeScript directamente con Node, lo que
+  # exige una versión moderna. Se fija para que el build no cambie de runtime
+  # sin avisar.
+  NODE_VERSION = "24"
+
+# Cabeceras de seguridad. El sitio no usa formularios de datos personales ni
+# cookies propias, así que son baratas de aplicar y cierran superficie.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # Evita que el navegador adivine el tipo de contenido.
+    X-Content-Type-Options = "nosniff"
+    # Impide que el sitio se incruste en un iframe ajeno.
+    X-Frame-Options = "DENY"
+    # No filtrar la URL completa al salir hacia las plataformas de cursos.
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    # El sitio no necesita ninguna de estas capacidades del navegador.
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=()"
