@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createSupabaseServerClient } from "../../lib/supabase/server-client";
 import { parseCourseSearchFilters, type RawSearchParams } from "../../lib/courses/search-filters";
 import { searchCourses } from "../../lib/courses/search-courses";
+import { formatDuration } from "../../lib/courses/duration";
 import styles from "./page.module.css";
 
 interface BuscarPageProps {
@@ -78,6 +79,9 @@ export default async function BuscarPage({ searchParams }: BuscarPageProps) {
                     </span>
                   )}
                   {course.rating !== null && <span> · ⭐ {course.rating}</span>}
+                  {formatDuration(course.duration) && (
+                    <span> · ⏱ {formatDuration(course.duration)}</span>
+                  )}
                   {course.language && <span> · {course.language}</span>}
                 </p>
                 {course.description && (

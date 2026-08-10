@@ -61,6 +61,8 @@ describeIfConfigured("HU-006 — ingesta de Coursera", () => {
       affiliateUrl: null,
       imageUrl: null,
       category: null,
+      durationMinMinutes: null,
+      durationMaxMinutes: null,
     });
 
     const { rows } = await client.query(

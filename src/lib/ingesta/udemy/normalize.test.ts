@@ -47,6 +47,8 @@ describe("normalizeUdemyCourse", () => {
         "https://www.udemy.com/course/ai-coder-from-vibe-coder-to-agentic-engineer/",
       imageUrl: "https://img-c.udemycdn.com/course/480x270/7053781_bd4d.jpg",
       category: null,
+      durationMinMinutes: null,
+      durationMaxMinutes: null,
     });
   });
 
@@ -67,6 +69,8 @@ describe("normalizeUdemyCourse", () => {
       affiliateUrl: "https://www.udemy.com/course/minimo/",
       imageUrl: null,
       category: null,
+      durationMinMinutes: null,
+      durationMaxMinutes: null,
     });
   });
 

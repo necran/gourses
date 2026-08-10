@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { COURSE_SOURCES, type CourseSource } from "./schema";
 import type { CourseSearchFilters } from "./search-filters";
+import type { DurationRange } from "./duration";
 
 export interface CourseSearchResult {
   id: string;
@@ -13,6 +14,7 @@ export interface CourseSearchResult {
   language: string | null;
   imageUrl: string | null;
   affiliateUrl: string | null;
+  duration: DurationRange | null;
 }
 
 const DEFAULT_LIMIT = 50;
@@ -35,6 +37,8 @@ interface CourseRow {
   language: string | null;
   image_url: string | null;
   affiliate_url: string | null;
+  duration_min_minutes: number | null;
+  duration_max_minutes: number | null;
 }
 
 function mapRow(row: CourseRow): CourseSearchResult {
@@ -49,6 +53,10 @@ function mapRow(row: CourseRow): CourseSearchResult {
     language: row.language,
     imageUrl: row.image_url,
     affiliateUrl: row.affiliate_url,
+    duration:
+      row.duration_min_minutes === null || row.duration_max_minutes === null
+        ? null
+        : { minMinutes: row.duration_min_minutes, maxMinutes: row.duration_max_minutes },
   };
 }
 
@@ -103,7 +111,7 @@ async function searchCoursesFromSource(
   let query = client
     .from("courses")
     .select(
-      "id, source, title, description, price_amount, price_currency, rating, language, image_url, affiliate_url"
+      "id, source, title, description, price_amount, price_currency, rating, language, image_url, affiliate_url, duration_min_minutes, duration_max_minutes"
     )
     .eq("source", source);
 

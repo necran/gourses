@@ -4,7 +4,7 @@
 
 Transversal a la Fase 1, ya cerrada. Hoy `affiliate_url` guarda la **URL directa** del curso en ambas fuentes (decisión consciente y documentada en `HU-006` y `HU-005` a falta de confirmar el formato de tracking), así que la web enseña cursos y manda tráfico a las plataformas **sin generar ninguna comisión**. Esta historia convierte ese enlace en uno de afiliado real.
 
-Hallazgo que condiciona el diseño (verificado 2026-08-10): el programa de afiliados de **Udemy también se gestiona vía Impact.com**, la misma red que Coursera, y el titular confirma que ambos están aprobados en esa red. Por tanto **una única integración con Impact cubre las dos fuentes**, cambiando solo el identificador de programa — no hace falta un mecanismo por plataforma. Por eso las variables de entorno pasan a llamarse `IMPACT_*` sin apellido de plataforma.
+Hallazgo que condiciona el diseño: el programa de afiliados de **Udemy también se gestiona vía Impact.com**, la misma red que Coursera, así que **una única integración cubre las dos fuentes** cambiando solo el identificador de programa. Por eso las variables de entorno se llaman `IMPACT_*`, sin apellido de plataforma.\n\nOjo: que ambos programas *existan* en Impact no significa que estén aprobados para esta cuenta. A 2026-08-10 no hay ninguna asociación aprobada (ver Estado).
 
 ## Como titular del proyecto quiero que los enlaces a los cursos lleven mi identificador de afiliado para cobrar la comisión cuando alguien compre desde la web
 
@@ -33,12 +33,15 @@ Hallazgo que condiciona el diseño (verificado 2026-08-10): el programa de afili
 
 ## Notas de investigación (2026-08-10)
 
-- La API de Impact requiere **Basic Auth con `AccountSID` como usuario y el token como contraseña**. Verificado que el token solo (`IMPACT_COURSERA_API_TOKEN`) devuelve `401`: falta el SID.
+- La API de Impact requiere **Basic Auth con `AccountSID` como usuario y el token como contraseña**. Con ambos autentica; sin el SID devuelve `401`.
 - Endpoint de creación: `POST https://api.impact.com/Mediapartners/{AccountSID}/Programs/{ProgramId}/TrackingLinks`, con `DeepLink` (la URL del curso) y `MediaPartnerPropertyId` (la propiedad/web dada de alta).
 - Aviso relevante para el diseño: Impact **limita a 5000 los tracking links** por programa y devuelve `403` al superarlo. Con 412 cursos hoy y crecimiento previsto, conviene comprobar si el formato de deeplink admite construcción directa por URL (sin crear un link por curso) antes de generar uno por curso.
 
 ## Estado
 
-Bloqueada — por una gestión externa, no por trabajo de código. No consta acceso a una cuenta de Impact: el token que teníamos devuelve `401` y proviene de la web de Coursera, no de un panel de Impact (ver la nota corregida en `docs/checklist-alta-afiliados.md`). Hasta poder autenticarse contra `api.impact.com` no hay forma de generar un solo enlace de tracking real, ni de verificar ningún criterio de aceptación de esta historia.
+Bloqueada por gestión externa, con el diagnóstico ya cerrado (2026-08-10). La cuenta de Impact existe y las credenciales autentican (`IMPACT_ACCOUNT_SID` + `IMPACT_API_TOKEN` ya en `.env.local`), pero faltan dos cosas, ninguna de código:
 
-Siguiente paso, manual y solo del titular: recuperar acceso en `app.impact.com` con el correo del alta de Coursera ("Forgot Password or Username"). Si la cuenta existe, con el `AccountSID` se desbloquea todo lo demás, incluido descubrir por API los `ProgramId` de Udemy y Coursera y el `MediaPartnerPropertyId`.
+1. **Permisos del token**: `Programs`, `TrackingLinks` y `MediaPartnerProperties` devuelven `403`. Se habilitan en la pestaña *Scopes* del token en el panel de Impact.
+2. **Ninguna asociación aprobada**: `Campaigns` devuelve `@total: 0`. Sin un programa aprobado no hay a qué generar enlaces, aunque los permisos estuvieran puestos.
+
+El punto 2 es el bloqueo de fondo y depende de que la plataforma apruebe la solicitud. Ver la tabla de endpoints en `docs/checklist-alta-afiliados.md`.

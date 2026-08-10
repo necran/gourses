@@ -14,6 +14,7 @@ function curso(source: string, n: number): CourseSearchResult {
     language: null,
     imageUrl: null,
     affiliateUrl: null,
+    duration: null,
   };
 }
 

@@ -15,7 +15,7 @@ export interface CourseraCatalogPage {
 }
 
 const FIELDS =
-  "name,description,photoUrl,primaryLanguages,domainTypes,instructorIds,partnerIds";
+  "name,description,photoUrl,primaryLanguages,domainTypes,instructorIds,partnerIds,workload";
 const INCLUDES = "instructorIds,partnerIds";
 
 function indexById(

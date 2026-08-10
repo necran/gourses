@@ -1,5 +1,6 @@
 import type { NormalizedCourse } from "../../courses/schema";
 import { mapCourseraDomainTypes } from "../../courses/categories.ts";
+import { parseDuration } from "../../courses/duration.ts";
 
 // La Catalog API de Coursera está en beta (ver .claude/rules/ingesta-fuentes.md):
 // si cambia de forma de manera incompatible, este error lo deja claro en vez
@@ -33,6 +34,7 @@ export interface CourseraRawCourse {
   domainTypes?: unknown;
   instructorIds?: unknown;
   partnerIds?: unknown;
+  workload?: unknown;
 }
 
 // Nombres ya resueltos que acompañan a la página del catálogo (HU-010).
@@ -105,5 +107,19 @@ export function normalizeCourseraCourse(
     affiliateUrl: `https://www.coursera.org/learn/${raw.slug}`,
     imageUrl: typeof raw.photoUrl === "string" ? raw.photoUrl : null,
     category: mapCourseraDomainTypes(raw.domainTypes),
+    ...duracion(raw.workload),
+  };
+}
+
+// Coursera publica la duración como texto libre; parseDuration solo devuelve
+// algo cuando la interpreta con seguridad (ver HU-011).
+function duracion(raw: unknown): {
+  durationMinMinutes: number | null;
+  durationMaxMinutes: number | null;
+} {
+  const d = typeof raw === "string" ? parseDuration(raw) : null;
+  return {
+    durationMinMinutes: d ? d.minMinutes : null,
+    durationMaxMinutes: d ? d.maxMinutes : null,
   };
 }

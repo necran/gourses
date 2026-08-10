@@ -65,6 +65,38 @@ test.describe("HU-008 — ficha de curso", () => {
     }
   });
 
+  // HU-011: el rango se muestra tal cual, sin reducirlo a un punto medio que
+  // la plataforma nunca ha publicado. Y sin duración, no se muestra nada.
+  test("la ficha muestra el rango de duración, y nada cuando no la hay", async ({ page }) => {
+    const databaseUrl = process.env.DATABASE_URL;
+    test.skip(!databaseUrl, "Requiere DATABASE_URL para sembrar los cursos");
+
+    const client = new Client({ connectionString: databaseUrl });
+    await client.connect();
+    const sourceId = `zzz-hu011-e2e-${Date.now()}`;
+
+    try {
+      const { rows } = await client.query(
+        `insert into courses (source, source_id, title, duration_min_minutes, duration_max_minutes)
+         values ('coursera', $1, 'Curso HU-011 con rango', 480, 960),
+                ('coursera', $2, 'Curso HU-011 sin duración', null, null)
+         returning id, source_id`,
+        [`${sourceId}-rango`, `${sourceId}-sin`]
+      );
+      const conRango = rows.find((r) => r.source_id === `${sourceId}-rango`)!.id;
+      const sinDuracion = rows.find((r) => r.source_id === `${sourceId}-sin`)!.id;
+
+      await page.goto(`/curso/${conRango}`);
+      await expect(page.locator("main")).toContainText("8 h–16 h");
+
+      await page.goto(`/curso/${sinDuracion}`);
+      await expect(page.locator("main")).not.toContainText("⏱");
+    } finally {
+      await client.query(`delete from courses where source_id like $1`, [`${sourceId}%`]);
+      await client.end();
+    }
+  });
+
   // Cuarto criterio de aceptación. No hay ninguna bajada de precio real en el
   // catálogo ingerido todavía, así que se siembra una y se limpia después
   // (misma excepción documentada en .claude/rules/testing.md que en HU-007).

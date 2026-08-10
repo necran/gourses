@@ -1,5 +1,6 @@
 import type { NormalizedCourse } from "../../courses/schema";
 import { mapUdemyCategory } from "../../courses/categories.ts";
+import { parseDuration } from "../../courses/duration.ts";
 
 // Cambio de forma en la respuesta de la API (contrato roto): detiene el job,
 // igual que CourseraShapeError en HU-006.
@@ -36,6 +37,8 @@ export interface UdemyRawCourse {
   visible_instructors?: unknown;
   image_480x270?: unknown;
   image_240x135?: unknown;
+  content_info_short?: unknown;
+  content_info?: unknown;
 }
 
 // Detalle de curso (/api-2.0/courses/{id}/): es lo único que trae el precio.
@@ -143,5 +146,20 @@ export function normalizeUdemyCourse(
     affiliateUrl: new URL(raw.url, baseUrl).toString(),
     imageUrl: firstString(raw.image_480x270, raw.image_240x135),
     category: mapUdemyCategory(categoryTitle),
+    ...duracion(raw),
+  };
+}
+
+// Udemy publica la duración en el propio listado, en formato uniforme
+// ("16.5 hours"), así que no hace falta ninguna llamada extra.
+function duracion(raw: UdemyRawCourse): {
+  durationMinMinutes: number | null;
+  durationMaxMinutes: number | null;
+} {
+  const texto = firstString(raw.content_info_short, raw.content_info);
+  const d = parseDuration(texto);
+  return {
+    durationMinMinutes: d ? d.minMinutes : null,
+    durationMaxMinutes: d ? d.maxMinutes : null,
   };
 }

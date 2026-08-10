@@ -17,6 +17,8 @@ function makeCourse(overrides: Partial<NormalizedCourse> = {}): NormalizedCourse
     affiliateUrl: null,
     imageUrl: null,
     category: null,
+    durationMinMinutes: null,
+    durationMaxMinutes: null,
     ...overrides,
   };
 }

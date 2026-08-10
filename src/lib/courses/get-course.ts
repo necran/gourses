@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CourseSource } from "./schema";
 import type { CourseCategory } from "./categories";
 import type { PriceHistoryEntry } from "./price-display";
+import type { DurationRange } from "./duration";
 
 export interface CourseDetail {
   id: string;
@@ -17,6 +18,7 @@ export interface CourseDetail {
   imageUrl: string | null;
   affiliateUrl: string | null;
   category: CourseCategory | null;
+  duration: DurationRange | null;
   priceHistory: PriceHistoryEntry[];
 }
 
@@ -43,6 +45,8 @@ interface CourseRow {
   image_url: string | null;
   affiliate_url: string | null;
   category: CourseCategory | null;
+  duration_min_minutes: number | null;
+  duration_max_minutes: number | null;
 }
 
 interface PriceHistoryRow {
@@ -66,7 +70,7 @@ export async function getCourseById(
   const { data, error } = await client
     .from("courses")
     .select(
-      "id, source, title, description, price_amount, price_currency, rating, level, language, instructor, image_url, affiliate_url, category"
+      "id, source, title, description, price_amount, price_currency, rating, level, language, instructor, image_url, affiliate_url, category, duration_min_minutes, duration_max_minutes"
     )
     .eq("id", id)
     .maybeSingle();
@@ -108,6 +112,10 @@ export async function getCourseById(
     imageUrl: row.image_url,
     affiliateUrl: row.affiliate_url,
     category: row.category,
+    duration:
+      row.duration_min_minutes === null || row.duration_max_minutes === null
+        ? null
+        : { minMinutes: row.duration_min_minutes, maxMinutes: row.duration_max_minutes },
     priceHistory,
   };
 }

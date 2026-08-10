@@ -5,6 +5,7 @@ import { getCourseById } from "../../../lib/courses/get-course";
 import { resolvePriceDisplay } from "../../../lib/courses/price-display";
 import { safeExternalUrl } from "../../../lib/courses/safe-external-url";
 import { CATEGORY_LABELS } from "../../../lib/courses/categories";
+import { formatDuration } from "../../../lib/courses/duration";
 import styles from "./page.module.css";
 
 interface CoursePageProps {
@@ -51,6 +52,9 @@ export default async function CoursePage({ params }: CoursePageProps) {
               {course.rating !== null && <span> · ⭐ {course.rating}</span>}
               {course.level && <span> · {course.level}</span>}
               {course.language && <span> · {course.language}</span>}
+              {formatDuration(course.duration) && (
+                <span> · ⏱ {formatDuration(course.duration)}</span>
+              )}
             </p>
             {course.instructor && (
               <p className={styles.instructor}>Impartido por {course.instructor}</p>

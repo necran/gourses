@@ -3,13 +3,13 @@
 No es una historia de usuario: son gestiones externas que solo puede hacer el titular del proyecto (tú), no generan código ni tests, y algunas tardan días en aprobarse. Conviene iniciarlas ya para no bloquear la Fase 1 más adelante.
 
 - [x] **Udemy Affiliate Program** — alta solicitada (2026-07-31), **aprobada y verificada (2026-08-10)**. Credenciales en `.env.local`: `UDEMY_CLIENT_ID` / `UDEMY_CLIENT_SECRET` (Basic Auth). Desbloquea `HU-005` — ver nota de acceso a catálogo abajo.
-- [ ] **Impact.com** (red que gestiona la afiliación de Coursera) — crear cuenta de afiliado y solicitar el programa de Coursera dentro de Impact.
+- [x] **Impact.com** — cuenta creada y credenciales verificadas (2026-08-10). **Pendiente**: activar los *scopes* del token y conseguir que aprueben alguna asociación (`Campaigns` está a 0). Ver nota abajo.
 - [ ] Confirmar si Impact ofrece feed de producto o solo enlaces de tracking para Coursera — condiciona si Coursera aporta catálogo automático además de comisión (ver `docs/analisis-y-estrategia.md`).
 - [ ] Revisar tiempos de aprobación de cada programa y anotarlos aquí una vez conocidos, para planificar cuándo empezar de verdad la ingesta de Fase 1.
 
 ## Estado
 
-Udemy: alta aprobada y acceso a catálogo verificado (`HU-005` desbloqueada). Coursera/Impact: token confirmado y en uso desde `HU-006`; queda pendiente solo confirmar el formato del enlace de tracking.
+Udemy: alta aprobada y acceso a catálogo verificado (`HU-005` cerrada). Impact: cuenta y credenciales funcionando, pero sin scopes ni asociaciones aprobadas, así que `HU-009` (enlaces de afiliado) sigue bloqueada y la web todavía no genera comisión.
 
 ## Nota sobre el acceso al catálogo de Udemy (2026-08-10)
 
@@ -29,19 +29,25 @@ Parámetros obligatorios de `discovery-units` (si faltan, responde 400 indicando
 
 Conclusión: Udemy **cumple** la regla de admisión (catálogo oficial y consultable, sin scraping) y se queda en la ingesta automática.
 
-## Nota sobre el token de afiliación (2026-07-31, **corregida el 2026-08-10**)
+## Nota sobre el acceso a Impact.com (resuelta el 2026-08-10)
 
-Lo único seguro: **no da acceso al catálogo de Coursera**, que es público vía `build.coursera.org` y no necesita autenticación. Por eso no bloqueó `HU-004` ni `HU-006`.
+Se aclaró definitivamente, con llamadas reales a `api.impact.com`:
 
-Lo que se dio por confirmado y no lo estaba: se anotó como "token de Impact.com" a partir de una respuesta del titular, sin comprobarlo contra ninguna API. El 2026-08-10, al intentar usarlo de verdad, **devuelve `401` contra `api.impact.com`**, y el titular precisa que lo obtuvo desde la web de Coursera / su programa de afiliados, no desde un panel de Impact.
+- **La cuenta de Impact sí existe** y el token que se recibió el 2026-07-31 **sí era de Impact**. La confusión venía de que el panel de Impact se muestra con la marca de Coursera (es el programa de Coursera *dentro* de Impact), así que parecía "la web de Coursera".
+- El `401` inicial se debía a que faltaba el `AccountSID`: Impact usa Basic Auth con **SID como usuario y token como contraseña**. Con ambos, autentica correctamente.
 
-Estado real, sin adornos: **no sabemos qué es ese token ni si existe una cuenta de Impact.** Dos cosas encajan con lo observado y no se han distinguido todavía:
+### Lo que sí funciona y lo que no
 
-1. El alta de afiliado de Coursera se hace en `about.coursera.org/affiliates`, cuyo formulario **es de Impact por debajo**: es posible que la cuenta de Impact se creara ahí sin que el titular lo percibiera, con las credenciales en su correo. En ese caso el `401` se explica por la falta del `AccountSID`, no por el token.
-2. El token es de otra cosa y la etiqueta lleva días equivocada.
+| Endpoint | Resultado |
+|---|---|
+| `Campaigns`, `Ads`, `Catalogs`, `Reports` | **200** — credenciales válidas |
+| `Programs`, `TrackingLinks`, `MediaPartnerProperties` | **403 Access Denied** — sin permisos |
 
-Cómo distinguirlo (acción manual, solo el titular): entrar en `app.impact.com`, usar **"Forgot Password or Username"** con el correo del alta de Coursera. Si Impact reconoce el correo, la cuenta existe (caso 1); si no, hay que darse de alta (caso 2).
+### Los dos bloqueos reales de `HU-009`
 
-Variable correspondiente: `IMPACT_API_TOKEN` (renombrada desde `IMPACT_COURSERA_API_TOKEN`, porque una misma cuenta de Impact cubriría Udemy y Coursera). Vive solo en `.env.local`, nunca en el repo.
+1. **Scopes del token**: los tres endpoints que hacen falta para generar enlaces devuelven `403`. Se activan en la pestaña **Scopes** del token, en el panel de Impact.
+2. **No hay ninguna asociación aprobada**: `Campaigns` devuelve `@total: 0` y una lista vacía. Sin un programa aprobado (Coursera o Udemy) no hay a qué generar enlaces, aunque los permisos estuvieran puestos. Es decir, la solicitud de afiliación sigue sin aprobarse o no se llegó a completar desde esta cuenta.
 
-**Lección, para no repetirla:** una credencial no se marca como "confirmada" hasta que una llamada real a su API responde algo distinto de `401`. Esta nota ya indujo a error una vez.
+El segundo es el bloqueo de fondo: es una gestión externa que depende de la aprobación de la plataforma, no de configuración nuestra.
+
+**Lección, para no repetirla:** una credencial no se marca como "confirmada" hasta que una llamada real a su API responde algo distinto de `401`. La nota anterior daba por confirmado el origen del token sin haberlo probado, y eso indujo a error dos veces: primero al etiquetarlo, y después al deducir que la cuenta no existía.

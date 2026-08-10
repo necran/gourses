@@ -97,6 +97,57 @@ describeIfConfigured("HU-010 — categoría común e instructor", () => {
     }
   }, 90_000);
 
+  // HU-011: duración.
+  it("la ingesta de Udemy guarda la duración de todos sus cursos", async () => {
+    const store = createPostgresCourseStore(client);
+    await runUdemyIngestJob({
+      creds: { baseUrl: udemyBaseUrl!, clientId: clientId!, clientSecret: clientSecret! },
+      store,
+      maxScopes: 1,
+      maxPagesPerScope: 1,
+      pageSize: 5,
+    });
+
+    const { rows } = await client.query(
+      `select count(*)::int as total, count(duration_min_minutes)::int as con_duracion
+       from courses where source = 'udemy'`
+    );
+
+    // Udemy publica la duración en el listado en formato uniforme, así que la
+    // cobertura debe ser total.
+    expect(rows[0].total).toBeGreaterThan(0);
+    expect(rows[0].con_duracion).toBe(rows[0].total);
+  }, 60_000);
+
+  it("la ingesta de Coursera guarda duraciones, incluidas las de rango", async () => {
+    const store = createPostgresCourseStore(client);
+    await runCourseraIngestJob({ baseUrl: courseraBaseUrl!, store, maxPages: 1, pageSize: 100 });
+
+    const { rows } = await client.query(
+      `select count(duration_min_minutes)::int as con_duracion,
+              count(*) filter (where duration_min_minutes <> duration_max_minutes)::int as rangos
+       from courses where source = 'coursera'`
+    );
+
+    expect(rows[0].con_duracion).toBeGreaterThan(0);
+    // Parte de las duraciones de Coursera son rangos genuinos ("2-4 h/semana"),
+    // y es justo el motivo de guardar mínimo y máximo por separado.
+    expect(rows[0].rangos).toBeGreaterThan(0);
+  }, 60_000);
+
+  it("nunca se guarda una duración incoherente", async () => {
+    const store = createPostgresCourseStore(client);
+    await runCourseraIngestJob({ baseUrl: courseraBaseUrl!, store, maxPages: 1, pageSize: 50 });
+
+    const { rows } = await client.query(
+      `select count(*)::int as incoherentes from courses
+       where duration_min_minutes is not null
+         and (duration_min_minutes <= 0 or duration_max_minutes < duration_min_minutes)`
+    );
+
+    expect(rows[0].incoherentes).toBe(0);
+  }, 60_000);
+
   // La razón de ser del vocabulario común: sin él, filtrar por categoría
   // escondería una fuente entera, el fallo que corrigió HU-005 con el orden.
   it("una misma categoría común devuelve cursos de las dos plataformas", async () => {

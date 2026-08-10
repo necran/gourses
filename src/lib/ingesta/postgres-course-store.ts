@@ -23,8 +23,8 @@ export function createPostgresCourseStore(client: Client): CourseStore {
     async insertCourse(course: NormalizedCourse) {
       const { rows } = await client.query(
         `insert into courses
-          (source, source_id, title, description, price_amount, price_currency, rating, level, language, instructor, affiliate_url, image_url, category, updated_at)
-         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, now())
+          (source, source_id, title, description, price_amount, price_currency, rating, level, language, instructor, affiliate_url, image_url, category, duration_min_minutes, duration_max_minutes, updated_at)
+         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, now())
          returning id`,
         [
           course.source,
@@ -40,6 +40,8 @@ export function createPostgresCourseStore(client: Client): CourseStore {
           course.affiliateUrl,
           course.imageUrl,
           course.category,
+          course.durationMinMinutes,
+          course.durationMaxMinutes,
         ]
       );
       return { id: rows[0].id };
@@ -50,7 +52,8 @@ export function createPostgresCourseStore(client: Client): CourseStore {
         `update courses set
           title = $2, description = $3, price_amount = $4, price_currency = $5,
           rating = $6, level = $7, language = $8, instructor = $9,
-          affiliate_url = $10, image_url = $11, category = $12, updated_at = now()
+          affiliate_url = $10, image_url = $11, category = $12,
+          duration_min_minutes = $13, duration_max_minutes = $14, updated_at = now()
          where id = $1`,
         [
           id,
@@ -65,6 +68,8 @@ export function createPostgresCourseStore(client: Client): CourseStore {
           course.affiliateUrl,
           course.imageUrl,
           course.category,
+          course.durationMinMinutes,
+          course.durationMaxMinutes,
         ]
       );
     },

@@ -21,4 +21,7 @@ export interface NormalizedCourse {
   imageUrl: string | null;
   /** Categoría del vocabulario común (HU-010), no la etiqueta de la plataforma. */
   category: CourseCategory | null;
+  /** Duración total en minutos (HU-011). Rango, porque a menudo lo es. */
+  durationMinMinutes: number | null;
+  durationMaxMinutes: number | null;
 }

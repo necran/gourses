@@ -26,6 +26,8 @@ describe("normalizeCourseraCourse", () => {
       affiliateUrl: "https://www.coursera.org/learn/intro-a-python",
       imageUrl: "https://example.com/foto.jpg",
       category: null,
+      durationMinMinutes: null,
+      durationMaxMinutes: null,
     });
   });
 
