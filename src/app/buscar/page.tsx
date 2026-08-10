@@ -77,7 +77,9 @@ export default async function BuscarPage({ searchParams }: BuscarPageProps) {
                   {course.rating !== null && <span> · ⭐ {course.rating}</span>}
                   {course.language && <span> · {course.language}</span>}
                 </p>
-                {course.description && <p>{course.description}</p>}
+                {course.description && (
+                  <p className={styles.description}>{course.description}</p>
+                )}
               </div>
             </li>
           ))}

@@ -1,7 +1,19 @@
+/* Colores derivados del tema del sistema: la paleta fija sobre blanco dejaba
+   los metadatos invisibles en modo oscuro. */
 .main {
+  --borde: rgba(0, 0, 0, 0.12);
+  --texto-suave: rgba(0, 0, 0, 0.62);
+
   max-width: 960px;
   margin: 0 auto;
   padding: 2rem 1rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .main {
+    --borde: rgba(255, 255, 255, 0.16);
+    --texto-suave: rgba(255, 255, 255, 0.7);
+  }
 }
 
 .form {
@@ -22,9 +34,14 @@
 .card {
   display: flex;
   gap: 1rem;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--borde);
   border-radius: 8px;
   padding: 1rem;
+}
+
+.card h2 {
+  font-size: 1.1rem;
+  margin: 0 0 0.35rem;
 }
 
 .image {
@@ -36,6 +53,18 @@
 }
 
 .meta {
-  color: rgba(0, 0, 0, 0.6);
+  color: var(--texto-suave);
   font-size: 0.9rem;
+  margin: 0 0 0.5rem;
+}
+
+/* Las descripciones de Coursera son el texto completo del curso: sin recortar,
+   una sola ficha ocupaba varias pantallas. */
+.description {
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }

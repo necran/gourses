@@ -1,6 +1,8 @@
 // Esquema común de curso (HU-004) — toda fuente se normaliza a esto antes de
 // guardarse, para que el buscador y el comparador nunca conozcan el origen.
-export type CourseSource = "udemy" | "coursera";
+export const COURSE_SOURCES = ["udemy", "coursera"] as const;
+
+export type CourseSource = (typeof COURSE_SOURCES)[number];
 
 export interface NormalizedCourse {
   source: CourseSource;

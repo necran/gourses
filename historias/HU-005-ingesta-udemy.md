@@ -19,23 +19,40 @@ Ingesta de Coursera (`HU-006`). Programación del job como cron recurrente en pr
 
 ## Checklist de tests (obligatorio antes de cerrar)
 
-- [ ] Unitarios: función de normalización Udemy → esquema común, cubriendo un caso completo y uno con campos ausentes
-- [ ] Unitarios: lógica de detección de cambio de precio (dispara o no inserción en histórico)
-- [ ] Integración: ejecución del job contra la API real de Udemy (o su entorno de sandbox si lo ofrece) y contra Supabase de test, verificando que los datos quedan guardados correctamente
-- [ ] Integración: caso de error de API simulado (mock de fallo/cuota excedida) y comprobación de que el job se detiene sin dejar datos parciales
-- [ ] `/security-review`: la clave de API de Udemy solo se usa en el job (server-side), nunca llega al cliente/frontend
+- [x] Unitarios: función de normalización Udemy → esquema común, cubriendo un caso completo y uno con campos ausentes (`src/lib/ingesta/udemy/normalize.test.ts`)
+- [x] Unitarios: lógica de detección de cambio de precio (dispara o no inserción en histórico) (`src/lib/ingesta/upsert-course.test.ts`, reutilizada; verificada extremo a extremo en `tests/integration/udemy-ingest.test.ts`)
+- [x] Integración: ejecución del job contra la API real de Udemy y contra la BD de test, verificando que los datos quedan guardados correctamente (`tests/integration/udemy-ingest.test.ts`)
+- [x] Integración: caso de error de API simulado (fallo/cuota excedida) y comprobación de que el job se detiene sin dejar datos parciales (mismo fichero: caso 429 y caso de cambio de contrato)
+- [x] `/security-review`: sin hallazgos — credenciales solo en el entrypoint del job (nunca bajo `src/app/`), escritura con SQL parametrizado, y la URL de paginación que devuelve la API se valida contra el mismo origen antes de seguirla (`resolveApiUrl`, con tests propios)
 
-## Notas de implementación (pendiente)
+## Notas de implementación
 
-Acceso a catálogo verificado el 2026-08-10 con las credenciales aprobadas (ver la tabla de endpoints en `docs/checklist-alta-afiliados.md`). La ingesta tendrá dos pasos, porque el listado no trae precio:
+La ingesta tiene dos pasos, porque el listado no trae precio (ver la tabla de endpoints en `docs/checklist-alta-afiliados.md`):
 
-1. **Descubrimiento**: recorrer categorías (`/api-2.0/course-categories/`) y sus subcategorías, y para cada una paginar la unidad `bestseller` de `/api-2.0/discovery-units/`. De aquí salen ID, título, valoración, nivel, idioma, instructor e imagen.
+1. **Descubrimiento**: recorrer categorías (`/api-2.0/course-categories/`) y, opcionalmente, sus subcategorías; para cada ámbito, paginar su unidad de cursos de `/api-2.0/discovery-units/`. De aquí salen ID, título, valoración, nivel, idioma, instructor e imagen.
 2. **Detalle**: por cada ID, `GET /api-2.0/courses/{id}/` para obtener `price_detail` (importe + moneda), que es lo que alimenta `course_price_history`.
 
-Ojo: el endpoint de listado clásico `/api-2.0/courses/` devuelve 403 con credenciales válidas — no es un fallo de configuración, es que esa ruta concreta ya no está disponible para afiliados. No perder tiempo depurándolo.
+Ojo: el listado clásico `/api-2.0/courses/` devuelve 403 con credenciales válidas — no es un fallo de configuración, esa ruta ya no está disponible para afiliados. No perder tiempo depurándolo.
 
-Se reutiliza tal cual `src/lib/ingesta/upsert-course.ts` (upsert + histórico de precio) de `HU-006`, que se escribió justamente para esto.
+Decisiones que conviene no reaprender:
+
+- **No se replican a mano los parámetros internos de `discovery-units`** (`fl`, `sos`, `fft`…): cambian según el ámbito (`fl=cat` en categoría, `fl=scat` en subcategoría). Se sigue la URL que la propia API devuelve en cada unidad, añadiéndole `source_page`, `page` y `page_size`. Como esa URL viene de un tercero, `resolveApiUrl` exige que resuelva al mismo origen antes de seguirla — si no, las credenciales Basic viajarían a otro host.
+- **Un fallo del endpoint de detalle no descarta el curso**: se guarda con precio `null` y se anota en `failedCourses`. Perder un curso del catálogo es peor que no tener su precio en esa pasada.
+- **Deduplicación en memoria**: las unidades de distintas categorías se solapan, así que se lleva un `Set` de IDs vistos para no repetir la llamada de detalle.
+- Se reutiliza tal cual `src/lib/ingesta/upsert-course.ts` de `HU-006`, que se escribió justamente para esto.
+- `affiliate_url` guarda de momento la URL directa del curso, igual que en `HU-006`, a la espera de confirmar el formato del enlace de afiliado.
+
+Ejecución real (`npm run ingest:udemy`) contra la base de dev: 13 ámbitos, **312 cursos guardados, 0 fallos**, todos con precio, valoración, nivel, idioma e instructor.
+
+### Efectos colaterales detectados al tener por fin dos fuentes con datos
+
+- **Defecto de producto corregido**: el buscador ordenaba por valoración, y como Coursera no expone valoraciones (verificado: su API no tiene ese campo ni ninguna ruta de ratings), sus 100 cursos quedaban fuera de la primera página **en la portada y en toda búsqueda**. `searchCourses` ahora consulta una vez por fuente e intercala los resultados. Un comparador tiene que enseñar las dos plataformas.
+- **Tests de integración en serie**: `coursera-ingest` y `udemy-ingest` comparten `gourses_test` y limpian tablas entre casos; en paralelo se pisaban y provocaban fallos intermitentes (probablemente la causa de la "flakiness" que en `HU-006` se atribuyó a la beta de Coursera). `npm run test:integration` usa ahora `--no-file-parallelism`.
+- **Dos tests de `HU-007` estaban mal planteados** y solo se sostenían con un catálogo pequeño: uno asumía que las filas sembradas entraban en los 50 primeros resultados; otro, que filtrar por precio reduce el número de resultados (con 412 cursos ambas listas llegan al límite de página). Corregidos para comprobar lo que de verdad exige el criterio.
+- **CSS del buscador**: los metadatos usaban colores fijos sobre fondo claro y eran ilegibles en modo oscuro; además las descripciones de Coursera (texto completo del curso) hacían fichas de varias pantallas. Ahora la paleta sigue el tema del sistema y la descripción se recorta a 3 líneas.
+
+Pendiente para una historia futura: la API de Coursera sí expone `instructorIds`, `domainTypes` (categoría) y `workload` (duración), que hoy no se aprovechan — rellenarían el instructor (ahora `null`) y permitirían recuperar el filtro por categoría que se dejó fuera de `HU-007`.
 
 ## Estado
 
-Desbloqueada, pendiente de implementar — HU-004 (esquema) cerrada y credenciales de Udemy verificadas.
+Cerrada.

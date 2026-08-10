@@ -53,12 +53,18 @@ describeIfConfigured("HU-007 — searchCourses", () => {
     expect(titles).not.toContain("Curso de prueba HU-007: cocina italiana");
   });
 
-  it("combina precio máximo y valoración mínima con AND", async () => {
-    const filters = parseCourseSearchFilters({ maxPrice: "50", minRating: "4" });
+  // Se acota por palabra clave, como el resto de tests de este fichero: sin
+  // ella el resultado depende del tamaño del catálogo real (el orden es por
+  // valoración y hay límite), no de la lógica de filtros que se quiere probar.
+  it("combina palabra clave, precio máximo y valoración mínima con AND", async () => {
+    const filters = parseCourseSearchFilters({
+      keyword: "Curso de prueba HU-007",
+      maxPrice: "50",
+      minRating: "4",
+    });
     const results = await searchCourses(supabase, filters, 100);
-    const testResults = results.filter((r) => r.title.startsWith("Curso de prueba HU-007"));
 
-    expect(testResults.map((r) => r.title)).toEqual([
+    expect(results.map((r) => r.title)).toEqual([
       "Curso de prueba HU-007: introducción a Rust",
     ]);
   });
