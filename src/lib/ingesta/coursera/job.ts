@@ -38,7 +38,7 @@ export async function runCourseraIngestJob({
     for (const raw of catalogPage.elements) {
       result.processed += 1;
       try {
-        const normalized = normalizeCourseraCourse(raw);
+        const normalized = normalizeCourseraCourse(raw, catalogPage.linked);
         await upsertCourse(store, normalized);
         result.saved += 1;
       } catch (error) {

@@ -3,6 +3,11 @@ import { runCourseraIngestJob } from "./job";
 import type { CourseStore } from "../upsert-course";
 import * as fetchCatalog from "./fetch-catalog";
 
+// Página sin instructores ni instituciones que resolver.
+function sinEnlazados() {
+  return { instructors: new Map<string, string>(), partners: new Map<string, string>() };
+}
+
 function makeStore(): CourseStore {
   return {
     findBySourceAndSourceId: vi.fn().mockResolvedValue(null),
@@ -21,6 +26,7 @@ describe("runCourseraIngestJob", () => {
         { id: "3", slug: "c", name: "Curso C" },
       ],
       next: null,
+      linked: sinEnlazados(),
     });
 
     const store = makeStore();
@@ -52,8 +58,16 @@ describe("runCourseraIngestJob", () => {
   it("pagina hasta que no hay más páginas o se alcanza maxPages", async () => {
     const spy = vi
       .spyOn(fetchCatalog, "fetchCourseraCatalogPage")
-      .mockResolvedValueOnce({ elements: [{ id: "1", slug: "a", name: "Curso A" }], next: "2" })
-      .mockResolvedValueOnce({ elements: [{ id: "2", slug: "b", name: "Curso B" }], next: null });
+      .mockResolvedValueOnce({
+        elements: [{ id: "1", slug: "a", name: "Curso A" }],
+        next: "2",
+        linked: sinEnlazados(),
+      })
+      .mockResolvedValueOnce({
+        elements: [{ id: "2", slug: "b", name: "Curso B" }],
+        next: null,
+        linked: sinEnlazados(),
+      });
 
     const store = makeStore();
     const result = await runCourseraIngestJob({ baseUrl: "https://api.coursera.org", store });

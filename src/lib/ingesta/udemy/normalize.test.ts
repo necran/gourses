@@ -46,6 +46,7 @@ describe("normalizeUdemyCourse", () => {
       affiliateUrl:
         "https://www.udemy.com/course/ai-coder-from-vibe-coder-to-agentic-engineer/",
       imageUrl: "https://img-c.udemycdn.com/course/480x270/7053781_bd4d.jpg",
+      category: null,
     });
   });
 
@@ -65,6 +66,7 @@ describe("normalizeUdemyCourse", () => {
       instructor: null,
       affiliateUrl: "https://www.udemy.com/course/minimo/",
       imageUrl: null,
+      category: null,
     });
   });
 
@@ -106,6 +108,21 @@ describe("normalizeUdemyCourse", () => {
     expect(normalizeUdemyCourse(rawCompleto, null, BASE).affiliateUrl).toBe(
       "https://www.udemy.com/course/ai-coder-from-vibe-coder-to-agentic-engineer/"
     );
+  });
+
+  // HU-010: la categoría viene del ámbito que recorre la ingesta, no del curso.
+  it("mapea al vocabulario común la categoría del ámbito recorrido", () => {
+    expect(normalizeUdemyCourse(rawCompleto, null, BASE, "Development").category).toBe(
+      "desarrollo"
+    );
+    expect(normalizeUdemyCourse(rawCompleto, null, BASE, "Health & Fitness").category).toBe(
+      "salud-y-bienestar"
+    );
+  });
+
+  it("deja la categoría a null si el ámbito no se conoce o no se pasa", () => {
+    expect(normalizeUdemyCourse(rawCompleto, null, BASE, "Categoría Inventada").category).toBeNull();
+    expect(normalizeUdemyCourse(rawCompleto, null, BASE).category).toBeNull();
   });
 
   it("lanza un fallo puntual (no de contrato) si falta id, title o url", () => {

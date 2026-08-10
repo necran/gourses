@@ -1,4 +1,5 @@
 import type { NormalizedCourse } from "../../courses/schema";
+import { mapCourseraDomainTypes } from "../../courses/categories.ts";
 
 // La Catalog API de Coursera está en beta (ver .claude/rules/ingesta-fuentes.md):
 // si cambia de forma de manera incompatible, este error lo deja claro en vez
@@ -29,6 +30,39 @@ export interface CourseraRawCourse {
   description?: unknown;
   photoUrl?: unknown;
   primaryLanguages?: unknown;
+  domainTypes?: unknown;
+  instructorIds?: unknown;
+  partnerIds?: unknown;
+}
+
+// Nombres ya resueltos que acompañan a la página del catálogo (HU-010).
+export interface CourseraLinkedNames {
+  instructors: Map<string, string>;
+  partners: Map<string, string>;
+}
+
+// Coursera devuelve a veces instructores con nombre vacío. En ese caso se usa
+// la institución que imparte el curso ("Google Cloud", "Universidad X"), que
+// es una respuesta honesta a "quién lo imparte" y evita dejar el campo vacío
+// como pasaba antes de HU-010.
+function resolveInstructor(
+  raw: CourseraRawCourse,
+  linked: CourseraLinkedNames | null
+): string | null {
+  if (!linked) return null;
+
+  const nombres = (ids: unknown, index: Map<string, string>): string[] =>
+    Array.isArray(ids)
+      ? ids
+          .map((id) => (typeof id === "string" ? index.get(id) : undefined))
+          .filter((n): n is string => typeof n === "string" && n.length > 0)
+      : [];
+
+  const instructores = nombres(raw.instructorIds, linked.instructors);
+  if (instructores.length > 0) return instructores.join(", ");
+
+  const instituciones = nombres(raw.partnerIds, linked.partners);
+  return instituciones.length > 0 ? instituciones.join(", ") : null;
 }
 
 // Coursera no expone precio por curso individual en esta API (la mayoría del
@@ -38,7 +72,10 @@ export interface CourseraRawCourse {
 // El enlace de afiliado vía Impact.com todavía no está confirmado (ver
 // docs/checklist-alta-afiliados.md) — hasta entonces se guarda el enlace
 // directo al curso como placeholder, nunca un enlace inventado de tracking.
-export function normalizeCourseraCourse(raw: CourseraRawCourse): NormalizedCourse {
+export function normalizeCourseraCourse(
+  raw: CourseraRawCourse,
+  linked: CourseraLinkedNames | null = null
+): NormalizedCourse {
   if (typeof raw.id !== "string" || raw.id.length === 0) {
     throw new CourseraCourseValidationError("falta 'id' o no es un string");
   }
@@ -64,8 +101,9 @@ export function normalizeCourseraCourse(raw: CourseraRawCourse): NormalizedCours
     rating: null,
     level: null,
     language,
-    instructor: null,
+    instructor: resolveInstructor(raw, linked),
     affiliateUrl: `https://www.coursera.org/learn/${raw.slug}`,
     imageUrl: typeof raw.photoUrl === "string" ? raw.photoUrl : null,
+    category: mapCourseraDomainTypes(raw.domainTypes),
   };
 }

@@ -4,6 +4,7 @@ import { createSupabaseServerClient } from "../../../lib/supabase/server-client"
 import { getCourseById } from "../../../lib/courses/get-course";
 import { resolvePriceDisplay } from "../../../lib/courses/price-display";
 import { safeExternalUrl } from "../../../lib/courses/safe-external-url";
+import { CATEGORY_LABELS } from "../../../lib/courses/categories";
 import styles from "./page.module.css";
 
 interface CoursePageProps {
@@ -46,6 +47,7 @@ export default async function CoursePage({ params }: CoursePageProps) {
             <h1>{course.title}</h1>
             <p className={styles.fuente}>
               <span className={styles.etiqueta}>{course.source}</span>
+              {course.category && <span> · {CATEGORY_LABELS[course.category]}</span>}
               {course.rating !== null && <span> · ⭐ {course.rating}</span>}
               {course.level && <span> · {course.level}</span>}
               {course.language && <span> · {course.language}</span>}

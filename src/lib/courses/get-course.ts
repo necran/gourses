@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CourseSource } from "./schema";
+import type { CourseCategory } from "./categories";
 import type { PriceHistoryEntry } from "./price-display";
 
 export interface CourseDetail {
@@ -15,6 +16,7 @@ export interface CourseDetail {
   instructor: string | null;
   imageUrl: string | null;
   affiliateUrl: string | null;
+  category: CourseCategory | null;
   priceHistory: PriceHistoryEntry[];
 }
 
@@ -40,6 +42,7 @@ interface CourseRow {
   instructor: string | null;
   image_url: string | null;
   affiliate_url: string | null;
+  category: CourseCategory | null;
 }
 
 interface PriceHistoryRow {
@@ -63,7 +66,7 @@ export async function getCourseById(
   const { data, error } = await client
     .from("courses")
     .select(
-      "id, source, title, description, price_amount, price_currency, rating, level, language, instructor, image_url, affiliate_url"
+      "id, source, title, description, price_amount, price_currency, rating, level, language, instructor, image_url, affiliate_url, category"
     )
     .eq("id", id)
     .maybeSingle();
@@ -104,6 +107,7 @@ export async function getCourseById(
     instructor: row.instructor,
     imageUrl: row.image_url,
     affiliateUrl: row.affiliate_url,
+    category: row.category,
     priceHistory,
   };
 }

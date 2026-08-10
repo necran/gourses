@@ -44,19 +44,27 @@ export async function runUdemyIngestJob({
   const result: UdemyJobResult = { processed: 0, saved: 0, scopes: 0, failedCourses: [] };
 
   const categories = await api.fetchCategories(creds);
-  const scopes: UdemyScope[] = [];
+  // Cada ámbito arrastra el título de su categoría raíz: es lo que después se
+  // mapea al vocabulario común (HU-010). Una subcategoría hereda el de su
+  // categoría padre, porque el vocabulario común es de primer nivel.
+  const scopes: Array<{ scope: UdemyScope; categoryTitle: string }> = [];
 
   for (const category of categories) {
-    scopes.push({ kind: "category", id: category.id });
+    scopes.push({ scope: { kind: "category", id: category.id }, categoryTitle: category.title });
     if (includeSubcategories) {
       const subcategories = await api.fetchSubcategories(creds, category.id);
-      for (const sub of subcategories) scopes.push({ kind: "subcategory", id: sub.id });
+      for (const sub of subcategories) {
+        scopes.push({
+          scope: { kind: "subcategory", id: sub.id },
+          categoryTitle: category.title,
+        });
+      }
     }
   }
 
   const seen = new Set<string>();
 
-  for (const scope of scopes.slice(0, maxScopes)) {
+  for (const { scope, categoryTitle } of scopes.slice(0, maxScopes)) {
     const unitUrl = await api.fetchCourseUnitUrl(creds, scope);
     // Un ámbito sin unidad de cursos no es un error: simplemente no aporta nada.
     if (!unitUrl) continue;
@@ -81,7 +89,7 @@ export async function runUdemyIngestJob({
 
         try {
           const detail = await fetchDetailTolerantly(creds, rawId, result);
-          const normalized = normalizeUdemyCourse(raw, detail, creds.baseUrl);
+          const normalized = normalizeUdemyCourse(raw, detail, creds.baseUrl, categoryTitle);
           await upsertCourse(store, normalized);
           result.saved += 1;
         } catch (error) {

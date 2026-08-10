@@ -1,4 +1,5 @@
 import type { NormalizedCourse } from "../../courses/schema";
+import { mapUdemyCategory } from "../../courses/categories.ts";
 
 // Cambio de forma en la respuesta de la API (contrato roto): detiene el job,
 // igual que CourseraShapeError en HU-006.
@@ -111,7 +112,10 @@ function parsePrice(detail: UdemyRawDetail | null): {
 export function normalizeUdemyCourse(
   raw: UdemyRawCourse,
   detail: UdemyRawDetail | null,
-  baseUrl: string
+  baseUrl: string,
+  // Título de la categoría del ámbito que se está recorriendo: la ingesta ya
+  // va categoría a categoría (HU-005), así que la conoce sin pedir nada extra.
+  categoryTitle: string | null = null
 ): NormalizedCourse {
   if (typeof raw.id !== "number" || !Number.isFinite(raw.id)) {
     throw new UdemyCourseValidationError("falta 'id' o no es un número");
@@ -138,5 +142,6 @@ export function normalizeUdemyCourse(
     instructor: parseInstructor(raw),
     affiliateUrl: new URL(raw.url, baseUrl).toString(),
     imageUrl: firstString(raw.image_480x270, raw.image_240x135),
+    category: mapUdemyCategory(categoryTitle),
   };
 }

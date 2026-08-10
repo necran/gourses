@@ -37,6 +37,34 @@ test.describe("HU-008 — ficha de curso", () => {
     expect(await boton.getAttribute("target")).toBe("_blank");
   });
 
+  // HU-010: la ficha muestra la categoría del vocabulario común, con su
+  // etiqueta legible y no con el identificador interno.
+  test("la ficha muestra la categoría del curso", async ({ page }) => {
+    const databaseUrl = process.env.DATABASE_URL;
+    test.skip(!databaseUrl, "Requiere DATABASE_URL para sembrar el curso");
+
+    const client = new Client({ connectionString: databaseUrl });
+    await client.connect();
+    const sourceId = `zzz-hu010-e2e-${Date.now()}`;
+
+    try {
+      const { rows } = await client.query(
+        `insert into courses (source, source_id, title, category, affiliate_url)
+         values ('udemy', $1, 'Curso HU-010 con categoría', 'datos-e-ia', 'https://www.udemy.com/course/hu010/')
+         returning id`,
+        [sourceId]
+      );
+
+      await page.goto(`/curso/${rows[0].id}`);
+
+      await expect(page.locator("main")).toContainText("Datos e IA");
+      await expect(page.locator("main")).not.toContainText("datos-e-ia");
+    } finally {
+      await client.query(`delete from courses where source_id = $1`, [sourceId]);
+      await client.end();
+    }
+  });
+
   // Cuarto criterio de aceptación. No hay ninguna bajada de precio real en el
   // catálogo ingerido todavía, así que se siembra una y se limpia después
   // (misma excepción documentada en .claude/rules/testing.md que en HU-007).

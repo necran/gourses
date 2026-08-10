@@ -148,6 +148,7 @@ describeIfConfigured("HU-005 — ingesta de Udemy", () => {
       instructor: null,
       affiliateUrl: null,
       imageUrl: null,
+      category: null,
     });
 
     const { rows } = await client.query(
