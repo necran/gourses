@@ -39,9 +39,15 @@ Hallazgo que condiciona el diseño: el programa de afiliados de **Udemy también
 
 ## Estado
 
-Bloqueada por gestión externa, con el diagnóstico ya cerrado (2026-08-10). La cuenta de Impact existe y las credenciales autentican (`IMPACT_ACCOUNT_SID` + `IMPACT_API_TOKEN` ya en `.env.local`), pero faltan dos cosas, ninguna de código:
+Aparcada hasta la **Fase 6** (despliegue). No por falta de trabajo de código, sino porque es prematura.
 
-1. **Permisos del token**: `Programs`, `TrackingLinks` y `MediaPartnerProperties` devuelven `403`. Se habilitan en la pestaña *Scopes* del token en el panel de Impact.
-2. **Ninguna asociación aprobada**: `Campaigns` devuelve `@total: 0`. Sin un programa aprobado no hay a qué generar enlaces, aunque los permisos estuvieran puestos.
+Diagnóstico cerrado el 2026-08-10: la cuenta de Impact existe, las credenciales autentican y **los permisos del token están correctos** (Campaigns, Media Properties y Tracking Links activados). Pero la cuenta está vacía: `MediaProperties` y `Campaigns` devuelven `total: 0`.
 
-El punto 2 es el bloqueo de fondo y depende de que la plataforma apruebe la solicitud. Ver la tabla de endpoints en `docs/checklist-alta-afiliados.md`.
+Faltan, en este orden y todo fuera de nuestro control:
+
+1. Dar de alta la web como *media property* — además, su id es parámetro obligatorio para crear enlaces de tracking.
+2. Solicitar los programas y que la plataforma los apruebe.
+
+Y el motivo de fondo para aparcarla: **las redes de afiliación aprueban en función de un sitio publicado**. Mientras el proyecto corra en local, una solicitud apuntando a `localhost` se rechaza. Por eso el orden correcto es Fase 6 → alta de propiedad → solicitud → esta historia.
+
+Mientras tanto, `affiliate_url` sigue guardando la URL directa del curso, que funciona para el usuario aunque no genere comisión.
