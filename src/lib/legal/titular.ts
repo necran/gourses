@@ -2,12 +2,9 @@
 // la LSSI-CE. Se centralizan aquí para que el aviso legal no dependa de texto
 // suelto repartido por las páginas.
 //
-// PENDIENTE: `nombre` y `nif` los debe rellenar el titular con sus datos
-// reales. Mientras estén vacíos, el aviso legal lo advierte de forma visible
-// en vez de publicar datos inventados.
 export const TITULAR = {
-  nombre: "",
-  nif: "",
+  nombre: "Rubén García Alcántara",
+  nif: "51470645A",
   email: "hola@gourses.com",
   sitio: "gourses.com",
   url: "https://gourses.com",

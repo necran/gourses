@@ -48,10 +48,10 @@ Auditoría de lo que la web trata **hoy** (2026-08-10), para no publicar una pol
 
 ## Pendiente
 
-- **Nombre y NIF del titular** en `src/lib/legal/titular.ts`: son datos reales que solo puede aportar el titular. Sin ellos el sitio no debería operar comercialmente.
+- ~~Nombre y NIF del titular~~ — completados el 2026-08-11. Se verificó además que el dígito de control del NIF es correcto.
 - **Crear el buzón `hola@gourses.com`** en IONOS (el plan incluye dos cuentas). Ya figura como contacto en las tres páginas.
 - **Revisión por un profesional del derecho** antes de operar con ingresos: estos textos son un borrador razonado, no asesoramiento legal.
 
 ## Estado
 
-Cerrada en lo que depende del código. Los dos datos del titular quedan como tarea manual, señalizada en la propia web.
+Cerrada.
