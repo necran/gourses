@@ -39,15 +39,17 @@ Hallazgo que condiciona el diseño: el programa de afiliados de **Udemy también
 
 ## Estado
 
-Aparcada hasta la **Fase 6** (despliegue). No por falta de trabajo de código, sino porque es prematura.
+Bloqueada, esperando respuesta externa. **Solicitud a Coursera enviada el 2026-08-11 y en revisión** ("In Review" en el panel de Impact).
 
-Diagnóstico cerrado el 2026-08-10: la cuenta de Impact existe, las credenciales autentican y **los permisos del token están correctos** (Campaigns, Media Properties y Tracking Links activados). Pero la cuenta está vacía: `MediaProperties` y `Campaigns` devuelven `total: 0`.
+Lo que ya está resuelto por nuestra parte:
 
-Faltan, en este orden y todo fuera de nuestro control:
+- Cuenta de Impact operativa: `IMPACT_ACCOUNT_SID` + `IMPACT_API_TOKEN` en `.env.local`, con los permisos correctos (Campaigns, Media Properties y Tracking Links activados).
+- Dominio verificado ante Impact mediante meta tag en `gourses.com` (ver `src/app/layout.tsx`). Se eligió ese método y **no** el script de seguimiento que Impact ofrece, porque ese script es un rastreador de terceros y la política de privacidad publicada afirma que el sitio no usa ninguno.
+- Sitio publicado, con dominio propio, páginas legales y divulgación de afiliación visible junto a cada enlace de salida — que es lo que las redes revisan antes de aprobar.
 
-1. Dar de alta la web como *media property* — además, su id es parámetro obligatorio para crear enlaces de tracking.
-2. Solicitar los programas y que la plataforma los apruebe.
+Lo que falta, y no depende de nosotros:
 
-Y el motivo de fondo para aparcarla: **las redes de afiliación aprueban en función de un sitio publicado**. Mientras el proyecto corra en local, una solicitud apuntando a `localhost` se rechaza. Por eso el orden correcto es Fase 6 → alta de propiedad → solicitud → esta historia.
+1. Que Coursera apruebe la asociación. Hasta entonces `Campaigns` sigue devolviendo `total: 0` y no hay programa al que generar enlaces.
+2. Solicitar también el programa de **Udemy** dentro de Impact, una vez se confirme que la mecánica funciona con el primero.
 
-Mientras tanto, `affiliate_url` sigue guardando la URL directa del curso, que funciona para el usuario aunque no genere comisión.
+Cuando llegue la aprobación, quedan por descubrir por API el `ProgramId` y el `MediaPartnerPropertyId`, y entonces ya se puede implementar la historia. Ojo al aviso de las notas de investigación: Impact limita a 5000 los enlaces de tracking por programa, así que conviene comprobar antes si el deeplink admite construcción directa por URL en vez de crear un enlace por curso.
