@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createSupabaseServerClient } from "../../../lib/supabase/server-client";
@@ -6,10 +7,40 @@ import { resolvePriceDisplay } from "../../../lib/courses/price-display";
 import { safeExternalUrl } from "../../../lib/courses/safe-external-url";
 import { CATEGORY_LABELS } from "../../../lib/courses/categories";
 import { formatDuration } from "../../../lib/courses/duration";
+import {
+  courseDescription,
+  courseStructuredData,
+  courseTitle,
+  serializeStructuredData,
+} from "../../../lib/courses/course-seo";
+import { TITULAR } from "../../../lib/legal/titular";
 import styles from "./page.module.css";
 
 interface CoursePageProps {
   params: Promise<{ id: string }>;
+}
+
+// Cada ficha lleva su propio título y descripción: son la puerta de entrada
+// desde los buscadores y, si se repiten, Google no puede distinguirlas
+// (HU-016). Si el curso no existe, se devuelven metadatos neutros porque la
+// página resultante será la de "no encontrado".
+export async function generateMetadata({ params }: CoursePageProps): Promise<Metadata> {
+  const { id } = await params;
+  const course = await getCourseById(createSupabaseServerClient(), id);
+
+  if (!course) return { title: "Curso no encontrado" };
+
+  return {
+    title: courseTitle(course),
+    description: courseDescription(course),
+    alternates: { canonical: `/curso/${course.id}` },
+    openGraph: {
+      title: courseTitle(course),
+      description: courseDescription(course),
+      type: "article",
+      images: course.imageUrl ? [course.imageUrl] : undefined,
+    },
+  };
 }
 
 function formatPrice(amount: number, currency: string | null): string {
@@ -32,8 +63,16 @@ export default async function CoursePage({ params }: CoursePageProps) {
   );
   const enlace = safeExternalUrl(course.affiliateUrl);
 
+  const datosEstructurados = courseStructuredData(course, `${TITULAR.url}/curso/${course.id}`);
+
   return (
     <main className={styles.main}>
+      {/* Datos estructurados para que el buscador entienda que esto describe un
+          curso concreto. Solo declara lo que se sabe (ver course-seo.ts). */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: serializeStructuredData(datosEstructurados) }}
+      />
       <p className={styles.volver}>
         <Link href="/buscar">← Volver a la búsqueda</Link>
       </p>
