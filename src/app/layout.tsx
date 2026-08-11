@@ -39,7 +39,7 @@ export const metadata: Metadata = {
 // públicamente en el HTML de la página.
 const IMPACT_SITE_VERIFICATION = {
   name: "impact-site-verification",
-  value: "7f907677-a607-4db3-8883-0dce525ba420",
+  value: "bf503000-b8c1-4934-941d-22d877e85818",
 } as unknown as React.MetaHTMLAttributes<HTMLMetaElement>;
 
 export default function RootLayout({
