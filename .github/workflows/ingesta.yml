@@ -1,0 +1,60 @@
+# Ingesta programada del catálogo (HU-015).
+#
+# Vive aquí y no en el hosting porque el job de Udemy encadena más de 300
+# peticiones y tarda minutos: las funciones serverless cortan a los 10–30
+# segundos y lo matarían a medias.
+name: Ingesta de catálogo
+
+on:
+  schedule:
+    # 04:17 UTC: madrugada en España y fuera de las horas en punto, que es
+    # cuando GitHub acumula picos de trabajos programados.
+    - cron: "17 4 * * *"
+  # Permite lanzarla a mano desde la pestaña Actions para comprobarla sin esperar.
+  workflow_dispatch:
+
+# Solo necesita leer el código; no escribe nada en el repositorio.
+permissions:
+  contents: read
+
+concurrency:
+  # Si una ejecución se alarga, no se solapa con la siguiente escribiendo
+  # sobre la misma base.
+  group: ingesta
+  cancel-in-progress: false
+
+jobs:
+  ingesta:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    env:
+      # La conexión directa de Supabase es solo IPv6; se usa el pooler.
+      DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+      UDEMY_CLIENT_ID: ${{ secrets.UDEMY_CLIENT_ID }}
+      UDEMY_CLIENT_SECRET: ${{ secrets.UDEMY_CLIENT_SECRET }}
+      UDEMY_AFFILIATE_API_BASE_URL: https://www.udemy.com
+      COURSERA_CATALOG_API_BASE_URL: https://api.coursera.org
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # Los scripts ejecutan TypeScript directamente con Node.
+          node-version: "24"
+          cache: npm
+
+      - run: npm ci
+
+      # Cada fuente en su paso: si una plataforma falla, la otra se ingiere
+      # igualmente en vez de perderse la actualización entera.
+      - name: Ingesta de Udemy
+        run: node scripts/ingest-udemy.mjs
+
+      - name: Ingesta de Coursera
+        # Se ejecuta aunque Udemy haya fallado, pero no si se cancela el flujo.
+        if: ${{ !cancelled() }}
+        env:
+          COURSERA_MAX_PAGES: "1"
+        run: node scripts/ingest-coursera.mjs
