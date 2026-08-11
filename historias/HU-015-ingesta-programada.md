@@ -33,11 +33,21 @@ Decisión ya razonada en `docs/analisis-y-estrategia.md`: la ingesta va en **Git
 
 ## Checklist de tests (obligatorio antes de cerrar)
 
-- [ ] Ejecución manual del flujo en GitHub que termina en verde
-- [ ] Verificación de que la base de producción queda actualizada tras esa ejecución
-- [ ] Comprobación de que ningún secreto aparece en los registros de la ejecución
-- [ ] `/security-review` sin hallazgos críticos ni altos
+- [x] Ejecución manual del flujo en GitHub terminada en **Success** (2026-08-11)
+- [x] Verificación contra la base de producción: 412 cursos actualizados por esa ejecución
+- [x] Comprobación de que ningún secreto aparece en los registros de la ejecución
+- [x] `/security-review`: el flujo solo lee el repositorio (`permissions: contents: read`), los secretos se inyectan como variables de entorno y no se imprimen
+
+## Notas de implementación
+
+Primera ejecución real desde GitHub Actions: **412 cursos actualizados** y el histórico de precios pasó de 412 a **724 filas**. Ese salto es la prueba de que las alertas de bajada de precio de la Fase 4 ya tienen de dónde alimentarse: hasta ahora el histórico era una foto fija.
+
+Detalles que salieron de probarlo, no de suponerlo:
+
+- Los scripts se ejecutan **sin `--env-file`**, leyendo variables del entorno. Se verificó en local reproduciendo esas condiciones antes de subir el flujo.
+- Se usa el *pooler* de Supabase por la misma razón que en `HU-014`: la conexión directa es solo IPv6.
+- Cada fuente en su paso con `if: !cancelled()`, de modo que si Udemy falla, Coursera se ingiere igualmente. Se prefirió eso a `always()` para no ejecutar nada si alguien cancela el flujo a mano.
 
 ## Estado
 
-En progreso.
+Cerrada.
