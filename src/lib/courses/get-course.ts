@@ -59,6 +59,55 @@ function toNumber(value: number | string | null): number | null {
   return value === null ? null : Number(value);
 }
 
+function mapRow(row: CourseRow): Omit<CourseDetail, "priceHistory"> {
+  return {
+    id: row.id,
+    source: row.source,
+    title: row.title,
+    description: row.description,
+    priceAmount: toNumber(row.price_amount),
+    priceCurrency: row.price_currency,
+    rating: toNumber(row.rating),
+    level: row.level,
+    language: row.language,
+    instructor: row.instructor,
+    imageUrl: row.image_url,
+    affiliateUrl: row.affiliate_url,
+    category: row.category,
+    duration:
+      row.duration_min_minutes === null || row.duration_max_minutes === null
+        ? null
+        : { minMinutes: row.duration_min_minutes, maxMinutes: row.duration_max_minutes },
+  };
+}
+
+const CAMPOS_CURSO =
+  "id, source, title, description, price_amount, price_currency, rating, level, language, instructor, image_url, affiliate_url, category, duration_min_minutes, duration_max_minutes";
+
+// Recupera varios cursos de una vez para el comparador (HU-017). Los ids ya
+// vienen validados por parseCompareIds, pero se vuelven a filtrar aquí porque
+// esta función es pública y no debe fiarse de quien la llame.
+//
+// Los ids que no existen simplemente no aparecen en el resultado: un enlace
+// compartido con un curso retirado debe seguir comparando los demás. El orden
+// devuelto respeta el de los ids pedidos, que es el que ve el usuario.
+export async function getCoursesByIds(
+  client: SupabaseClient,
+  ids: string[]
+): Promise<Array<Omit<CourseDetail, "priceHistory">>> {
+  const validos = ids.filter(isValidCourseId);
+  if (validos.length === 0) return [];
+
+  const { data, error } = await client.from("courses").select(CAMPOS_CURSO).in("id", validos);
+
+  if (error) {
+    throw new Error(`Fallo al leer los cursos: ${error.message}`);
+  }
+
+  const porId = new Map((data as CourseRow[] | null ?? []).map((r) => [r.id, mapRow(r)]));
+  return validos.map((id) => porId.get(id)).filter((c): c is Omit<CourseDetail, "priceHistory"> => !!c);
+}
+
 // Lee un curso y su histórico de precio vía PostgREST/anon, respetando la RLS
 // de lectura pública de HU-004. Devuelve null si el id no es válido o no existe.
 export async function getCourseById(

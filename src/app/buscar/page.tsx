@@ -3,6 +3,7 @@ import { createSupabaseServerClient } from "../../lib/supabase/server-client";
 import { parseCourseSearchFilters, type RawSearchParams } from "../../lib/courses/search-filters";
 import { searchCourses } from "../../lib/courses/search-courses";
 import { formatDuration } from "../../lib/courses/duration";
+import { MAX_COMPARADOS } from "../../lib/courses/compare";
 import styles from "./page.module.css";
 
 interface BuscarPageProps {
@@ -59,9 +60,28 @@ export default async function BuscarPage({ searchParams }: BuscarPageProps) {
       {results.length === 0 ? (
         <p role="status">No se han encontrado cursos con esos criterios.</p>
       ) : (
+        // Formulario aparte del de filtros (no se pueden anidar). Envía por GET
+        // a /comparar, así que la comparación queda en la dirección y se puede
+        // compartir, y funciona sin JavaScript de cliente (HU-017).
+        <form method="get" action="/comparar">
+        <div className={styles.barraComparar}>
+          <button type="submit" className={styles.botonComparar}>
+            Comparar seleccionados
+          </button>
+          <span className={styles.ayudaComparar}>
+            Marca de 2 a {MAX_COMPARADOS} cursos
+          </span>
+        </div>
         <ul className={styles.results}>
           {results.map((course) => (
             <li key={course.id} className={styles.card}>
+              <input
+                type="checkbox"
+                name="ids"
+                value={course.id}
+                className={styles.casilla}
+                aria-label={`Seleccionar ${course.title} para comparar`}
+              />
               {course.imageUrl && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={course.imageUrl} alt="" className={styles.image} />
@@ -91,6 +111,7 @@ export default async function BuscarPage({ searchParams }: BuscarPageProps) {
             </li>
           ))}
         </ul>
+        </form>
       )}
     </main>
   );

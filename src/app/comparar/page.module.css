@@ -1,0 +1,129 @@
+.main {
+  --borde: rgba(0, 0, 0, 0.12);
+  --texto-suave: rgba(0, 0, 0, 0.62);
+  --fondo-suave: rgba(0, 0, 0, 0.04);
+  --acento: #6d28d9;
+
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2.5rem 1rem 3rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .main {
+    --borde: rgba(255, 255, 255, 0.16);
+    --texto-suave: rgba(255, 255, 255, 0.7);
+    --fondo-suave: rgba(255, 255, 255, 0.06);
+    --acento: #8b5cf6;
+  }
+}
+
+.volver {
+  margin: 0 0 1.5rem;
+  font-size: 0.9rem;
+}
+
+.main h1 {
+  font-size: 1.7rem;
+  margin: 0 0 0.5rem;
+}
+
+.intro,
+.divulgacion {
+  color: var(--texto-suave);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.intro {
+  margin: 0 0 1.5rem;
+}
+
+.divulgacion {
+  margin-top: 1.5rem;
+}
+
+.aviso {
+  border: 1px solid var(--borde);
+  background: var(--fondo-suave);
+  border-radius: 8px;
+  padding: 1rem 1.2rem;
+  line-height: 1.6;
+}
+
+/* La tabla puede no caber en móvil: se desplaza ella sola en vez de
+   desbordar la página entera. */
+.tablaContenedor {
+  overflow-x: auto;
+}
+
+.tabla {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 34rem;
+}
+
+.tabla th,
+.tabla td {
+  border: 1px solid var(--borde);
+  padding: 0.7rem 0.9rem;
+  text-align: left;
+  vertical-align: top;
+  font-size: 0.95rem;
+}
+
+.esquina {
+  background: transparent;
+  border: none !important;
+}
+
+.cabeceraCurso {
+  background: var(--fondo-suave);
+  font-size: 0.95rem;
+  line-height: 1.35;
+  min-width: 11rem;
+}
+
+.cabeceraCurso a {
+  color: inherit;
+}
+
+.etiqueta {
+  background: var(--fondo-suave);
+  white-space: nowrap;
+  width: 1%;
+}
+
+/* Un hueco debe leerse como hueco, nunca confundirse con un cero. */
+.sinDato {
+  color: var(--texto-suave);
+  font-style: italic;
+  font-size: 0.9rem;
+}
+
+.boton {
+  display: inline-block;
+  padding: 0.5rem 0.9rem;
+  border-radius: 6px;
+  background: var(--acento);
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.boton:hover {
+  filter: brightness(1.1);
+}
+
+.oculto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
