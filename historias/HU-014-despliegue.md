@@ -44,6 +44,25 @@ El alojamiento web de IONOS no se usa: no soporta Node.js. De IONOS solo se apro
 - [ ] Comprobación de que ninguna credencial de servidor aparece en el HTML ni en el JavaScript servido al navegador
 - [ ] `/security-review` sin hallazgos críticos ni altos
 
+## Notas de implementación
+
+- **Base de datos**: proyecto `gourses` en Supabase Cloud (`eu-west-1`), separado del proyecto de finanzas que ya existía en la misma cuenta. Se comprobó antes de tocar nada: aquel tenía tablas de banca en producción y aplicar ahí las migraciones habría sido un destrozo.
+- **Conexión**: hay que usar el *pooler* (`aws-1-eu-west-1.pooler.supabase.com:5432`). La conexión directa de Supabase es **solo IPv6** y no se alcanza desde una red IPv4 normal. El host del pooler se encontró probando variantes; el que aparece por defecto en la documentación (`aws-0-…`) devuelve "tenant not found".
+- **Puerto 5432 y no 6543**: el 6543 es el pooler en modo transacción y no admite sentencias preparadas, que es lo que necesitan las migraciones y los jobs.
+- **Seguridad verificada de extremo a extremo** contra la base real: `SELECT` anónimo devuelve 200, `INSERT` anónimo devuelve 401 por RLS.
+- Las variables `NEXT_PUBLIC_*` se incrustan **en tiempo de compilación**, así que tras configurarlas en Netlify hay que relanzar el despliegue; no basta con guardarlas.
+- Visibilidad: producción pública y previsualizaciones privadas, para que el trabajo sin terminar no sea accesible ni indexable.
+
+### El escollo del DNS en IONOS (para no repetirlo)
+
+Editar el registro `A` desde el panel DNS **fallaba en silencio**: el formulario aceptaba el cambio, mostraba la vista previa correcta, y al guardar no pasaba nada. Ni error ni aviso. Se comprobó consultando el servidor autoritativo directamente, no solo el panel.
+
+La causa no era el aviso de "confirme su correo" (primera hipótesis, equivocada), sino que los registros `A` y `AAAA` pertenecían al servicio **"Default Site"** de IONOS. Los registros gestionados por un servicio no se pueden editar sueltos.
+
+La solución: en el panel DNS, acción **"Desactivar servicio"** sobre ese registro. Desactiva solo `A`, `AAAA` y un `TXT` de IONOS — **no toca MX, SPF, DKIM ni DMARC**, así que el correo del dominio sigue funcionando. Después ya se pueden añadir los registros propios con normalidad.
+
+Registros finales: `A @` y `A www` → `75.2.60.5`, sin `AAAA`. Se eliminó el `AAAA` a propósito: si se deja apuntando a IONOS, quien navegue por IPv6 seguiría llegando al servidor antiguo aunque el resto esté bien configurado.
+
 ## Estado
 
-En progreso — configuración preparada; pendiente de crear el proyecto en Supabase Cloud y conectar el repositorio en Netlify.
+Cerrada en lo que depende de la configuración. El certificado HTTPS lo emite Netlify automáticamente cuando termine de propagarse el DNS (el TTL anterior era de una hora).
