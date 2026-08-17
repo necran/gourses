@@ -54,6 +54,14 @@ export default function Privacidad() {
         hacerlo la fila se borra.
       </p>
 
+      <h3>Avisos de bajada de precio</h3>
+      <p>
+        Si tienes cursos en favoritos, te escribimos cuando alguno baja de precio. Solo eso:
+        un correo por bajada, nunca publicidad ni cursos que no hayas guardado. Puedes
+        desactivarlos en <Link href="/mi-cuenta">Mi cuenta</Link>, y quitar un curso de
+        favoritos también corta sus avisos. Cada correo lleva ambas indicaciones.
+      </p>
+
       <h3>Para qué y con qué base jurídica</h3>
       <p>
         Únicamente para identificarte y poder asociarte lo que guardes en el sitio. La base

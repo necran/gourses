@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getUsuarioActual } from "../../lib/supabase/session-client";
+import { createSupabaseSessionClient, getUsuarioActual } from "../../lib/supabase/session-client";
+import { avisosActivados } from "../../lib/alertas/preferencias";
 import { cerrarSesion } from "../acceder/actions";
 import { BorrarCuentaForm } from "./borrar-form";
+import { AvisosForm } from "./avisos-form";
 import styles from "./page.module.css";
 
 export const metadata: Metadata = {
@@ -17,6 +19,9 @@ export default async function MiCuentaPage() {
   // Sin sesión no se muestra un error, se lleva a acceder: es lo que la
   // persona necesita hacer a continuación.
   if (!usuario) redirect("/acceder");
+
+  const client = await createSupabaseSessionClient();
+  const avisos = await avisosActivados(client);
 
   return (
     <main className={styles.main}>
@@ -33,6 +38,8 @@ export default async function MiCuentaPage() {
       <p className={styles.nota}>
         <Link href="/favoritos">Ver mis favoritos</Link>
       </p>
+
+      <AvisosForm activados={avisos} />
 
       <form action={cerrarSesion}>
         <button type="submit" className={styles.boton}>

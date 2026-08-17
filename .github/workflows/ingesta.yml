@@ -58,3 +58,16 @@ jobs:
         env:
           COURSERA_MAX_PAGES: "1"
         run: node scripts/ingest-coursera.mjs
+
+      # Va después de la ingesta a propósito: primero se actualizan los precios,
+      # luego se mira quién tenía guardado algo que ha bajado (HU-021).
+      #
+      # Sin RESEND_API_KEY el job corre igual y registra los avisos que mandaría
+      # en vez de enviarlos, así que este paso es seguro antes de dar de alta el
+      # correo. Para encenderlo basta con crear el secreto.
+      - name: Avisos de bajada de precio
+        if: ${{ !cancelled() }}
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_FROM: ${{ secrets.RESEND_FROM }}
+        run: node scripts/alertas-precio.mjs

@@ -75,3 +75,27 @@
 @media (prefers-color-scheme: dark) {
   .zonaPeligro { --peligro: #f87171; }
 }
+
+.seccion { margin-top: 2.5rem; }
+.seccion h2 { font-size: 1.1rem; margin: 0 0 0.5rem; }
+
+.formularioAvisos {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.casilla {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.guardado {
+  margin: 0.7rem 0 0;
+  font-size: 0.9rem;
+  color: var(--acento);
+}

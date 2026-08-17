@@ -1,8 +1,44 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createSupabaseSessionClient } from "../../lib/supabase/session-client";
 import { confirmacionCoincide } from "../../lib/auth/borrado";
+import { guardarPreferenciaAvisos } from "../../lib/alertas/preferencias";
+
+export interface AvisosEstado {
+  guardado?: boolean;
+  activados?: boolean;
+}
+
+// Activa o desactiva los avisos de bajada de precio (HU-021).
+//
+// El valor llega de una casilla del formulario, pero de quién es la preferencia
+// no: eso sale de la sesión verificada. Así el formulario no puede tocar la de
+// otra persona, y la RLS lo impediría igualmente.
+//
+// Devuelve estado en vez de no devolver nada para poder confirmar en pantalla
+// que se guardó. Sin esa confirmación, pulsar «Guardar» no produce ningún
+// cambio visible y no hay forma de saber si surtió efecto.
+export async function cambiarAvisos(
+  _previo: AvisosEstado,
+  formData: FormData
+): Promise<AvisosEstado> {
+  const client = await createSupabaseSessionClient();
+  const {
+    data: { user },
+  } = await client.auth.getUser();
+
+  if (!user) redirect("/acceder");
+
+  // Una casilla sin marcar no se envía: su ausencia es el "no".
+  const activados = formData.get("avisos") !== null;
+
+  await guardarPreferenciaAvisos(client, user.id, activados);
+  revalidatePath("/mi-cuenta");
+
+  return { guardado: true, activados };
+}
 
 export interface BorradoEstado {
   error?: string;
