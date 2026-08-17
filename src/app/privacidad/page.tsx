@@ -80,10 +80,12 @@ export default function Privacidad() {
         </li>
       </ul>
 
-      <h3>Cuánto tiempo</h3>
+      <h3>Cuánto tiempo, y cómo borrarlo</h3>
       <p>
-        Mientras tengas la cuenta. Si pides que la borremos, se elimina tu correo y todo lo
-        asociado a él.
+        Mientras tengas la cuenta. Puedes borrarla tú mismo cuando quieras desde{" "}
+        <Link href="/mi-cuenta">Mi cuenta</Link>: se elimina tu correo y tus favoritos, sin
+        vuelta atrás y sin que quede ninguna copia. No hace falta que nos escribas ni que
+        esperes a que alguien te atienda.
       </p>
 
       <h2>Lo que sí ocurre</h2>

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getUsuarioActual } from "../../lib/supabase/session-client";
 import { cerrarSesion } from "../acceder/actions";
+import { BorrarCuentaForm } from "./borrar-form";
 import styles from "./page.module.css";
 
 export const metadata: Metadata = {
@@ -38,6 +39,8 @@ export default async function MiCuentaPage() {
           Cerrar sesión
         </button>
       </form>
+
+      <BorrarCuentaForm correo={usuario.email ?? ""} />
 
       <p className={styles.enlaces}>
         <Link href="/buscar">Buscar cursos</Link> · <Link href="/privacidad">Privacidad</Link>

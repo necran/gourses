@@ -31,3 +31,47 @@
   cursor: pointer;
 }
 .boton:hover { background: rgba(127, 127, 127, 0.12); }
+
+/* Separada del resto y con marca de peligro: lo que hay aquí no se deshace. */
+.zonaPeligro {
+  --peligro: #b91c1c;
+
+  margin-top: 3rem;
+  padding: 1.2rem;
+  border: 1px solid var(--peligro);
+  border-radius: 8px;
+}
+
+.zonaPeligro h2 { font-size: 1.1rem; margin: 0 0 0.6rem; color: var(--peligro); }
+.aviso { margin: 0 0 1rem; line-height: 1.6; font-size: 0.93rem; }
+
+.etiqueta { display: block; margin-bottom: 0.4rem; font-size: 0.9rem; }
+
+.campo {
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font-size: 0.95rem;
+  margin-bottom: 0.8rem;
+}
+
+.error { color: var(--peligro); font-size: 0.88rem; margin: 0 0 0.8rem; }
+
+.botonPeligro {
+  padding: 0.6rem 1.1rem;
+  border: 1px solid var(--peligro);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--peligro);
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+.botonPeligro:hover { background: rgba(185, 28, 28, 0.1); }
+.botonPeligro:disabled { opacity: 0.6; cursor: default; }
+
+@media (prefers-color-scheme: dark) {
+  .zonaPeligro { --peligro: #f87171; }
+}
