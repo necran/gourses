@@ -129,3 +129,12 @@ Los dos tienen test, y se comprobó que **fallan con el código anterior**.
 - Un precio objetivo por curso («avísame si baja de 15 €»).
 - Agrupar varias bajadas del mismo día en un solo correo, si llega a molestar.
 - Los cursos de Coursera no tienen precio, así que nunca generan avisos.
+
+## Nota del analizador de Supabase (revisado, no es un fallo)
+
+`supabase db advisors --type security` marca en producción un WARN:
+`borrar_mi_cuenta()` es una función `security definer` ejecutable por usuarios
+identificados. Es exactamente su razón de ser —el propio aviso dice «si no es
+intencionado»—, y lo que la hace segura está comprobado aparte: no acepta
+argumentos, el borrado va atado a `auth.uid()` y tiene `search_path=""`. Ninguna
+otra alerta.

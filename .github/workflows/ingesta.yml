@@ -35,6 +35,11 @@ jobs:
       UDEMY_CLIENT_SECRET: ${{ secrets.UDEMY_CLIENT_SECRET }}
       UDEMY_AFFILIATE_API_BASE_URL: https://www.udemy.com
       COURSERA_CATALOG_API_BASE_URL: https://api.coursera.org
+      # Se declara a nivel de job —y no solo en su paso— porque el contexto
+      # `secrets` no está disponible en el `if` de un paso, pero `env` sí. Es lo
+      # que permite saltarse los avisos mientras no exista la clave.
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      RESEND_FROM: ${{ secrets.RESEND_FROM }}
 
     steps:
       - uses: actions/checkout@v4
@@ -65,9 +70,10 @@ jobs:
       # Sin RESEND_API_KEY el job corre igual y registra los avisos que mandaría
       # en vez de enviarlos, así que este paso es seguro antes de dar de alta el
       # correo. Para encenderlo basta con crear el secreto.
+      # Mientras no exista el secreto, el paso se salta entero en vez de fallar
+      # cada noche en rojo: una ejecución roja recurrente que se sabe que va a
+      # fallar acaba ignorándose, y entonces no avisa de nada cuando el fallo sea
+      # de verdad. En cuanto se cree RESEND_API_KEY, el paso se activa solo.
       - name: Avisos de bajada de precio
-        if: ${{ !cancelled() }}
-        env:
-          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          RESEND_FROM: ${{ secrets.RESEND_FROM }}
+        if: ${{ !cancelled() && env.RESEND_API_KEY != '' }}
         run: node scripts/alertas-precio.mjs
