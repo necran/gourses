@@ -1,0 +1,72 @@
+.main {
+  --borde: rgba(0, 0, 0, 0.12);
+  --texto-suave: rgba(0, 0, 0, 0.62);
+
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: 3rem 1rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .main {
+    --borde: rgba(255, 255, 255, 0.16);
+    --texto-suave: rgba(255, 255, 255, 0.7);
+  }
+}
+
+.main h1 { font-size: 1.7rem; margin: 0 0 1.5rem; }
+
+.vacio {
+  color: var(--texto-suave);
+  line-height: 1.6;
+}
+
+.lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.tarjeta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  padding: 0.9rem;
+}
+
+.imagen {
+  width: 7rem;
+  height: auto;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+/* Empuja el botón de quitar al extremo opuesto de la tarjeta. */
+.cuerpo { flex: 1; min-width: 0; }
+
+.cuerpo h2 { font-size: 1.05rem; margin: 0 0 0.3rem; }
+.meta { color: var(--texto-suave); font-size: 0.88rem; margin: 0; }
+
+.quitar {
+  padding: 0.45rem 0.8rem;
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+.quitar:hover { background: rgba(127, 127, 127, 0.12); }
+
+.enlaces { margin-top: 2rem; font-size: 0.9rem; }
+
+/* En pantallas estrechas la tarjeta se apila para que el título no se estruje. */
+@media (max-width: 30rem) {
+  .tarjeta { flex-wrap: wrap; }
+  .imagen { width: 5rem; }
+}

@@ -5,6 +5,11 @@ node_modules/
 .env
 .env.local
 .env.*.local
+# Cualquier copia de seguridad de un fichero de entorno lleva las mismas claves
+# dentro, así que se ignora igual. Sin esto, un `.env.local.bak` quedaría listo
+# para commitear por accidente.
+.env*.bak*
+.env.local.*
 
 # builds
 .next/

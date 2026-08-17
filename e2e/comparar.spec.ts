@@ -1,16 +1,28 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
+
+// Marca los dos primeros cursos y espera a estar de verdad en la comparación.
+//
+// Esa espera no es adorno. Lecturas como `count()`, `allTextContents()` o
+// `page.url()` no reintentan: devuelven lo que haya en ese instante. Si se usan
+// justo después del clic, leen todavía /buscar —cero filas, cero títulos— y el
+// test falla culpando al comparador de algo que no ha hecho. Con el servidor de
+// desarrollo compilando /comparar por primera vez y varios workers a la vez, esa
+// carrera se pierde de forma sistemática.
+async function compararDosPrimeros(page: Page) {
+  await page.goto("/buscar");
+
+  const casillas = page.locator('input[name="ids"]');
+  await casillas.nth(0).check();
+  await casillas.nth(1).check();
+  await page.getByRole("button", { name: "Comparar seleccionados" }).click();
+
+  await expect(page).toHaveURL(/\/comparar\?ids=/);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Comparar cursos");
+}
 
 test.describe("HU-017 — comparador", () => {
   test("seleccionar cursos en el buscador lleva a la comparación", async ({ page }) => {
-    await page.goto("/buscar");
-
-    const casillas = page.locator('input[name="ids"]');
-    await casillas.nth(0).check();
-    await casillas.nth(1).check();
-    await page.getByRole("button", { name: "Comparar seleccionados" }).click();
-
-    await expect(page).toHaveURL(/\/comparar\?ids=/);
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Comparar cursos");
+    await compararDosPrimeros(page);
 
     // Dos cursos comparados: dos columnas además de la de etiquetas.
     const cabeceras = page.locator("thead th");
@@ -18,11 +30,7 @@ test.describe("HU-017 — comparador", () => {
   });
 
   test("los mismos campos se muestran para todos los cursos", async ({ page }) => {
-    await page.goto("/buscar");
-    const casillas = page.locator('input[name="ids"]');
-    await casillas.nth(0).check();
-    await casillas.nth(1).check();
-    await page.getByRole("button", { name: "Comparar seleccionados" }).click();
+    await compararDosPrimeros(page);
 
     // Cada fila tiene una celda por curso, que es lo que permite leerla en vertical.
     const filas = page.locator("tbody tr");
@@ -37,11 +45,7 @@ test.describe("HU-017 — comparador", () => {
   });
 
   test("la comparación se puede compartir por enlace", async ({ page, context }) => {
-    await page.goto("/buscar");
-    const casillas = page.locator('input[name="ids"]');
-    await casillas.nth(0).check();
-    await casillas.nth(1).check();
-    await page.getByRole("button", { name: "Comparar seleccionados" }).click();
+    await compararDosPrimeros(page);
 
     const url = page.url();
     const titulos = await page.locator("thead th a").allTextContents();
@@ -70,11 +74,7 @@ test.describe("HU-017 — comparador", () => {
 
   // Un enlace compartido con un curso retirado debe seguir siendo útil.
   test("los identificadores inválidos se ignoran y se comparan los válidos", async ({ page }) => {
-    await page.goto("/buscar");
-    const casillas = page.locator('input[name="ids"]');
-    await casillas.nth(0).check();
-    await casillas.nth(1).check();
-    await page.getByRole("button", { name: "Comparar seleccionados" }).click();
+    await compararDosPrimeros(page);
 
     const url = new URL(page.url());
     url.searchParams.append("ids", "no-soy-un-uuid");
@@ -85,11 +85,7 @@ test.describe("HU-017 — comparador", () => {
   });
 
   test("desde la comparación se puede ir a la ficha y a la plataforma", async ({ page }) => {
-    await page.goto("/buscar");
-    const casillas = page.locator('input[name="ids"]');
-    await casillas.nth(0).check();
-    await casillas.nth(1).check();
-    await page.getByRole("button", { name: "Comparar seleccionados" }).click();
+    await compararDosPrimeros(page);
 
     const salida = page.getByRole("link", { name: /^Ver en /i }).first();
     await expect(salida).toBeVisible();
