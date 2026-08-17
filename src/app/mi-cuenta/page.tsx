@@ -25,8 +25,12 @@ export default async function MiCuentaPage() {
       </p>
 
       <p className={styles.nota}>
-        De momento aquí no hay mucho: los favoritos llegan en la siguiente entrega. Lo único que
-        guardamos de ti es tu correo, para poder identificarte.
+        Lo único que guardamos de ti es tu correo, para poder identificarte, y los cursos que
+        marcas como favoritos.
+      </p>
+
+      <p className={styles.nota}>
+        <Link href="/favoritos">Ver mis favoritos</Link>
       </p>
 
       <form action={cerrarSesion}>

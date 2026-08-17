@@ -14,6 +14,7 @@ import {
   serializeStructuredData,
 } from "../../../lib/courses/course-seo";
 import { TITULAR } from "../../../lib/legal/titular";
+import { BotonFavorito } from "../../../components/boton-favorito";
 import styles from "./page.module.css";
 
 interface CoursePageProps {
@@ -118,6 +119,10 @@ export default async function CoursePage({ params }: CoursePageProps) {
               </>
             )}
           </p>
+
+          {/* Guardar no depende de que la plataforma tenga enlace de salida, así
+              que va fuera del bloque de abajo. */}
+          <BotonFavorito courseId={course.id} />
 
           {enlace && (
             <div className={styles.acciones}>

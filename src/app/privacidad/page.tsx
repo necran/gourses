@@ -5,7 +5,7 @@ import styles from "../legal.module.css";
 
 export const metadata: Metadata = {
   title: "Política de privacidad",
-  description: `Qué datos trata ${TITULAR.sitio} y cuáles no: sin cuentas, sin cookies propias y sin analítica.`,
+  description: `Qué datos trata ${TITULAR.sitio} y cuáles no: sin analítica, sin rastreadores y sin ceder datos a nadie.`,
 };
 
 export default function Privacidad() {
@@ -45,6 +45,13 @@ export default function Privacidad() {
         enviamos un enlace de un solo uso, así que no hay ninguna contraseña tuya almacenada.
         Junto al correo se guardan las fechas de creación y último acceso de la cuenta, que
         genera automáticamente el sistema de autenticación.
+      </p>
+      <p>
+        Si marcas cursos como favoritos, guardamos <strong>qué cursos son y cuándo los
+        guardaste</strong>, asociados a tu cuenta. Esa lista es privada: nadie más puede verla,
+        ni siquiera otras personas registradas. La base de datos lo impide por sí misma, no
+        solo la pantalla que te la muestra. Puedes quitar cualquier curso cuando quieras, y al
+        hacerlo la fila se borra.
       </p>
 
       <h3>Para qué y con qué base jurídica</h3>
