@@ -16,21 +16,68 @@ export default function Privacidad() {
       </p>
 
       <h1>Política de privacidad</h1>
-      <p className={styles.actualizado}>Última actualización: 10 de agosto de 2026</p>
+      <p className={styles.actualizado}>Última actualización: 11 de agosto de 2026</p>
 
       <p>
         Esta política describe lo que este sitio hace <strong>hoy</strong>, no lo que suele
-        poner una plantilla. Si en el futuro añadimos cuentas de usuario, analítica o
-        cookies, se actualizará antes de ponerlas en marcha.
+        poner una plantilla. Si añadimos algo que trate datos de otra forma, se actualiza antes
+        de ponerlo en marcha, como se hizo al incorporar las cuentas de usuario.
       </p>
 
       <h2>Lo que no hacemos</h2>
       <ul>
-        <li>No usamos cookies propias.</li>
         <li>No usamos herramientas de analítica ni rastreadores publicitarios.</li>
-        <li>No hay registro ni cuentas de usuario, así que no pedimos nombre ni correo.</li>
+        <li>No usamos cookies de publicidad ni de seguimiento entre sitios.</li>
+        <li>No pedimos nombre, apellidos, teléfono ni datos de pago.</li>
         <li>No vendemos ni cedemos datos personales a nadie con fines comerciales.</li>
+        <li>No usamos tu correo para enviarte publicidad.</li>
       </ul>
+
+      <h2>Si creas una cuenta</h2>
+      <p>
+        Tener cuenta es opcional: puedes buscar y comparar cursos sin identificarte. Si decides
+        crearla, esto es exactamente lo que ocurre.
+      </p>
+
+      <h3>Qué guardamos</h3>
+      <p>
+        <strong>Tu dirección de correo, y poco más.</strong> No usamos contraseñas: para entrar te
+        enviamos un enlace de un solo uso, así que no hay ninguna contraseña tuya almacenada.
+        Junto al correo se guardan las fechas de creación y último acceso de la cuenta, que
+        genera automáticamente el sistema de autenticación.
+      </p>
+
+      <h3>Para qué y con qué base jurídica</h3>
+      <p>
+        Únicamente para identificarte y poder asociarte lo que guardes en el sitio. La base
+        jurídica es la ejecución del servicio que tú mismo solicitas al crear la cuenta
+        (artículo 6.1.b del RGPD).
+      </p>
+
+      <h3>Cookies de sesión</h3>
+      <p>
+        Al entrar se instalan cookies necesarias para mantener la sesión iniciada. Son
+        imprescindibles para que el servicio funcione —sin ellas tendrías que identificarte en
+        cada página— y no se usan para seguirte ni para publicidad. Si cierras sesión, se
+        eliminan.
+      </p>
+
+      <h3>Quién más interviene</h3>
+      <ul>
+        <li>
+          <strong>Supabase</strong> gestiona la autenticación y la base de datos. Los datos se
+          alojan en la Unión Europea (Irlanda).
+        </li>
+        <li>
+          <strong>Resend</strong> envía el correo con tu enlace de acceso.
+        </li>
+      </ul>
+
+      <h3>Cuánto tiempo</h3>
+      <p>
+        Mientras tengas la cuenta. Si pides que la borremos, se elimina tu correo y todo lo
+        asociado a él.
+      </p>
 
       <h2>Lo que sí ocurre</h2>
 
@@ -70,10 +117,10 @@ export default function Privacidad() {
       <h2>Tus derechos</h2>
       <p>
         Puedes ejercer los derechos de acceso, rectificación, supresión, oposición,
-        limitación y portabilidad escribiendo a <strong>{TITULAR.email}</strong>. Ten en
-        cuenta que, al no haber cuentas de usuario, en la práctica no conservamos información
-        que permita identificarte más allá de los registros técnicos mencionados. También
-        puedes reclamar ante la Agencia Española de Protección de Datos.
+        limitación y portabilidad escribiendo a <strong>{TITULAR.email}</strong>. Si no tienes
+        cuenta, en la práctica no conservamos información que permita identificarte más allá de
+        los registros técnicos mencionados. También puedes reclamar ante la Agencia Española de
+        Protección de Datos.
       </p>
     </main>
   );

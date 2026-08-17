@@ -39,14 +39,20 @@ test.describe("HU-013 — páginas legales", () => {
     await expect(main).toContainText(/direcci[óo]n ip/i);
   });
 
-  // No debe declarar cookies ni analítica que hoy no existen: una política
-  // copiada que describa cosas que no hacemos es tan mala como no tenerla.
-  test("la privacidad no declara cookies ni analítica inexistentes", async ({ page }) => {
+  // La política debe describir lo que el sitio hace de verdad, ni más ni
+  // menos. Desde HU-018 hay cookies de sesión, así que ya no puede afirmar que
+  // no usa ninguna; lo que sigue siendo cierto es que no hay analítica ni
+  // rastreo, y eso debe seguir declarándose.
+  test("la privacidad describe el uso real de cookies y analítica", async ({ page }) => {
     await page.goto("/privacidad");
 
     const main = page.locator("main");
-    await expect(main).toContainText(/no usamos cookies propias/i);
     await expect(main).toContainText(/no usamos herramientas de anal[íi]tica/i);
+    await expect(main).toContainText(/no usamos cookies de publicidad ni de seguimiento/i);
+
+    // Y declara las que sí hay, en vez de callarlas.
+    await expect(main).toContainText(/cookies necesarias para mantener la sesión/i);
+    await expect(main).not.toContainText(/no usamos cookies propias/i);
   });
 
   test("la afiliación explica la comisión y que no encarece el precio", async ({ page }) => {

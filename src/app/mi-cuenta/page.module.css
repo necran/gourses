@@ -1,0 +1,33 @@
+.main {
+  --borde: rgba(0, 0, 0, 0.12);
+  --texto-suave: rgba(0, 0, 0, 0.62);
+  --acento: #6d28d9;
+
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 3rem 1rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .main {
+    --borde: rgba(255, 255, 255, 0.16);
+    --texto-suave: rgba(255, 255, 255, 0.7);
+    --acento: #8b5cf6;
+  }
+}
+
+.main h1 { font-size: 1.7rem; margin: 0 0 1rem; }
+.identidad { margin: 0 0 1rem; }
+.nota { color: var(--texto-suave); line-height: 1.6; margin: 0 0 1.8rem; }
+.enlaces { margin-top: 2rem; font-size: 0.9rem; }
+
+.boton {
+  padding: 0.6rem 1.1rem;
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+.boton:hover { background: rgba(127, 127, 127, 0.12); }

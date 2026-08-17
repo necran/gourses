@@ -12,11 +12,13 @@
   # sin avisar.
   NODE_VERSION = "24"
 
-# Cabeceras de seguridad. El sitio no usa formularios de datos personales ni
-# cookies propias, así que son baratas de aplicar y cierran superficie.
+# Cabeceras de seguridad.
 [[headers]]
   for = "/*"
   [headers.values]
+    # Desde HU-018 hay cookies de sesión, así que la primera visita por http://
+    # dejaría de ser inofensiva: obliga al navegador a no intentarlo siquiera.
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
     # Evita que el navegador adivine el tipo de contenido.
     X-Content-Type-Options = "nosniff"
     # Impide que el sitio se incruste en un iframe ajeno.
