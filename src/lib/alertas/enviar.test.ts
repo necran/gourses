@@ -71,6 +71,20 @@ describe("HU-021 — envío de los avisos", () => {
       expect(cuerpo.text).toBe(MENSAJE.texto);
     });
 
+    // GitHub Actions define la variable como cadena VACÍA cuando el secreto no
+    // existe, en vez de dejarla sin definir. Con `??` eso pasaba de largo y se
+    // enviaba `from: ""`, que Resend rechaza: habría fallado el primer envío
+    // real, justo cuando ya no se está mirando.
+    it("una cadena vacía como remitente cae al de por defecto", async () => {
+      const fetchFalso = vi.fn(async () => new Response("{}", { status: 200 }));
+      vi.stubGlobal("fetch", fetchFalso);
+
+      await crearEnviadorResend("re_clave", "").enviar("a@b.com", MENSAJE);
+
+      const [, opciones] = fetchFalso.mock.calls[0] as unknown as [string, RequestInit];
+      expect(JSON.parse(String(opciones.body)).from).toContain("avisos@gourses.com");
+    });
+
     it("usa el remitente configurado si lo hay", async () => {
       const fetchFalso = vi.fn(async () => new Response("{}", { status: 200 }));
       vi.stubGlobal("fetch", fetchFalso);

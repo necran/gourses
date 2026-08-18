@@ -20,7 +20,11 @@ const REMITENTE_POR_DEFECTO = "Gourses <avisos@gourses.com>";
 // un JSON, y así el job no arrastra una dependencia más ni su cadena de
 // actualizaciones.
 export function crearEnviadorResend(apiKey: string, remitente?: string): EnviadorCorreo {
-  const from = remitente ?? REMITENTE_POR_DEFECTO;
+  // Aquí `??` no vale: GitHub Actions define la variable como cadena **vacía**
+  // cuando el secreto no existe, en vez de dejarla sin definir, y `??` solo
+  // atrapa null/undefined. Se enviaría `from: ""` y Resend rechazaría todos los
+  // correos — el primer envío real, justo cuando ya nadie está mirando.
+  const from = remitente?.trim() || REMITENTE_POR_DEFECTO;
 
   return {
     nombre: "resend",
