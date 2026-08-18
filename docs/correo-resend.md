@@ -9,7 +9,7 @@ y equivocarlas rompe el correo del dominio.
 | Pieza | Estado |
 |---|---|
 | Dominio en Resend | `gourses.com`, región Irlanda (eu-west-1) |
-| Registros DNS en IONOS | pendientes (ver abajo) |
+| Registros DNS en IONOS | **añadidos y propagados** (2026-08-18) |
 | `RESEND_API_KEY` en GitHub | pendiente |
 | SMTP propio en Supabase | pendiente |
 
@@ -17,7 +17,12 @@ Mientras falte la clave, el paso de avisos del workflow se salta solo y la web
 sigue usando el correo integrado de Supabase, limitado a **2 mensajes por hora en
 todo el proyecto**.
 
-## Los tres registros que hay que añadir
+El dominio queda en «Pending» hasta que los resolutores de Resend vean los
+registros. Los tres están publicados y comprobados contra el DNS público, y el
+DKIM coincide carácter por carácter (218) con el que Resend espera, así que no
+hay nada más que hacer: es esperar. Resend avisa de que puede tardar horas.
+
+## Los tres registros añadidos
 
 Ninguno pisa nada de lo que ya existe: usan nombres nuevos (`send` y
 `resend._domainkey`).
