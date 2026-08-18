@@ -119,6 +119,9 @@ async function searchCoursesFromSource(
     const value = `%${escapeOrFilterValue(filters.keyword)}%`;
     query = query.or(`title.ilike.${value},description.ilike.${value}`);
   }
+  if (filters.category !== null) {
+    query = query.eq("category", filters.category);
+  }
   if (filters.maxPrice !== null) {
     query = query.lte("price_amount", filters.maxPrice);
   }

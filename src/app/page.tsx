@@ -57,7 +57,10 @@ export default async function Home() {
         <ul className={styles.listaCategorias}>
           {CATEGORIAS_DESTACADAS.map((categoria) => (
             <li key={categoria}>
-              <Link href={`/buscar?keyword=${encodeURIComponent(CATEGORY_LABELS[categoria])}`}>
+              {/* Se enlaza por el identificador de categoría, no por la etiqueta: buscar
+                  "Desarrollo" como texto no encuentra nada, porque los títulos del
+                  catálogo están casi todos en inglés (HU-022). */}
+              <Link href={`/buscar?category=${categoria}`}>
                 {CATEGORY_LABELS[categoria]}
               </Link>
             </li>

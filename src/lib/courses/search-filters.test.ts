@@ -12,6 +12,7 @@ describe("parseCourseSearchFilters", () => {
 
     expect(filters).toEqual({
       keyword: "python",
+      category: null,
       maxPrice: 49.99,
       minRating: 4,
       language: "es",
@@ -21,6 +22,7 @@ describe("parseCourseSearchFilters", () => {
   it("devuelve todo a null cuando no se pasa ningún parámetro", () => {
     expect(parseCourseSearchFilters({})).toEqual({
       keyword: null,
+      category: null,
       maxPrice: null,
       minRating: null,
       language: null,
@@ -66,5 +68,35 @@ describe("parseCourseSearchFilters", () => {
   it("ignora intentos de inyección tratándolos como texto de búsqueda normal", () => {
     const filters = parseCourseSearchFilters({ keyword: "'; drop table courses; --" });
     expect(filters.keyword).toBe("'; drop table courses; --");
+  });
+
+  // HU-022: la portada enlazaba por la etiqueta visible ("Desarrollo") como
+  // texto libre, y como los títulos del catálogo están en inglés, las seis
+  // categorías llevaban a una página vacía. Se filtra por el identificador
+  // estable, y solo si es uno conocido.
+  describe("categoría", () => {
+    it("acepta un identificador del vocabulario", () => {
+      expect(parseCourseSearchFilters({ category: "desarrollo" }).category).toBe("desarrollo");
+      expect(parseCourseSearchFilters({ category: "datos-e-ia" }).category).toBe("datos-e-ia");
+    });
+
+    it("tolera espacios y mayúsculas", () => {
+      expect(parseCourseSearchFilters({ category: "  Desarrollo  " }).category).toBe("desarrollo");
+    });
+
+    it("descarta la etiqueta visible, que no es el identificador", () => {
+      expect(parseCourseSearchFilters({ category: "Datos e IA" }).category).toBeNull();
+      expect(parseCourseSearchFilters({ category: "IT y software" }).category).toBeNull();
+    });
+
+    it("descarta una categoría inventada en vez de romper la búsqueda", () => {
+      for (const raw of ["", "   ", "no-existe", "'; drop table courses--", "*"]) {
+        expect(parseCourseSearchFilters({ category: raw }).category).toBeNull();
+      }
+    });
+
+    it("sin categoría en la dirección, no se filtra", () => {
+      expect(parseCourseSearchFilters({}).category).toBeNull();
+    });
   });
 });

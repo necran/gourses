@@ -4,6 +4,7 @@ import { parseCourseSearchFilters, type RawSearchParams } from "../../lib/course
 import { searchCourses } from "../../lib/courses/search-courses";
 import { formatDuration } from "../../lib/courses/duration";
 import { MAX_COMPARADOS } from "../../lib/courses/compare";
+import { CATEGORY_LABELS, COURSE_CATEGORIES } from "../../lib/courses/categories";
 import styles from "./page.module.css";
 
 interface BuscarPageProps {
@@ -54,6 +55,17 @@ export default async function BuscarPage({ searchParams }: BuscarPageProps) {
           defaultValue={filters.language ?? ""}
           aria-label="Idioma"
         />
+        {/* Va en el formulario para que se vea cuál está aplicada y se pueda
+            quitar; si no, quien llega desde la portada no entiende por qué ve
+            solo una parte del catálogo (HU-022). */}
+        <select name="category" defaultValue={filters.category ?? ""} aria-label="Categoría">
+          <option value="">Todas las categorías</option>
+          {COURSE_CATEGORIES.map((c) => (
+            <option key={c} value={c}>
+              {CATEGORY_LABELS[c]}
+            </option>
+          ))}
+        </select>
         <button type="submit">Buscar</button>
       </form>
 
