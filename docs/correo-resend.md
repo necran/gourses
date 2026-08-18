@@ -76,3 +76,38 @@ Tras añadir los registros, en Resend: «Verify DNS Records». Desde la terminal
     node -e 'for (const [n,t] of [["resend._domainkey.gourses.com","TXT"],["send.gourses.com","MX"],["send.gourses.com","TXT"]]) fetch(`https://dns.google/resolve?name=${n}&type=${t}`).then(r=>r.json()).then(j=>console.log(n, t, (j.Answer||[]).map(a=>a.data).join(" | ")||"(no existe)"))'
 
 El DNS puede tardar en propagarse; si no aparece al momento, no es un error.
+
+## SMTP propio en Supabase (Auth)
+
+Configurado en *Authentication → Emails → SMTP Settings* del proyecto `gourses`:
+
+| Campo | Valor |
+|---|---|
+| Remitente | `avisos@gourses.com` |
+| Nombre | `Gourses` |
+| Servidor | `smtp.resend.com` |
+| Puerto | `465` |
+| Intervalo mínimo por usuario | `60` s |
+| Usuario | `resend` |
+| Contraseña | la clave de API de Resend |
+
+**El usuario es literalmente `resend`**, no el correo ni el nombre del proyecto:
+así lo exige Resend para SMTP, y la clave de API va como contraseña. El
+navegador autocompletó ahí el nombre del proyecto de Supabase, que habría hecho
+fallar la autenticación sin decir por qué.
+
+Con SMTP propio, el límite de correos de Auth sube de 2 a **30 por hora**.
+
+### Ojo mientras el dominio no esté verificado
+
+Activar el SMTP propio antes de que Resend verifique `gourses.com` **rompe el
+acceso**: Resend rechaza enviar desde un dominio sin verificar. Comprobado
+llamando a `/auth/v1/otp` en producción:
+
+    HTTP 500 {"error_code":"unexpected_failure","msg":"Error sending confirmation email"}
+
+Se arregla solo en cuanto el dominio pase a *Verified*; no hay nada que tocar.
+Si hiciera falta que el acceso funcione antes, la salida es desactivar
+temporalmente «Enable custom SMTP», que devuelve el proveedor integrado de
+Supabase con sus 2 correos/hora — pero al reactivarlo hay que volver a escribir
+la clave, porque Supabase no la muestra una vez guardada.
