@@ -197,4 +197,112 @@ describe("runUdemyIngestJob", () => {
     expect(result.saved).toBe(0);
     expect(result.failedCourses).toHaveLength(0);
   });
+
+  // HU-023: el detalle es una petición por curso y es lo que decide si el job
+  // cabe en el tope del workflow. Se pide con concurrencia acotada.
+  describe("concurrencia del detalle", () => {
+    it("no pide más detalles a la vez que el límite", async () => {
+      const items = Array.from({ length: 20 }, (_, i) => course(i + 1));
+      stubApi({ pages: [{ items, totalPages: 1, totalItemCount: items.length }] });
+
+      let enCurso = 0;
+      let maximo = 0;
+      vi.spyOn(api, "fetchCourseDetail").mockImplementation(async () => {
+        enCurso += 1;
+        maximo = Math.max(maximo, enCurso);
+        await new Promise((r) => setTimeout(r, 5));
+        enCurso -= 1;
+        return { price_detail: { amount: 9.99, currency: "EUR" } };
+      });
+
+      const result = await runUdemyIngestJob({ creds, store: makeStore(), concurrenciaDetalle: 4 });
+
+      expect(maximo).toBe(4);
+      expect(result.saved).toBe(20);
+    });
+
+    // Si la deduplicación ocurriera dentro de las tareas concurrentes, dos
+    // obreros podrían pedir el mismo curso a la vez. Los ámbitos se solapan
+    // mucho, así que eso convertiría la concurrencia en trabajo repetido.
+    it("no pide dos veces el detalle del mismo curso aunque salga en varios ámbitos", async () => {
+      stubApi({
+        categories: [
+          { id: 1, title: "Development" },
+          { id: 2, title: "Design" },
+        ],
+        pages: [
+          { items: [course(1), course(2)], totalPages: 1, totalItemCount: 2 },
+          { items: [course(2), course(3)], totalPages: 1, totalItemCount: 2 },
+        ],
+      });
+      const detailSpy = vi
+        .spyOn(api, "fetchCourseDetail")
+        .mockResolvedValue({ price_detail: { amount: 9.99, currency: "EUR" } });
+
+      const result = await runUdemyIngestJob({ creds, store: makeStore(), concurrenciaDetalle: 4 });
+
+      expect(result.processed).toBe(3);
+      expect(detailSpy).toHaveBeenCalledTimes(3);
+    });
+
+    // Un detalle que no llega no descarta el curso: se guarda sin precio y el
+    // fallo queda anotado. Con concurrencia debe seguir siendo así.
+    it("un detalle que falla no impide que se guarden los demás", async () => {
+      const items = Array.from({ length: 6 }, (_, i) => course(i + 1));
+      stubApi({ pages: [{ items, totalPages: 1, totalItemCount: items.length }] });
+
+      vi.spyOn(api, "fetchCourseDetail").mockImplementation(async (_c, id) => {
+        if (id === 3) throw new Error("Udemy API respondió 404 Not Found");
+        return { price_detail: { amount: 9.99, currency: "EUR" } };
+      });
+
+      const result = await runUdemyIngestJob({ creds, store: makeStore(), concurrenciaDetalle: 3 });
+
+      expect(result.saved).toBe(6);
+      expect(result.failedCourses).toHaveLength(1);
+      expect(result.failedCourses[0]).toMatchObject({ id: 3 });
+    });
+
+    // El reintento tiene que envolver la llamada real. Si se pusiera alrededor
+    // del envoltorio tolerante, este se tragaría el error y no se reintentaría
+    // nunca: el job parecería correcto y perdería precios en silencio.
+    it("reintenta un 429 del detalle en vez de perder el precio", async () => {
+      stubApi({ pages: [{ items: [course(1)], totalPages: 1, totalItemCount: 1 }] });
+
+      let intentos = 0;
+      vi.spyOn(api, "fetchCourseDetail").mockImplementation(async () => {
+        intentos += 1;
+        if (intentos < 3) throw new Error("Udemy API respondió 429 Too Many Requests");
+        return { price_detail: { amount: 12.5, currency: "EUR" } };
+      });
+
+      const store = makeStore();
+      const result = await runUdemyIngestJob({ creds, store, concurrenciaDetalle: 2 });
+
+      expect(intentos).toBe(3);
+      expect(result.failedCourses).toHaveLength(0);
+      expect(store.insertCourse).toHaveBeenCalledWith(
+        expect.objectContaining({ priceAmount: 12.5 })
+      );
+    }, 20_000);
+
+    // Un cambio de forma de la propia API sí detiene el job: no se puede seguir
+    // guardando sobre un contrato que ya no se cumple.
+    it("un cambio de forma de la API detiene el job aunque haya concurrencia", async () => {
+      // Un curso mal formado se tolera (ya cubierto arriba). Lo que NO se
+      // tolera es que cambie la forma de la propia API: eso ocurre dentro de
+      // una tarea concurrente y tiene que salir del job, no quedarse entre los
+      // fallos puntuales, para no guardar sobre un contrato que ya no se cumple.
+      stubApi({
+        pages: [{ items: [course(1), course(2)], totalPages: 1, totalItemCount: 2 }],
+      });
+      vi.spyOn(api, "fetchCourseDetail").mockRejectedValue(
+        new UdemyShapeError("falta 'price_detail'", {})
+      );
+
+      await expect(
+        runUdemyIngestJob({ creds, store: makeStore(), concurrenciaDetalle: 4 })
+      ).rejects.toBeInstanceOf(UdemyShapeError);
+    });
+  });
 });

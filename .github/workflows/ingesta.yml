@@ -26,7 +26,9 @@ concurrency:
 jobs:
   ingesta:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # Medido en HU-023: la ingesta completa de Udemy son unos 29 min. Se deja el
+    # doble de margen para que una noche lenta no la deje a medias.
+    timeout-minutes: 60
 
     env:
       # La conexión directa de Supabase es solo IPv6; se usa el pooler.
@@ -61,7 +63,10 @@ jobs:
         # Se ejecuta aunque Udemy haya fallado, pero no si se cancela el flujo.
         if: ${{ !cancelled() }}
         env:
-          COURSERA_MAX_PAGES: "1"
+          # Coursera sale casi gratis porque su catálogo no tiene precio y por
+          # tanto no hay una petición de detalle por curso: medido en HU-023,
+          # 40 páginas son 4.000 cursos en 16 s.
+          COURSERA_MAX_PAGES: "40"
         run: node scripts/ingest-coursera.mjs
 
       # Va después de la ingesta a propósito: primero se actualizan los precios,

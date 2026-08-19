@@ -3,6 +3,8 @@ import { upsertCourse } from "../upsert-course.ts";
 import * as api from "./fetch-catalog.ts";
 import type { UdemyCredentials, UdemyScope } from "./fetch-catalog.ts";
 import { UdemyShapeError, normalizeUdemyCourse } from "./normalize.ts";
+import { mapConLimite } from "../comun/concurrencia.ts";
+import { conReintentos } from "../comun/reintentos.ts";
 
 export interface UdemyJobResult {
   processed: number;
@@ -20,6 +22,8 @@ export interface UdemyJobOptions {
   maxScopes?: number;
   maxPagesPerScope?: number;
   pageSize?: number;
+  /** Cuántos detalles de curso se piden a la vez (HU-023). */
+  concurrenciaDetalle?: number;
 }
 
 // Job de ingesta de Udemy (HU-005). Se ejecuta bajo demanda (ver
@@ -40,6 +44,7 @@ export async function runUdemyIngestJob({
   maxScopes = Infinity,
   maxPagesPerScope = Infinity,
   pageSize = 12,
+  concurrenciaDetalle = 6,
 }: UdemyJobOptions): Promise<UdemyJobResult> {
   const result: UdemyJobResult = { processed: 0, saved: 0, scopes: 0, failedCourses: [] };
 
@@ -77,28 +82,45 @@ export async function runUdemyIngestJob({
       const unitPage = await api.fetchUnitPage(creds, unitUrl, scope, { page, pageSize });
       totalPages = unitPage.totalPages;
 
+      // La deduplicación se hace ANTES de repartir el trabajo, y en serie: si
+      // se hiciera dentro de las tareas concurrentes, dos obreros podrían mirar
+      // el mismo curso a la vez, no verlo todavía en `seen`, y pedir su detalle
+      // dos veces. Los ámbitos se solapan mucho, así que eso convertiría la
+      // concurrencia en trabajo repetido.
+      const nuevos: typeof unitPage.items = [];
       for (const raw of unitPage.items) {
-        const rawId = (raw as { id?: unknown }).id;
-        // Las unidades de distintas categorías se solapan; no repetimos trabajo
-        // ni llamadas de detalle por un curso ya procesado en esta ejecución.
-        const key = String(rawId);
+        const key = String((raw as { id?: unknown }).id);
         if (seen.has(key)) continue;
         seen.add(key);
+        nuevos.push(raw);
+      }
 
-        result.processed += 1;
+      result.processed += nuevos.length;
 
+      // Aquí está el tiempo del job: una petición de detalle por curso, a 0,45 s
+      // cada una. En serie no cabe en el tope del workflow (HU-023).
+      const errores = await mapConLimite(nuevos, concurrenciaDetalle, async (raw) => {
+        const rawId = (raw as { id?: unknown }).id;
         try {
           const detail = await fetchDetailTolerantly(creds, rawId, result);
           const normalized = normalizeUdemyCourse(raw, detail, creds.baseUrl, categoryTitle);
           await upsertCourse(store, normalized);
-          result.saved += 1;
+          return null;
         } catch (error) {
-          if (error instanceof UdemyShapeError) throw error;
-          result.failedCourses.push({
+          if (error instanceof UdemyShapeError) return error;
+          return {
             id: rawId,
             error: error instanceof Error ? error.message : String(error),
-          });
+          };
         }
+      });
+
+      // Un cambio de forma de la API sí detiene el job, como antes: se propaga
+      // fuera de las tareas para no perderlo entre los fallos tolerados.
+      for (const e of errores) {
+        if (e instanceof UdemyShapeError) throw e;
+        if (e) result.failedCourses.push(e);
+        else result.saved += 1;
       }
 
       page += 1;
@@ -118,7 +140,11 @@ async function fetchDetailTolerantly(
 ): Promise<Awaited<ReturnType<typeof api.fetchCourseDetail>> | null> {
   if (typeof rawId !== "number") return null;
   try {
-    return await api.fetchCourseDetail(creds, rawId);
+    // El reintento va aquí dentro, envolviendo la llamada de verdad. Si se
+    // pusiera fuera de esta función no serviría de nada: el `catch` de abajo
+    // se traga el error y devuelve null, así que quien envolviera desde fuera
+    // nunca vería el 429 que quiere reintentar.
+    return await conReintentos(() => api.fetchCourseDetail(creds, rawId));
   } catch (error) {
     if (error instanceof UdemyShapeError) throw error;
     result.failedCourses.push({

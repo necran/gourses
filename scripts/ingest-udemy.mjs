@@ -25,9 +25,21 @@ for (const [nombre, valor] of [
   }
 }
 
-const maxScopes = process.env.UDEMY_MAX_SCOPES ? Number(process.env.UDEMY_MAX_SCOPES) : 13;
-const maxPagesPerScope = process.env.UDEMY_MAX_PAGES ? Number(process.env.UDEMY_MAX_PAGES) : 2;
-const includeSubcategories = process.env.UDEMY_INCLUDE_SUBCATEGORIES === "true";
+// Medido contra la API real (HU-023): 143 ámbitos, ~59 cursos únicos por ámbito
+// y ~12 s por ámbito con concurrencia 6 → unos 8.500 cursos en ~29 min.
+//
+// `page_size` no puede pasar de 50: con 100 la API responde 400. Y subir las
+// páginas por ámbito no aporta nada, porque cada unidad se agota sobre los 71
+// cursos; lo que multiplica el catálogo son las subcategorías.
+const maxScopes = process.env.UDEMY_MAX_SCOPES ? Number(process.env.UDEMY_MAX_SCOPES) : Infinity;
+const maxPagesPerScope = process.env.UDEMY_MAX_PAGES ? Number(process.env.UDEMY_MAX_PAGES) : 3;
+const pageSize = process.env.UDEMY_PAGE_SIZE ? Number(process.env.UDEMY_PAGE_SIZE) : 50;
+const concurrenciaDetalle = process.env.UDEMY_CONCURRENCIA
+  ? Number(process.env.UDEMY_CONCURRENCIA)
+  : 6;
+// Por defecto sí: recorrer solo las 13 categorías raíz dejaba el catálogo en 425
+// cursos, y con ese tamaño casi nadie encuentra lo que busca.
+const includeSubcategories = process.env.UDEMY_INCLUDE_SUBCATEGORIES !== "false";
 
 const client = new Client({ connectionString: databaseUrl });
 await client.connect();
@@ -40,6 +52,8 @@ try {
     includeSubcategories,
     maxScopes,
     maxPagesPerScope,
+    pageSize,
+    concurrenciaDetalle,
   });
   console.log(
     `Ámbitos recorridos: ${result.scopes}, procesados: ${result.processed}, guardados: ${result.saved}`
