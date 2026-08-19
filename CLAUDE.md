@@ -44,6 +44,23 @@ No hay excepciones a este orden ni "hecho con pendientes".
 - Nunca `git push --force` ni `git commit --amend` sobre commits ya compartidos.
 - Una historia de usuario = una rama, un PR (cuando exista remoto).
 
+## Despliegues: agrupar, no publicar por historia
+
+Netlify cobra por créditos y el plan gratuito da **300 al mes**. Un despliegue de
+producción cuesta del orden de **10**, así que publicar al cerrar cada historia agota
+la cuota en unos pocos días de trabajo intenso — pasó el 18 de agosto de 2026, y dejó
+el sitio sin poder publicar hasta el 9 de septiembre.
+
+Lo que consume no es el tráfico (60 MB de ancho de banda en todo un mes, 1–2 créditos
+diarios entre funciones y peticiones) sino **la cantidad de publicaciones**.
+
+Por tanto: **se acumulan varias historias cerradas y se despliega una vez**, no una por
+historia. Cerrar una historia significa dejarla probada y fusionada, no publicada.
+Antes de desplegar, comprobar los créditos que quedan en *Usage & billing*.
+
+Para ver los cambios sin gastar créditos está el entorno local (`npm run dev`), que es
+la misma aplicación contra la misma base de datos.
+
 ## Reglas modulares
 
 Reglas adicionales por área, cargadas solo cuando se tocan los ficheros correspondientes: ver `.claude/rules/`.
