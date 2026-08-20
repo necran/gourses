@@ -111,3 +111,34 @@ Si hiciera falta que el acceso funcione antes, la salida es desactivar
 temporalmente «Enable custom SMTP», que devuelve el proveedor integrado de
 Supabase con sus 2 correos/hora — pero al reactivarlo hay que volver a escribir
 la clave, porque Supabase no la muestra una vez guardada.
+
+### Cómo diagnosticar «No hemos podido enviar el enlace» (2026-08-20)
+
+El dominio pasó a *Verified* y el acceso seguía fallando. La página solo dice
+que no ha podido enviar el enlace, que es lo correcto de cara al visitante pero
+no sirve para arreglar nada. El error de verdad está en dos sitios:
+
+**Supabase → Logs → Auth**, filtrando por el intento:
+
+    status 500 · path /otp · action user_confirmation_requested
+    error: 535 "Authentication credentials invalid"
+
+**Resend → Logs**: vacío. Si Resend no registra ni un intento, la petición no
+llegó a salir de Supabase, así que el problema está entre los dos y no en el
+dominio ni en el DNS.
+
+`535` es SMTP rechazando usuario/contraseña. Con el usuario en `resend` (que es
+lo correcto), solo puede ser la clave. Se confirma en **Resend → API keys**: la
+columna *Last used* decía «No activity», o sea que esa clave no se había usado
+nunca — lo guardado en Supabase no era esa clave, o se pegó incompleta.
+
+Arreglo: volver a pegar la clave en SMTP Settings → Password. Como Resend solo
+enseña la clave entera al crearla, si no está guardada hay que crear una nueva y
+actualizarla **en dos sitios**, o los avisos de precio fallarán aunque el acceso
+funcione:
+
+1. Supabase → Authentication → Emails → SMTP Settings → Password.
+2. GitHub → `necran/gourses` → Settings → Secrets → `RESEND_API_KEY`.
+
+Al reintentar, contar hasta 60: *Minimum interval per user* está en 60 s, así
+que dos intentos seguidos con el mismo correo fallan aunque ya esté arreglado.
