@@ -6,6 +6,10 @@ import { UdemyShapeError, type UdemyRawCourse } from "./normalize";
 
 const creds = { baseUrl: "https://www.udemy.com", clientId: "id", clientSecret: "secret" };
 
+// Sin esperas reales: los tests miden cuántos intentos se hacen, no los 15 s de
+// espera creciente que el job usa en producción.
+const sinEsperas = { dormir: async () => {} };
+
 function makeStore(): CourseStore {
   return {
     findBySourceAndSourceId: vi.fn().mockResolvedValue(null),
@@ -88,7 +92,7 @@ describe("runUdemyIngestJob", () => {
     detailSpy.mockRejectedValue(new Error("Udemy API respondió 429 Too Many Requests"));
     const store = makeStore();
 
-    const result = await runUdemyIngestJob({ creds, store });
+    const result = await runUdemyIngestJob({ creds, store, opcionesReintento: sinEsperas });
 
     expect(result.saved).toBe(1);
     expect(store.insertCourse).toHaveBeenCalledWith(
@@ -256,7 +260,12 @@ describe("runUdemyIngestJob", () => {
         return { price_detail: { amount: 9.99, currency: "EUR" } };
       });
 
-      const result = await runUdemyIngestJob({ creds, store: makeStore(), concurrenciaDetalle: 3 });
+      const result = await runUdemyIngestJob({
+        creds,
+        store: makeStore(),
+        concurrenciaDetalle: 3,
+        opcionesReintento: sinEsperas,
+      });
 
       expect(result.saved).toBe(6);
       expect(result.failedCourses).toHaveLength(1);
@@ -277,7 +286,12 @@ describe("runUdemyIngestJob", () => {
       });
 
       const store = makeStore();
-      const result = await runUdemyIngestJob({ creds, store, concurrenciaDetalle: 2 });
+      const result = await runUdemyIngestJob({
+        creds,
+        store,
+        concurrenciaDetalle: 2,
+        opcionesReintento: sinEsperas,
+      });
 
       expect(intentos).toBe(3);
       expect(result.failedCourses).toHaveLength(0);

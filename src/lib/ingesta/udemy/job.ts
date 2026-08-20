@@ -24,6 +24,12 @@ export interface UdemyJobOptions {
   pageSize?: number;
   /** Cuántos detalles de curso se piden a la vez (HU-023). */
   concurrenciaDetalle?: number;
+  /**
+   * Opciones de reintento. Existe para que los tests no tengan que esperar de
+   * verdad los 15 s de espera creciente: el comportamiento a comprobar es
+   * cuántas veces se reintenta, no cuánto se duerme.
+   */
+  opcionesReintento?: Parameters<typeof conReintentos>[1];
 }
 
 // Job de ingesta de Udemy (HU-005). Se ejecuta bajo demanda (ver
@@ -44,7 +50,8 @@ export async function runUdemyIngestJob({
   maxScopes = Infinity,
   maxPagesPerScope = Infinity,
   pageSize = 12,
-  concurrenciaDetalle = 6,
+  concurrenciaDetalle = 3,
+  opcionesReintento,
 }: UdemyJobOptions): Promise<UdemyJobResult> {
   const result: UdemyJobResult = { processed: 0, saved: 0, scopes: 0, failedCourses: [] };
 
@@ -102,7 +109,7 @@ export async function runUdemyIngestJob({
       const errores = await mapConLimite(nuevos, concurrenciaDetalle, async (raw) => {
         const rawId = (raw as { id?: unknown }).id;
         try {
-          const detail = await fetchDetailTolerantly(creds, rawId, result);
+          const detail = await fetchDetailTolerantly(creds, rawId, result, opcionesReintento);
           const normalized = normalizeUdemyCourse(raw, detail, creds.baseUrl, categoryTitle);
           await upsertCourse(store, normalized);
           return null;
@@ -136,7 +143,8 @@ export async function runUdemyIngestJob({
 async function fetchDetailTolerantly(
   creds: UdemyCredentials,
   rawId: unknown,
-  result: UdemyJobResult
+  result: UdemyJobResult,
+  opcionesReintento?: Parameters<typeof conReintentos>[1]
 ): Promise<Awaited<ReturnType<typeof api.fetchCourseDetail>> | null> {
   if (typeof rawId !== "number") return null;
   try {
@@ -144,7 +152,7 @@ async function fetchDetailTolerantly(
     // pusiera fuera de esta función no serviría de nada: el `catch` de abajo
     // se traga el error y devuelve null, así que quien envolviera desde fuera
     // nunca vería el 429 que quiere reintentar.
-    return await conReintentos(() => api.fetchCourseDetail(creds, rawId));
+    return await conReintentos(() => api.fetchCourseDetail(creds, rawId), opcionesReintento);
   } catch (error) {
     if (error instanceof UdemyShapeError) throw error;
     result.failedCourses.push({

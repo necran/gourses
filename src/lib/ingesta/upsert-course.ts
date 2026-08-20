@@ -29,14 +29,30 @@ export async function upsertCourse(
 ): Promise<{ id: string; priceChanged: boolean }> {
   const existing = await store.findBySourceAndSourceId(course.source, course.sourceId);
 
+  // Precio desconocido: la fuente no pudo decirnos cuánto cuesta en esta pasada.
+  // Se trata como "no tengo dato nuevo", nunca como "vale null".
+  const desconocido = course.priceUnknown === true;
+
   if (!existing) {
     const { id } = await store.insertCourse(course);
-    await store.insertPriceHistory(id, course.priceAmount, course.priceCurrency);
-    return { id, priceChanged: true };
+    // El curso se guarda igualmente —vale más tenerlo en el catálogo sin precio
+    // que perderlo—, pero no se abre un histórico con un precio inventado.
+    if (!desconocido) {
+      await store.insertPriceHistory(id, course.priceAmount, course.priceCurrency);
+    }
+    return { id, priceChanged: !desconocido };
   }
 
-  const priceChanged = pricesDiffer(existing, course);
-  await store.updateCourse(existing.id, course);
+  // Se conserva el precio que ya había. Sin esto, un 429 pasajero en la llamada
+  // de detalle machacaba con null un precio bueno, y de paso metía en
+  // course_price_history una bajada que nunca ocurrió — que es justo lo que
+  // dispara los avisos por correo de HU-021.
+  const aGuardar = desconocido
+    ? { ...course, priceAmount: existing.priceAmount, priceCurrency: existing.priceCurrency }
+    : course;
+
+  const priceChanged = !desconocido && pricesDiffer(existing, course);
+  await store.updateCourse(existing.id, aGuardar);
   if (priceChanged) {
     await store.insertPriceHistory(existing.id, course.priceAmount, course.priceCurrency);
   }

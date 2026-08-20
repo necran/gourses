@@ -7,6 +7,11 @@
 //
 // Solo se reintenta lo que tiene sentido reintentar: un 429 o un fallo del
 // servidor pasan solos, pero un 404 no va a cambiar por insistir.
+//
+// La espera por defecto es deliberadamente larga (1+2+4+8 = 15 s repartidos en
+// cinco intentos). Con la anterior —3,5 s en total— una ejecución completa se
+// dejó sin precio el 21 % de los cursos: la ventana de Udemy dura más que eso, y
+// rendirse pronto solo consigue perder el precio y volver a pedirlo mañana.
 const REINTENTABLES = [429, 500, 502, 503, 504];
 
 export function esReintentable(error: unknown): boolean {
@@ -17,8 +22,8 @@ export function esReintentable(error: unknown): boolean {
 export async function conReintentos<T>(
   tarea: () => Promise<T>,
   {
-    intentos = 4,
-    esperaBaseMs = 500,
+    intentos = 5,
+    esperaBaseMs = 1000,
     dormir = (ms: number) => new Promise((r) => setTimeout(r, ms)),
   }: { intentos?: number; esperaBaseMs?: number; dormir?: (ms: number) => Promise<unknown> } = {}
 ): Promise<T> {

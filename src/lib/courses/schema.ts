@@ -13,6 +13,14 @@ export interface NormalizedCourse {
   description: string | null;
   priceAmount: number | null;
   priceCurrency: string | null;
+  /**
+   * `true` cuando el precio **no se ha podido averiguar** en esta pasada (la
+   * llamada de detalle falló), que no es lo mismo que "este curso no tiene
+   * precio". Sin esta distinción, `priceAmount: null` significaba las dos
+   * cosas, y un 429 pasajero borraba el precio que ya teníamos guardado.
+   * Ausente o `false` = el dato es de fiar, aunque sea null.
+   */
+  priceUnknown?: boolean;
   rating: number | null;
   level: string | null;
   language: string | null;

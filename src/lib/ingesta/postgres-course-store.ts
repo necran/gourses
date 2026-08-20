@@ -1,11 +1,15 @@
-import type { Client } from "pg";
+import type { Client, Pool } from "pg";
 import type { CourseStore } from "./upsert-course.ts";
 import type { NormalizedCourse } from "../courses/schema.ts";
 
 // Implementación de CourseStore contra Postgres directo (no PostgREST) —
 // usada por los jobs de ingesta, que corren server-side y nunca desde el
 // cliente/frontend (ver .claude/rules/seguridad.md).
-export function createPostgresCourseStore(client: Client): CourseStore {
+// Acepta un `Client` (una sola conexión) o un `Pool` (varias). Desde HU-023 la
+// ingesta de Udemy pide detalles en paralelo y escribe desde varias tareas a la
+// vez: sobre un único `Client`, `pg` encola las consultas y avisa de que eso
+// quedará prohibido en pg@9. Con un `Pool` cada tarea coge su conexión.
+export function createPostgresCourseStore(client: Client | Pool): CourseStore {
   return {
     async findBySourceAndSourceId(source, sourceId) {
       const { rows } = await client.query(

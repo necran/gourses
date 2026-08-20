@@ -107,7 +107,8 @@ function parsePrice(detail: UdemyRawDetail | null): {
 
 // Combina el item del listado (metadatos) con el detalle (precio) y lo lleva al
 // esquema común de HU-004. El detalle es opcional: si esa llamada falló, el
-// curso se guarda igualmente con precio null en vez de perderse.
+// curso se guarda igualmente en vez de perderse, pero marcado con
+// `priceUnknown` para que nadie confunda "no lo sé" con "no cuesta nada".
 //
 // El enlace de afiliado de Udemy todavía no está confirmado (ver
 // docs/checklist-alta-afiliados.md), así que affiliate_url guarda de momento la
@@ -139,6 +140,9 @@ export function normalizeUdemyCourse(
     description: firstString(raw.headline),
     priceAmount: amount,
     priceCurrency: currency,
+    // Sin detalle no es que el curso sea gratis: es que no lo sabemos. La
+    // distinción la usa upsertCourse para no borrar el precio que ya hubiera.
+    priceUnknown: detail === null,
     rating: parseRating(raw),
     level: firstString(raw.instructional_level_simple, raw.instructional_level),
     language: parseLanguage(raw),

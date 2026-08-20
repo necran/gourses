@@ -39,6 +39,7 @@ describe("normalizeUdemyCourse", () => {
       description: "Master Vibe Coding with AI Coding Agents",
       priceAmount: 17.99,
       priceCurrency: "EUR",
+      priceUnknown: false,
       rating: 4.66,
       level: "All Levels",
       language: "en",
@@ -62,6 +63,8 @@ describe("normalizeUdemyCourse", () => {
       description: null,
       priceAmount: null,
       priceCurrency: null,
+      // Sin detalle, el precio no es "ninguno": es desconocido.
+      priceUnknown: true,
       rating: null,
       level: null,
       language: null,
@@ -134,5 +137,21 @@ describe("normalizeUdemyCourse", () => {
       const roto = { ...rawCompleto, [campo]: undefined };
       expect(() => normalizeUdemyCourse(roto, null, BASE)).toThrow(UdemyCourseValidationError);
     }
+  });
+});
+
+// La distinción que impide que un 429 borre precios buenos (ver upsert-course).
+describe("normalizeUdemyCourse — precio desconocido frente a precio ausente", () => {
+  const minimo: UdemyRawCourse = { id: 1, title: "Curso mínimo", url: "/course/minimo/" };
+
+  it("marca el precio como desconocido cuando no hubo detalle", () => {
+    expect(normalizeUdemyCourse(minimo, null, BASE).priceUnknown).toBe(true);
+  });
+
+  // El detalle respondió; que no traiga precio es un dato, no una laguna.
+  it("no lo marca cuando el detalle respondió sin precio", () => {
+    const curso = normalizeUdemyCourse(minimo, {}, BASE);
+    expect(curso.priceAmount).toBeNull();
+    expect(curso.priceUnknown).toBe(false);
   });
 });

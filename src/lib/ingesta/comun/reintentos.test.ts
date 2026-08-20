@@ -29,12 +29,14 @@ describe("HU-023 — reintentos con espera creciente", () => {
         if (llamadas < 3) throw new Error("Udemy API respondió 429 Too Many Requests");
         return "ok";
       },
-      { dormir }
+      { esperaBaseMs: 500, dormir }
     );
 
     expect(r).toBe("ok");
     expect(llamadas).toBe(3);
     // Creciente: si se insistiera al mismo ritmo, se agobiaría más a la API.
+    // La base se pasa explícita para no depender del valor por defecto, que se
+    // ajusta según lo que aguante la API.
     expect(esperas).toEqual([500, 1000]);
   });
 
