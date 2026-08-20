@@ -91,12 +91,12 @@ Dos consecuencias que marcan el diseño:
 |---|---|---|
 | Subcategorías | desactivadas (13 ámbitos) | activadas (143 ámbitos) |
 | `page_size` | 12 | 50 (máximo real: con 100 la API da 400) |
-| Detalle de precio | en serie | concurrencia 6, con reintentos |
+| Detalle de precio | en serie | concurrencia 3, con reintentos |
 | Coursera | 1 página | 40 páginas |
 | Tope del job | 30 min | 60 min |
 
 Medido contra la API real: 0,59 s por curso en serie frente a **0,25 s con
-concurrencia 6**, y ~59 cursos únicos por ámbito. Proyección: **de 425 a ~12.500
+concurrencia**, y ~59 cursos únicos por ámbito. Proyección: **de 425 a ~12.500
 cursos** (8.500 de Udemy + 4.000 de Coursera) en unos 29 minutos, de ahí el margen
 del doble en el tope.
 
@@ -115,6 +115,30 @@ alguien lo devuelve a su sitio anterior.
 También hubo dos tests propios mal planteados: uno daba por hecho que un detalle
 fallido descarta el curso (no: se guarda sin precio y el fallo queda anotado), y otro
 esperaba un error de forma donde el sistema tolera a propósito un curso mal formado.
+
+## El segundo fallo, este sí se coló: la cuota y los precios borrados
+
+La primera ejecución completa contra el NAS trajo 4.784 cursos de Udemy, pero **994
+(21 %) fallaron con 429**. Un experimento controlado descartó la explicación fácil: a
+4 ámbitos no falla ni uno a ninguna concurrencia, y la concurrencia 6 no es más rápida
+que la 3. O sea que el límite no es de peticiones por segundo sino **acumulado**, así
+que se bajó la concurrencia a 3 y se alargó la espera creciente.
+
+Lo grave apareció al vigilar la segunda pasada: los cursos sin precio **subían** de 994
+a 1.123 en una ejecución que no añadía cursos nuevos. Es decir, cada 429 estaba
+**borrando un precio bueno que ya teníamos** y apuntando en `course_price_history` una
+bajada que nunca ocurrió — justo el dato del que se alimentan los avisos por correo de
+HU-021.
+
+La raíz era que `null` significaba dos cosas a la vez: "este curso no tiene precio" y
+"no he podido averiguar el precio". `priceUnknown` las separa; con la marca puesta,
+`upsertCourse` conserva el precio anterior y no toca el histórico. Verificado en la
+ingesta siguiente: los cursos sin precio se quedaron clavados en 194 mientras se
+reprocesaban cientos de cursos, en vez de subir.
+
+No llegó a salir ningún correo falso: el detector de HU-021 ya descartaba los precios
+nulos por su cuenta ("sin-precio" / "sin-referencia"). Fue suerte del diseño, no del
+código de ingesta.
 
 ## Sobre el crecimiento de la base de datos
 

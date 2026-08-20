@@ -35,15 +35,28 @@ test.describe("HU-022 — filtrar por categoría", () => {
     await expect(page.getByLabel("Categoría")).toHaveValue("datos-e-ia");
   });
 
+  // Este test comparaba el número de cursos con filtro y sin él. Dejó de valer
+  // al ampliar el catálogo (HU-023): «idiomas» ya llena la primera página, así
+  // que quitar el filtro no puede dar *más* de 50 y el test fallaba pese a
+  // funcionar la web. Lo que importa no es cuántos salen, sino que al quitar el
+  // filtro aparezcan cursos que antes quedaban fuera.
   test("volver a «todas» devuelve el catálogo completo", async ({ page }) => {
     await page.goto("/buscar?category=idiomas");
-    const conFiltro = await cursos(page).count();
+    const conFiltro = new Set(await cursos(page).allTextContents());
+    expect(conFiltro.size).toBeGreaterThan(0);
 
     await page.getByLabel("Categoría").selectOption("");
     await page.getByRole("button", { name: "Buscar" }).click();
 
-    await expect(page.getByLabel("Categoría")).toHaveValue("");
-    expect(await cursos(page).count()).toBeGreaterThan(conFiltro);
+    // Esperar a la navegación por la URL, no por el valor del selector: «todas»
+    // es también lo que acaba de seleccionarse en la página anterior, así que
+    // esa comprobación pasaría antes de que llegue la nueva lista. El formulario
+    // manda `category=` vacío en vez de omitirlo, y eso es lo que se espera.
+    await expect(page).toHaveURL(/[?&]category=(&|$)/);
+
+    await expect
+      .poll(async () => (await cursos(page).allTextContents()).some((t) => !conFiltro.has(t)))
+      .toBe(true);
   });
 
   test("una categoría inventada se ignora, sin error", async ({ page }) => {
