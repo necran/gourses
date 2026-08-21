@@ -41,6 +41,21 @@ export default async function MiCuentaPage() {
 
       <AvisosForm activados={avisos} />
 
+      {/* Va antes de la zona de peligro a propósito: llevarse los datos solo
+          sirve si se puede hacer *antes* de borrarlos (HU-024). */}
+      <section className={styles.seccion}>
+        <h2>Mis datos</h2>
+        <p className={styles.nota}>
+          Puedes descargarte todo lo que guardamos de ti —tu correo, tus favoritos y si
+          quieres avisos— en un fichero que sirve para leerlo o llevártelo a otro sitio.
+        </p>
+        {/* Enlace y no botón: es una descarga, no una acción que cambie nada.
+            `download` deja el nombre en manos de la cabecera de la respuesta. */}
+        <a className={styles.boton} href="/mi-cuenta/exportar" download>
+          Descargar mis datos
+        </a>
+      </section>
+
       <form action={cerrarSesion}>
         <button type="submit" className={styles.boton}>
           Cerrar sesión

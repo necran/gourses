@@ -99,3 +99,10 @@
   font-size: 0.9rem;
   color: var(--acento);
 }
+
+/* El enlace de descarga usa .boton, que está pensado para <button>: hay que
+   devolverle el aspecto de caja y quitarle el subrayado de enlace. */
+a.boton {
+  display: inline-block;
+  text-decoration: none;
+}
