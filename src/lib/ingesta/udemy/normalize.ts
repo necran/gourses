@@ -41,9 +41,50 @@ export interface UdemyRawCourse {
   content_info?: unknown;
 }
 
-// Detalle de curso (/api-2.0/courses/{id}/): es lo único que trae el precio.
+// Detalle de curso (/api-2.0/courses/{id}/), pedido con fields[course] (HU-029):
+// trae el precio y también la descripción real, «lo que aprenderás», los
+// requisitos y las cifras de reseñas/alumnos — nada de esto viene en el listado.
 export interface UdemyRawDetail {
   price_detail?: unknown;
+  description?: unknown;
+  what_you_will_learn_data?: unknown;
+  requirements_data?: unknown;
+  num_reviews?: unknown;
+  num_subscribers?: unknown;
+}
+
+// El HTML de `description` es de Udemy, no nuestro: nunca se mete en el DOM
+// tal cual. Se limpia a texto plano, conservando los saltos de párrafo y de
+// elemento de lista, que es lo que hace legible un texto largo sin etiquetas.
+export function limpiarDescripcionHtml(html: string): string {
+  return html
+    .replace(/<\/(p|li|h[1-6])>/gi, "\n")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<li[^>]*>/gi, "• ")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&#39;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+// Listas de Udemy (`what_you_will_learn_data`, `requirements_data`): siempre
+// `{ items: string[] }` cuando existen. Un curso sin ninguna de las dos cosas
+// no trae la clave, así que null es "no publica esto", no un fallo de forma.
+function parseListaDeItems(raw: unknown): string[] | null {
+  const items = (raw as { items?: unknown } | undefined)?.items;
+  if (!Array.isArray(items)) return null;
+  const limpios = items.filter((i): i is string => typeof i === "string" && i.trim().length > 0);
+  return limpios.length > 0 ? limpios : null;
+}
+
+function parseEntero(raw: unknown): number | null {
+  return typeof raw === "number" && Number.isFinite(raw) ? Math.round(raw) : null;
 }
 
 function firstString(...values: unknown[]): string | null {
@@ -133,15 +174,23 @@ export function normalizeUdemyCourse(
 
   const { amount, currency } = parsePrice(detail);
 
+  // La descripción real, «lo que aprenderás», los requisitos y las cifras de
+  // reseñas/alumnos vienen todos de la misma llamada de detalle que el precio
+  // (HU-029). Antes `description` era el titular del listado (`headline`),
+  // que no es una descripción — se deja de usar como tal.
+  const descripcionHtml = typeof detail?.description === "string" ? detail.description : null;
+
   return {
     source: "udemy",
     sourceId: String(raw.id),
     title: raw.title,
-    description: firstString(raw.headline),
+    description: descripcionHtml ? limpiarDescripcionHtml(descripcionHtml) : null,
     priceAmount: amount,
     priceCurrency: currency,
     // Sin detalle no es que el curso sea gratis: es que no lo sabemos. La
-    // distinción la usa upsertCourse para no borrar el precio que ya hubiera.
+    // misma marca cubre ahora también descripción y estadísticas: todo viene
+    // de la misma llamada, así que todo es igual de incierto cuando falla —
+    // upsertCourse conserva lo que ya hubiera en vez de borrarlo con null.
     priceUnknown: detail === null,
     rating: parseRating(raw),
     level: firstString(raw.instructional_level_simple, raw.instructional_level),
@@ -150,6 +199,10 @@ export function normalizeUdemyCourse(
     affiliateUrl: new URL(raw.url, baseUrl).toString(),
     imageUrl: firstString(raw.image_480x270, raw.image_240x135),
     category: mapUdemyCategory(categoryTitle),
+    numReviews: parseEntero(detail?.num_reviews),
+    numSubscribers: parseEntero(detail?.num_subscribers),
+    whatYouWillLearn: parseListaDeItems(detail?.what_you_will_learn_data),
+    requirements: parseListaDeItems(detail?.requirements_data),
     ...duracion(raw),
   };
 }

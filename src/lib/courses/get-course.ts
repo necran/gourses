@@ -19,6 +19,10 @@ export interface CourseDetail {
   affiliateUrl: string | null;
   category: CourseCategory | null;
   duration: DurationRange | null;
+  numReviews: number | null;
+  numSubscribers: number | null;
+  whatYouWillLearn: string[] | null;
+  requirements: string[] | null;
   priceHistory: PriceHistoryEntry[];
 }
 
@@ -47,6 +51,10 @@ interface CourseRow {
   category: CourseCategory | null;
   duration_min_minutes: number | null;
   duration_max_minutes: number | null;
+  num_reviews: number | null;
+  num_subscribers: number | null;
+  what_you_will_learn: string[] | null;
+  requirements: string[] | null;
 }
 
 interface PriceHistoryRow {
@@ -78,11 +86,15 @@ function mapRow(row: CourseRow): Omit<CourseDetail, "priceHistory"> {
       row.duration_min_minutes === null || row.duration_max_minutes === null
         ? null
         : { minMinutes: row.duration_min_minutes, maxMinutes: row.duration_max_minutes },
+    numReviews: row.num_reviews,
+    numSubscribers: row.num_subscribers,
+    whatYouWillLearn: row.what_you_will_learn,
+    requirements: row.requirements,
   };
 }
 
 const CAMPOS_CURSO =
-  "id, source, title, description, price_amount, price_currency, rating, level, language, instructor, image_url, affiliate_url, category, duration_min_minutes, duration_max_minutes";
+  "id, source, title, description, price_amount, price_currency, rating, level, language, instructor, image_url, affiliate_url, category, duration_min_minutes, duration_max_minutes, num_reviews, num_subscribers, what_you_will_learn, requirements";
 
 // Recupera varios cursos de una vez para el comparador (HU-017). Los ids ya
 // vienen validados por parseCompareIds, pero se vuelven a filtrar aquí porque
@@ -118,9 +130,7 @@ export async function getCourseById(
 
   const { data, error } = await client
     .from("courses")
-    .select(
-      "id, source, title, description, price_amount, price_currency, rating, level, language, instructor, image_url, affiliate_url, category, duration_min_minutes, duration_max_minutes"
-    )
+    .select(CAMPOS_CURSO)
     .eq("id", id)
     .maybeSingle();
 
@@ -147,24 +157,5 @@ export async function getCourseById(
     capturedAt: h.captured_at,
   }));
 
-  return {
-    id: row.id,
-    source: row.source,
-    title: row.title,
-    description: row.description,
-    priceAmount: toNumber(row.price_amount),
-    priceCurrency: row.price_currency,
-    rating: toNumber(row.rating),
-    level: row.level,
-    language: row.language,
-    instructor: row.instructor,
-    imageUrl: row.image_url,
-    affiliateUrl: row.affiliate_url,
-    category: row.category,
-    duration:
-      row.duration_min_minutes === null || row.duration_max_minutes === null
-        ? null
-        : { minMinutes: row.duration_min_minutes, maxMinutes: row.duration_max_minutes },
-    priceHistory,
-  };
+  return { ...mapRow(row), priceHistory };
 }

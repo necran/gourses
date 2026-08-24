@@ -23,6 +23,10 @@ function curso(overrides: Partial<CourseDetail> = {}): CourseDetail {
     affiliateUrl: "https://www.udemy.com/course/x/",
     category: "desarrollo",
     duration: { minMinutes: 990, maxMinutes: 990 },
+    numReviews: null,
+    numSubscribers: null,
+    whatYouWillLearn: null,
+    requirements: null,
     priceHistory: [],
     ...overrides,
   };
@@ -124,8 +128,30 @@ describe("courseStructuredData", () => {
     expect(d.offers).toBeUndefined();
   });
 
-  it("no declara valoración, porque no guardamos el número de reseñas que exige el estándar", () => {
-    const d = courseStructuredData(curso(), url);
+  // Sin reviewCount, AggregateRating es un dato incompleto que Google puede
+  // tomar por engañoso — mejor omitirlo que publicarlo a medias (HU-029).
+  it("no declara valoración cuando no se conoce el número de reseñas", () => {
+    const d = courseStructuredData(curso({ numReviews: null }), url);
+    expect(d.aggregateRating).toBeUndefined();
+  });
+
+  it("declara AggregateRating cuando hay valoración y reseñas de verdad", () => {
+    const d = courseStructuredData(curso({ rating: 4.7, numReviews: 1532 }), url);
+    expect(d.aggregateRating).toEqual({
+      "@type": "AggregateRating",
+      ratingValue: 4.7,
+      reviewCount: 1532,
+    });
+  });
+
+  it("no declara AggregateRating si hay reseñas pero no valoración", () => {
+    const d = courseStructuredData(curso({ rating: null, numReviews: 1532 }), url);
+    expect(d.aggregateRating).toBeUndefined();
+  });
+
+  // Cero reseñas no sostiene una valoración: no hay opiniones detrás.
+  it("no declara AggregateRating con cero reseñas", () => {
+    const d = courseStructuredData(curso({ rating: 4.7, numReviews: 0 }), url);
     expect(d.aggregateRating).toBeUndefined();
   });
 

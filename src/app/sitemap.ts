@@ -18,15 +18,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   try {
     const client = createSupabaseServerClient();
-    const { data, error } = await client
-      .from("courses")
-      .select("id, updated_at")
-      .order("updated_at", { ascending: false })
-      .limit(5000);
+    const cursos = await leerTodosLosCursos(client);
 
-    if (error || !data) return fijas;
-
-    const fichas: MetadataRoute.Sitemap = data.map((c) => ({
+    const fichas: MetadataRoute.Sitemap = cursos.map((c) => ({
       url: `${TITULAR.url}/curso/${c.id}`,
       lastModified: c.updated_at ? new Date(c.updated_at) : undefined,
       changeFrequency: "weekly" as const,
@@ -39,4 +33,44 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // mejor servir las páginas fijas que devolver un error.
     return fijas;
   }
+}
+
+interface FilaCurso {
+  id: string;
+  updated_at: string | null;
+}
+
+// El límite real de un sitemap es 50.000 URLs; se deja margen para las
+// páginas fijas. Si el catálogo se acerca a esta cifra, hace falta partir el
+// sitemap en varios (un índice de sitemaps), no subir más este número.
+const TOPE_SITEMAP = 49_000;
+
+// PostgREST de este proyecto limita cada respuesta a 1.000 filas *aunque se
+// pida más* con `.limit()` — no es la instrucción SQL, es un tope del propio
+// servidor (comprobado contra la API real: pedir 49.000 sigue devolviendo
+// 1.000). El `.limit(5000)` que había antes nunca llegó a hacer nada: el
+// catálogo entero estaba ya recortado a 1.000 fichas mucho antes de esa cifra,
+// y nadie lo había notado porque un sitemap corto no da ningún error (HU-029).
+// Se pagina con `.range()` hasta agotar el catálogo o el tope de arriba.
+async function leerTodosLosCursos(
+  client: ReturnType<typeof createSupabaseServerClient>
+): Promise<FilaCurso[]> {
+  const PAGINA = 1000;
+  const cursos: FilaCurso[] = [];
+
+  for (let desde = 0; desde < TOPE_SITEMAP; desde += PAGINA) {
+    const { data, error } = await client
+      .from("courses")
+      .select("id, updated_at")
+      .order("id", { ascending: true })
+      .range(desde, Math.min(desde + PAGINA, TOPE_SITEMAP) - 1);
+
+    if (error) throw new Error(`Fallo al leer el catálogo para el sitemap: ${error.message}`);
+    if (!data || data.length === 0) break;
+
+    cursos.push(...data);
+    if (data.length < PAGINA) break;
+  }
+
+  return cursos;
 }

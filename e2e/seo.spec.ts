@@ -75,8 +75,12 @@ test.describe("HU-016 — SEO de las fichas", () => {
     expect(xml).toContain("/buscar");
     expect(xml).toContain("/afiliacion");
 
-    // Debe listar fichas reales, no solo las páginas fijas.
+    // Debe listar fichas reales, no solo las páginas fijas. El umbral de
+    // 1.000 no es arbitrario: es el tope de filas por respuesta de PostgREST
+    // en este proyecto, que un `.limit()` más alto no sorteaba — con eso el
+    // sitemap se quedaba callado en 1.000 fichas pasara lo que pasara, y
+    // nadie lo notaba porque un sitemap corto no da ningún error (HU-029).
     const fichas = xml.match(/\/curso\/[0-9a-f-]{36}/g) ?? [];
-    expect(fichas.length).toBeGreaterThan(10);
+    expect(fichas.length).toBeGreaterThan(1000);
   });
 });

@@ -23,6 +23,10 @@ function curso(overrides: Partial<FavoriteCourse> = {}): FavoriteCourse {
     affiliateUrl: "https://www.udemy.com/course/prueba/",
     category: "desarrollo",
     duration: { minMinutes: 60, maxMinutes: 90 },
+    numReviews: null,
+    numSubscribers: null,
+    whatYouWillLearn: null,
+    requirements: null,
     ...overrides,
   };
 }

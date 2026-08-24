@@ -98,9 +98,18 @@ export function courseStructuredData(course: CourseDetail, url: string): Record<
     };
   }
 
-  // schema.org exige un número de reseñas junto a la valoración. No lo
-  // guardamos, así que no se declara la valoración: mejor omitirla que
-  // publicar un dato incompleto que Google puede tomar por engañoso.
+  // schema.org exige un número de reseñas junto a la valoración
+  // (`reviewCount`). Antes no se guardaba, así que la valoración no se
+  // declaraba nunca: mejor omitirla que publicar un dato incompleto que
+  // Google puede tomar por engañoso. Con `numReviews` real (HU-029), se
+  // declara solo cuando hay las dos cosas — nunca una valoración a medias.
+  if (course.rating !== null && course.numReviews !== null && course.numReviews > 0) {
+    datos.aggregateRating = {
+      "@type": "AggregateRating",
+      ratingValue: course.rating,
+      reviewCount: course.numReviews,
+    };
+  }
 
   return datos;
 }

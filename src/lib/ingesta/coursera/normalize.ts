@@ -107,6 +107,13 @@ export function normalizeCourseraCourse(
     affiliateUrl: `https://www.coursera.org/learn/${raw.slug}`,
     imageUrl: typeof raw.photoUrl === "string" ? raw.photoUrl : null,
     category: mapCourseraDomainTypes(raw.domainTypes),
+    // Coursera no expone reseñas, alumnos ni «lo que aprenderás» en su Catalog
+    // API pública (verificado 2026-08-24, ver HU-029). Siempre null, nunca
+    // un hueco que parezca un dato ausente por error.
+    numReviews: null,
+    numSubscribers: null,
+    whatYouWillLearn: null,
+    requirements: null,
     ...duracion(raw.workload),
   };
 }

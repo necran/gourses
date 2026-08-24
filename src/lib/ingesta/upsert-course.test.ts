@@ -17,6 +17,10 @@ function makeCourse(overrides: Partial<NormalizedCourse> = {}): NormalizedCourse
     affiliateUrl: null,
     imageUrl: null,
     category: null,
+    numReviews: null,
+    numSubscribers: null,
+    whatYouWillLearn: null,
+    requirements: null,
     durationMinMinutes: null,
     durationMaxMinutes: null,
     ...overrides,
@@ -114,6 +118,82 @@ describe("upsertCourse — precio que no se ha podido averiguar", () => {
     await upsertCourse(store, makeCourse({ priceAmount: null, priceUnknown: true }));
 
     expect(store.insertPriceHistory).not.toHaveBeenCalled();
+  });
+
+  // HU-029: descripción, reseñas, alumnos y las dos listas vienen de la misma
+  // llamada que el precio, así que un detalle fallido las deja igual de
+  // desconocidas — y "desconocido" no puede borrar lo que ya se sabía.
+  it("no borra la descripción ni las estadísticas cuando el detalle falló", async () => {
+    const store = makeStore({
+      findBySourceAndSourceId: vi.fn().mockResolvedValue({
+        id: "existing-id",
+        priceAmount: 19.99,
+        priceCurrency: "USD",
+        description: "Descripción real ya guardada",
+        numReviews: 1200,
+        numSubscribers: 5000,
+        whatYouWillLearn: ["Aprender X"],
+        requirements: ["Saber Y"],
+      }),
+    });
+
+    await upsertCourse(
+      store,
+      makeCourse({
+        priceAmount: null,
+        priceCurrency: null,
+        priceUnknown: true,
+        description: null,
+        numReviews: null,
+        numSubscribers: null,
+        whatYouWillLearn: null,
+        requirements: null,
+      })
+    );
+
+    expect(store.updateCourse).toHaveBeenCalledWith(
+      "existing-id",
+      expect.objectContaining({
+        description: "Descripción real ya guardada",
+        numReviews: 1200,
+        numSubscribers: 5000,
+        whatYouWillLearn: ["Aprender X"],
+        requirements: ["Saber Y"],
+      })
+    );
+  });
+
+  // El detalle SÍ respondió, solo que sin precio: eso no es "desconocido", es
+  // el dato real, así que no debe conservar nada del curso anterior.
+  it("cuando el detalle respondió de verdad, no conserva nada del curso anterior", async () => {
+    const store = makeStore({
+      findBySourceAndSourceId: vi.fn().mockResolvedValue({
+        id: "existing-id",
+        priceAmount: 19.99,
+        priceCurrency: "USD",
+        description: "Descripción vieja",
+        numReviews: 10,
+        numSubscribers: 20,
+        whatYouWillLearn: null,
+        requirements: null,
+      }),
+    });
+
+    await upsertCourse(
+      store,
+      makeCourse({
+        priceAmount: 24.99,
+        priceCurrency: "USD",
+        priceUnknown: false,
+        description: "Descripción nueva",
+        numReviews: 30,
+      })
+    );
+
+    expect(store.updateCourse).toHaveBeenCalledWith(
+      "existing-id",
+      expect.objectContaining({ description: "Descripción nueva", numReviews: 30 })
+    );
   });
 
   // Un curso nuevo sí se guarda —vale más tenerlo en el catálogo sin precio que

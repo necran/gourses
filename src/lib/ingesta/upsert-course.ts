@@ -7,7 +7,16 @@ export interface CourseStore {
   findBySourceAndSourceId(
     source: string,
     sourceId: string
-  ): Promise<{ id: string; priceAmount: number | null; priceCurrency: string | null } | null>;
+  ): Promise<{
+    id: string;
+    priceAmount: number | null;
+    priceCurrency: string | null;
+    description: string | null;
+    numReviews: number | null;
+    numSubscribers: number | null;
+    whatYouWillLearn: string[] | null;
+    requirements: string[] | null;
+  } | null>;
   insertCourse(course: NormalizedCourse): Promise<{ id: string }>;
   updateCourse(id: string, course: NormalizedCourse): Promise<void>;
   insertPriceHistory(courseId: string, priceAmount: number | null, priceCurrency: string | null): Promise<void>;
@@ -43,12 +52,24 @@ export async function upsertCourse(
     return { id, priceChanged: !desconocido };
   }
 
-  // Se conserva el precio que ya había. Sin esto, un 429 pasajero en la llamada
-  // de detalle machacaba con null un precio bueno, y de paso metía en
-  // course_price_history una bajada que nunca ocurrió — que es justo lo que
-  // dispara los avisos por correo de HU-021.
+  // Se conserva lo que ya había del detalle: precio, descripción real y
+  // estadísticas (HU-029). Todo viene de la misma llamada de Udemy, así que
+  // cuando falla, falla todo a la vez — sin esto, un 429 pasajero machacaba
+  // con null un precio bueno (y de paso metía en course_price_history una
+  // bajada que nunca ocurrió, que es lo que dispara los avisos de HU-021), o
+  // borraba una descripción real que ya se había conseguido en una pasada
+  // anterior.
   const aGuardar = desconocido
-    ? { ...course, priceAmount: existing.priceAmount, priceCurrency: existing.priceCurrency }
+    ? {
+        ...course,
+        priceAmount: existing.priceAmount,
+        priceCurrency: existing.priceCurrency,
+        description: existing.description,
+        numReviews: existing.numReviews,
+        numSubscribers: existing.numSubscribers,
+        whatYouWillLearn: existing.whatYouWillLearn,
+        requirements: existing.requirements,
+      }
     : course;
 
   const priceChanged = !desconocido && pricesDiffer(existing, course);

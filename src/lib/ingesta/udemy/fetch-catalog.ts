@@ -174,12 +174,22 @@ export async function fetchUnitPage(
   };
 }
 
-// El listado de descubrimiento no trae precio, así que hace falta una llamada
-// de detalle por curso — es lo que alimenta course_price_history (HU-004).
+// Campos de detalle que se piden explícitamente. Sin `fields[course]`, Udemy
+// devuelve un conjunto por defecto que no trae ninguno de estos — es lo que
+// hacía que `description` acabara siendo el titular del listado en vez de la
+// descripción real (HU-029). Probado contra la API real: los cinco están
+// disponibles con las credenciales de afiliado, sin permiso adicional.
+const CAMPOS_DETALLE =
+  "price_detail,description,what_you_will_learn_data,requirements_data,num_reviews,num_subscribers";
+
+// El listado de descubrimiento no trae precio ni descripción real, así que
+// hace falta una llamada de detalle por curso — es lo que alimenta
+// course_price_history (HU-004) y el contenido de la ficha (HU-029).
 export async function fetchCourseDetail(
   creds: UdemyCredentials,
   courseId: number
 ): Promise<UdemyRawDetail> {
   const url = resolveApiUrl(creds.baseUrl, `/api-2.0/courses/${courseId}/`);
+  url.searchParams.set("fields[course]", CAMPOS_DETALLE);
   return (await getJson(creds, url)) as UdemyRawDetail;
 }

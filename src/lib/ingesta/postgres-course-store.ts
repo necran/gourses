@@ -13,7 +13,9 @@ export function createPostgresCourseStore(client: Client | Pool): CourseStore {
   return {
     async findBySourceAndSourceId(source, sourceId) {
       const { rows } = await client.query(
-        `select id, price_amount, price_currency from courses where source = $1 and source_id = $2`,
+        `select id, price_amount, price_currency, description, num_reviews, num_subscribers,
+                what_you_will_learn, requirements
+         from courses where source = $1 and source_id = $2`,
         [source, sourceId]
       );
       if (rows.length === 0) return null;
@@ -21,14 +23,19 @@ export function createPostgresCourseStore(client: Client | Pool): CourseStore {
         id: rows[0].id,
         priceAmount: rows[0].price_amount === null ? null : Number(rows[0].price_amount),
         priceCurrency: rows[0].price_currency,
+        description: rows[0].description,
+        numReviews: rows[0].num_reviews,
+        numSubscribers: rows[0].num_subscribers,
+        whatYouWillLearn: rows[0].what_you_will_learn,
+        requirements: rows[0].requirements,
       };
     },
 
     async insertCourse(course: NormalizedCourse) {
       const { rows } = await client.query(
         `insert into courses
-          (source, source_id, title, description, price_amount, price_currency, rating, level, language, instructor, affiliate_url, image_url, category, duration_min_minutes, duration_max_minutes, updated_at)
-         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, now())
+          (source, source_id, title, description, price_amount, price_currency, rating, level, language, instructor, affiliate_url, image_url, category, duration_min_minutes, duration_max_minutes, num_reviews, num_subscribers, what_you_will_learn, requirements, updated_at)
+         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, now())
          returning id`,
         [
           course.source,
@@ -46,6 +53,10 @@ export function createPostgresCourseStore(client: Client | Pool): CourseStore {
           course.category,
           course.durationMinMinutes,
           course.durationMaxMinutes,
+          course.numReviews,
+          course.numSubscribers,
+          course.whatYouWillLearn,
+          course.requirements,
         ]
       );
       return { id: rows[0].id };
@@ -57,7 +68,9 @@ export function createPostgresCourseStore(client: Client | Pool): CourseStore {
           title = $2, description = $3, price_amount = $4, price_currency = $5,
           rating = $6, level = $7, language = $8, instructor = $9,
           affiliate_url = $10, image_url = $11, category = $12,
-          duration_min_minutes = $13, duration_max_minutes = $14, updated_at = now()
+          duration_min_minutes = $13, duration_max_minutes = $14,
+          num_reviews = $15, num_subscribers = $16, what_you_will_learn = $17, requirements = $18,
+          updated_at = now()
          where id = $1`,
         [
           id,
@@ -74,6 +87,10 @@ export function createPostgresCourseStore(client: Client | Pool): CourseStore {
           course.category,
           course.durationMinMinutes,
           course.durationMaxMinutes,
+          course.numReviews,
+          course.numSubscribers,
+          course.whatYouWillLearn,
+          course.requirements,
         ]
       );
     },

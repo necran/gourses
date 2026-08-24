@@ -27,6 +27,14 @@ export interface NormalizedCourse {
   instructor: string | null;
   affiliateUrl: string | null;
   imageUrl: string | null;
+  /** Número de reseñas (HU-029). Necesario para declarar AggregateRating sin
+   *  arriesgarse a que Google lo trate como un dato incompleto o engañoso. */
+  numReviews: number | null;
+  numSubscribers: number | null;
+  /** «Lo que aprenderás» / requisitos previos, tal cual los publica la
+   *  plataforma de origen (HU-029). Coursera no tiene equivalente: siempre null. */
+  whatYouWillLearn: string[] | null;
+  requirements: string[] | null;
   /** Categoría del vocabulario común (HU-010), no la etiqueta de la plataforma. */
   category: CourseCategory | null;
   /** Duración total en minutos (HU-011). Rango, porque a menudo lo es. */

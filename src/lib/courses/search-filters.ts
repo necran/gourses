@@ -1,4 +1,5 @@
 import { COURSE_CATEGORIES, type CourseCategory } from "./categories.ts";
+import { conSeparadorDeMiles } from "../formato-numero.ts";
 
 // Entrada cruda de la query string de /buscar — nunca se confía en el tipo
 // ni el rango de estos valores antes de sanearlos (ver .claude/rules/seguridad.md).
@@ -37,16 +38,6 @@ export const ETIQUETAS_ORDEN: Record<OrdenResultados, string> = {
   "precio-asc": "Precio: de menor a mayor",
   "valoracion-desc": "Mejor valorados",
 };
-
-// Separador de miles a mano, con punto: `toLocaleString("es-ES")` depende de
-// que el entorno traiga los datos ICU de ese locale, y no siempre los trae
-// (comprobado: en este proyecto Node los da sin separar). Escribirlo a mano
-// no depende de nada.
-function conSeparadorDeMiles(n: number): string {
-  return Math.trunc(n)
-    .toString()
-    .replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-}
 
 /**
  * Texto del recuento de resultados (HU-028). Aparte, sencilla y sin JSX, para

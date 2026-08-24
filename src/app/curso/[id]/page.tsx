@@ -15,6 +15,7 @@ import {
 } from "../../../lib/courses/course-seo";
 import { TITULAR } from "../../../lib/legal/titular";
 import { BotonFavorito } from "../../../components/boton-favorito";
+import { conSeparadorDeMiles } from "../../../lib/formato-numero";
 import styles from "./page.module.css";
 
 interface CoursePageProps {
@@ -89,7 +90,13 @@ export default async function CoursePage({ params }: CoursePageProps) {
             <p className={styles.fuente}>
               <span className={styles.etiqueta}>{course.source}</span>
               {course.category && <span> · {CATEGORY_LABELS[course.category]}</span>}
-              {course.rating !== null && <span> · ⭐ {course.rating}</span>}
+              {course.rating !== null && (
+                <span>
+                  {" "}
+                  · ⭐ {course.rating}
+                  {course.numReviews !== null && ` (${conSeparadorDeMiles(course.numReviews)} reseñas)`}
+                </span>
+              )}
               {course.level && <span> · {course.level}</span>}
               {course.language && <span> · {course.language}</span>}
               {formatDuration(course.duration) && (
@@ -97,7 +104,11 @@ export default async function CoursePage({ params }: CoursePageProps) {
               )}
             </p>
             {course.instructor && (
-              <p className={styles.instructor}>Impartido por {course.instructor}</p>
+              <p className={styles.instructor}>
+                Impartido por {course.instructor}
+                {course.numSubscribers !== null &&
+                  ` · ${conSeparadorDeMiles(course.numSubscribers)} alumnos`}
+              </p>
             )}
           </div>
         </header>
@@ -148,6 +159,32 @@ export default async function CoursePage({ params }: CoursePageProps) {
           <section>
             <h2>Descripción</h2>
             <p className={styles.descripcion}>{course.description}</p>
+          </section>
+        )}
+
+        {/* Vienen de la misma llamada de detalle de Udemy que la descripción
+            (HU-029). Coursera no tiene equivalente, así que en sus fichas
+            estas dos secciones no aparecen — no es un hueco, es que la
+            plataforma no publica esto. */}
+        {course.whatYouWillLearn && (
+          <section>
+            <h2>Lo que aprenderás</h2>
+            <ul className={styles.listaAprendizaje}>
+              {course.whatYouWillLearn.map((item, i) => (
+                <li key={i}>{item}</li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {course.requirements && (
+          <section>
+            <h2>Requisitos</h2>
+            <ul className={styles.listaAprendizaje}>
+              {course.requirements.map((item, i) => (
+                <li key={i}>{item}</li>
+              ))}
+            </ul>
           </section>
         )}
       </article>

@@ -26,6 +26,10 @@ describe("normalizeCourseraCourse", () => {
       affiliateUrl: "https://www.coursera.org/learn/intro-a-python",
       imageUrl: "https://example.com/foto.jpg",
       category: null,
+      numReviews: null,
+      numSubscribers: null,
+      whatYouWillLearn: null,
+      requirements: null,
       durationMinMinutes: null,
       durationMaxMinutes: null,
     });

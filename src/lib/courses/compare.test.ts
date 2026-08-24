@@ -24,6 +24,10 @@ function curso(overrides: Partial<CourseDetail> = {}): CourseDetail {
     affiliateUrl: null,
     category: "desarrollo",
     duration: { minMinutes: 120, maxMinutes: 120 },
+    numReviews: null,
+    numSubscribers: null,
+    whatYouWillLearn: null,
+    requirements: null,
     priceHistory: [],
     ...overrides,
   };

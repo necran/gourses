@@ -61,6 +61,10 @@ describeIfConfigured("HU-006 — ingesta de Coursera", () => {
       affiliateUrl: null,
       imageUrl: null,
       category: null,
+      numReviews: null,
+      numSubscribers: null,
+      whatYouWillLearn: null,
+      requirements: null,
       durationMinMinutes: null,
       durationMaxMinutes: null,
     });

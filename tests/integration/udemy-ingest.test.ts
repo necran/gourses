@@ -149,6 +149,10 @@ describeIfConfigured("HU-005 — ingesta de Udemy", () => {
       affiliateUrl: null,
       imageUrl: null,
       category: null,
+      numReviews: null,
+      numSubscribers: null,
+      whatYouWillLearn: null,
+      requirements: null,
       durationMinMinutes: null,
       durationMaxMinutes: null,
     });
