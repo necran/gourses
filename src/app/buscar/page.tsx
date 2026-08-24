@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { createSupabaseServerClient } from "../../lib/supabase/server-client";
 import {
+  ETIQUETAS_ORDEN,
+  ORDENES,
   excluyePorFaltaDeDato,
   parseCourseSearchFilters,
   type CourseSearchFilters,
@@ -42,6 +44,7 @@ function enlacePagina(filters: CourseSearchFilters, pagina: number): string {
   if (filters.language) params.set("language", filters.language);
   if (filters.category) params.set("category", filters.category);
   if (filters.incluirSinDato) params.set("sinDato", "1");
+  if (filters.orden) params.set("orden", filters.orden);
   if (pagina > 1) params.set("pagina", String(pagina));
   const query = params.toString();
   return query ? `/buscar?${query}` : "/buscar";
@@ -102,6 +105,18 @@ export default async function BuscarPage({ searchParams }: BuscarPageProps) {
             </option>
           ))}
         </select>
+        {/* El orden va en el mismo formulario que los filtros: cambiarlo es
+            otra búsqueda, y así vuelve sola a la página 1 al no mandarse
+            `pagina` (HU-027). */}
+        <select name="orden" defaultValue={filters.orden ?? ""} aria-label="Ordenar por">
+          <option value="">Mezcla equilibrada</option>
+          {ORDENES.map((o) => (
+            <option key={o} value={o}>
+              {ETIQUETAS_ORDEN[o]}
+            </option>
+          ))}
+        </select>
+
         {/* Se conserva al volver a filtrar: si se perdiera, cambiar la palabra
             clave volvería a esconder medio catálogo sin avisar (HU-026). No va
             como casilla visible porque solo tiene sentido cuando hay un filtro

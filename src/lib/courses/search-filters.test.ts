@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   MAX_PAGINA,
+  ORDENES,
   excluyePorFaltaDeDato,
   parseCourseSearchFilters,
 } from "./search-filters";
@@ -22,6 +23,7 @@ describe("parseCourseSearchFilters", () => {
       language: "es",
       pagina: 1,
       incluirSinDato: false,
+      orden: null,
     });
   });
 
@@ -36,6 +38,7 @@ describe("parseCourseSearchFilters", () => {
       // mirando alguna, y sin parámetro se mira la primera.
       pagina: 1,
       incluirSinDato: false,
+      orden: null,
     });
   });
 
@@ -195,5 +198,36 @@ describe("excluyePorFaltaDeDato", () => {
   // Un precio de cero es un filtro real («solo gratis»), no la ausencia de uno.
   it("avisa también con precio máximo cero", () => {
     expect(excluyePorFaltaDeDato(parseCourseSearchFilters({ maxPrice: "0" }))).toBe(true);
+  });
+});
+
+describe("orden (HU-027)", () => {
+  // `null` no es «sin orden»: es el reparto equilibrado entre plataformas, que
+  // es lo que se ve al entrar.
+  it("sin parámetro no hay orden pedido", () => {
+    expect(parseCourseSearchFilters({}).orden).toBeNull();
+  });
+
+  it.each(ORDENES)("acepta %s", (orden) => {
+    expect(parseCourseSearchFilters({ orden }).orden).toBe(orden);
+  });
+
+  it("acepta el valor aunque venga con espacios o en mayúsculas", () => {
+    expect(parseCourseSearchFilters({ orden: "  PRECIO-ASC " }).orden).toBe("precio-asc");
+  });
+
+  // Una dirección compartida con un orden que ya no existe tiene que seguir
+  // enseñando cursos, no fallar.
+  it.each(["precio", "precio-desc", "", "   ", "id", "1"])(
+    "descarta el orden inventado %j",
+    (raw) => {
+      expect(parseCourseSearchFilters({ orden: raw }).orden).toBeNull();
+    }
+  );
+
+  it("se queda con el primero si llega repetido", () => {
+    expect(parseCourseSearchFilters({ orden: ["precio-asc", "valoracion-desc"] }).orden).toBe(
+      "precio-asc"
+    );
   });
 });

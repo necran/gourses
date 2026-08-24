@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { COURSE_SOURCES, type CourseSource } from "./schema";
-import type { CourseSearchFilters } from "./search-filters";
+import type { CourseSearchFilters, OrdenResultados } from "./search-filters";
 import type { DurationRange } from "./duration";
 
 export interface CourseSearchResult {
@@ -105,6 +105,15 @@ export async function searchCourses(
 ): Promise<CourseSearchPage> {
   const pagina = Math.max(1, filters.pagina);
 
+  // Con un orden pedido, el reparto equilibrado entre plataformas **estorba**:
+  // alternar una de cada no está ordenado por precio por mucho que cada mitad
+  // lo esté. Así que se consulta una sola vez, ordenada de verdad, y los cursos
+  // sin ese dato caen al final. Quien ha pedido ordenar por precio ha pedido
+  // justo eso (HU-027).
+  if (filters.orden !== null) {
+    return searchCoursesOrdenado(client, filters, filters.orden, pagina, limit);
+  }
+
   // Se pide a cada fuente todo lo que va **hasta el final** de la página, más
   // un resultado. No se puede pedir solo el trozo de esta página: cuántos pone
   // cada fuente en una página depende de si la otra se agotó antes, y eso solo
@@ -117,6 +126,54 @@ export async function searchCourses(
   );
 
   return paginarIntercalado(groups, pagina, limit);
+}
+
+// Una sola consulta global. Aquí sí se puede saltar directamente al trozo que
+// toca (`range`), porque no hay nada que intercalar: el orden lo pone Postgres.
+async function searchCoursesOrdenado(
+  client: SupabaseClient,
+  filters: CourseSearchFilters,
+  orden: OrdenResultados,
+  pagina: number,
+  limit: number
+): Promise<CourseSearchPage> {
+  const desde = (pagina - 1) * limit;
+
+  let query = aplicarFiltros(seleccionBase(client), filters);
+
+  // `nullsFirst: false` en los dos: un curso sin precio no es el más barato, y
+  // uno sin valoración no es el mejor. Un hueco no es un cero — la misma regla
+  // que ya rige el filtro de HU-026 y el comparador.
+  query =
+    orden === "precio-asc"
+      ? query.order("price_amount", { ascending: true, nullsFirst: false })
+      : query.order("rating", { ascending: false, nullsFirst: false });
+
+  // Se pide uno de más para saber si hay página siguiente, igual que en el
+  // camino intercalado.
+  const { data, error } = await query
+    .order("id", { ascending: true })
+    .range(desde, desde + limit);
+
+  if (error) {
+    throw new Error(`Fallo al buscar cursos: ${error.message}`);
+  }
+
+  const filas = (data ?? []).map(mapRow);
+
+  return {
+    resultados: filas.slice(0, limit),
+    pagina,
+    hayMas: filas.length > limit,
+  };
+}
+
+function seleccionBase(client: SupabaseClient) {
+  return client
+    .from("courses")
+    .select(
+      "id, source, title, description, price_amount, price_currency, rating, language, image_url, affiliate_url, duration_min_minutes, duration_max_minutes"
+    );
 }
 
 /**
@@ -150,12 +207,38 @@ async function searchCoursesFromSource(
   source: CourseSource,
   limit: number
 ): Promise<CourseSearchResult[]> {
-  let query = client
-    .from("courses")
-    .select(
-      "id, source, title, description, price_amount, price_currency, rating, language, image_url, affiliate_url, duration_min_minutes, duration_max_minutes"
-    )
-    .eq("source", source);
+  const query = aplicarFiltros(seleccionBase(client).eq("source", source), filters);
+
+  const { data, error } = await query
+    .order("rating", { ascending: false, nullsFirst: false })
+    .order("updated_at", { ascending: false })
+    // Desempate por un campo único, necesario desde que hay paginación
+    // (HU-025). Los 4.000 cursos de Coursera tienen `rating` nulo y muchos
+    // comparten `updated_at` porque entraron en la misma pasada, así que sin un
+    // tercer criterio hay miles de filas empatadas y Postgres no promete
+    // devolver los empates en el mismo orden entre dos consultas — bastaría un
+    // plan distinto para que la página 2 repitiera cursos de la 1.
+    //
+    // Hoy, contra la base real, el orden sale estable también sin esto: el test
+    // de integración pasa igual quitándolo. Se mantiene porque la garantía la
+    // da el ORDER BY, no la casualidad de que el plan de hoy sea el de mañana.
+    .order("id", { ascending: true })
+    .limit(limit);
+
+  if (error) {
+    throw new Error(`Fallo al buscar cursos: ${error.message}`);
+  }
+
+  return (data ?? []).map(mapRow);
+}
+
+// Los filtros son los mismos se ordene como se ordene, así que viven en un solo
+// sitio: si mañana se añade uno y solo se pusiera en un camino, una de las dos
+// búsquedas devolvería cursos que no cumplen lo pedido (HU-027).
+type ConsultaCursos = ReturnType<typeof seleccionBase>;
+
+function aplicarFiltros(base: ConsultaCursos, filters: CourseSearchFilters): ConsultaCursos {
+  let query = base;
 
   if (filters.keyword) {
     const value = `%${escapeOrFilterValue(filters.keyword)}%`;
@@ -184,25 +267,5 @@ async function searchCoursesFromSource(
     query = query.ilike("language", filters.language);
   }
 
-  const { data, error } = await query
-    .order("rating", { ascending: false, nullsFirst: false })
-    .order("updated_at", { ascending: false })
-    // Desempate por un campo único, necesario desde que hay paginación
-    // (HU-025). Los 4.000 cursos de Coursera tienen `rating` nulo y muchos
-    // comparten `updated_at` porque entraron en la misma pasada, así que sin un
-    // tercer criterio hay miles de filas empatadas y Postgres no promete
-    // devolver los empates en el mismo orden entre dos consultas — bastaría un
-    // plan distinto para que la página 2 repitiera cursos de la 1.
-    //
-    // Hoy, contra la base real, el orden sale estable también sin esto: el test
-    // de integración pasa igual quitándolo. Se mantiene porque la garantía la
-    // da el ORDER BY, no la casualidad de que el plan de hoy sea el de mañana.
-    .order("id", { ascending: true })
-    .limit(limit);
-
-  if (error) {
-    throw new Error(`Fallo al buscar cursos: ${error.message}`);
-  }
-
-  return (data ?? []).map(mapRow);
+  return query;
 }

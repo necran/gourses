@@ -19,7 +19,24 @@ export interface CourseSearchFilters {
    * lo contrario esconde los 4.000 cursos de Coursera sin decir nada.
    */
   incluirSinDato: boolean;
+  /**
+   * Orden pedido, o `null` para el de por defecto (HU-027).
+   *
+   * `null` **no** significa «sin orden»: significa el reparto equilibrado entre
+   * plataformas de HU-007, que es lo que se ve al entrar. Los otros dos ordenan
+   * de verdad, de arriba abajo, y entonces el reparto se pierde a propósito.
+   */
+  orden: OrdenResultados | null;
 }
+
+/** Órdenes que se admiten. Cualquier otro valor no existe (HU-027). */
+export const ORDENES = ["precio-asc", "valoracion-desc"] as const;
+export type OrdenResultados = (typeof ORDENES)[number];
+
+export const ETIQUETAS_ORDEN: Record<OrdenResultados, string> = {
+  "precio-asc": "Precio: de menor a mayor",
+  "valoracion-desc": "Mejor valorados",
+};
 
 /**
  * Si la búsqueda tiene algún filtro que descarta cursos **por no tener el
@@ -99,6 +116,15 @@ function parsePagina(raw: string | undefined): number {
 
 // Una casilla marcada, no un número: solo cuenta el "sí" explícito. Cualquier
 // otra cosa —ausente, vacía, "0", basura— es que no se ha pedido.
+// Igual que la categoría: solo vale lo del vocabulario conocido. Uno inventado
+// se descarta y se usa el orden por defecto, en vez de fallar — una dirección
+// compartida con un orden que ya no existe tiene que seguir enseñando cursos.
+function parseOrden(raw: string | undefined): OrdenResultados | null {
+  if (raw === undefined) return null;
+  const limpio = raw.trim().toLowerCase();
+  return (ORDENES as readonly string[]).includes(limpio) ? (limpio as OrdenResultados) : null;
+}
+
 function parseIncluirSinDato(raw: string | undefined): boolean {
   return raw === "1" || raw === "true";
 }
@@ -121,5 +147,6 @@ export function parseCourseSearchFilters(params: RawSearchParams): CourseSearchF
     language: parseLanguage(firstValue(params.language)),
     pagina: parsePagina(firstValue(params.pagina)),
     incluirSinDato: parseIncluirSinDato(firstValue(params.sinDato)),
+    orden: parseOrden(firstValue(params.orden)),
   };
 }
