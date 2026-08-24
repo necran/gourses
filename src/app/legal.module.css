@@ -1,56 +1,53 @@
 /* Estilos compartidos por las tres páginas legales. */
 .main {
-  --borde: rgba(0, 0, 0, 0.12);
-  --texto-suave: rgba(0, 0, 0, 0.62);
-  --aviso-fondo: rgba(180, 83, 9, 0.12);
-  --aviso-borde: rgba(180, 83, 9, 0.5);
-
   max-width: 46rem;
   margin: 0 auto;
-  padding: 3rem 1rem 4rem;
+  padding: 2rem clamp(1rem, 4vw, 24px) 4rem;
   line-height: 1.7;
 }
 
-@media (prefers-color-scheme: dark) {
-  .main {
-    --borde: rgba(255, 255, 255, 0.16);
-    --texto-suave: rgba(255, 255, 255, 0.7);
-    --aviso-fondo: rgba(251, 191, 36, 0.14);
-    --aviso-borde: rgba(251, 191, 36, 0.5);
-  }
-}
-
 .main h1 {
+  font-family: var(--font-display), -apple-system, "Segoe UI", sans-serif;
+  font-weight: 700;
   font-size: 1.9rem;
   margin: 0 0 0.5rem;
 }
 
 .main h2 {
+  font-family: var(--font-display), -apple-system, "Segoe UI", sans-serif;
+  font-weight: 700;
   font-size: 1.15rem;
   margin: 2rem 0 0.5rem;
 }
 
 .main h3 {
+  font-weight: 700;
   font-size: 1rem;
   margin: 1.4rem 0 0.4rem;
 }
 
 .actualizado {
-  color: var(--texto-suave);
+  color: var(--ink-muted);
   font-size: 0.9rem;
   margin: 0 0 2rem;
 }
 
 .volver {
   margin: 0 0 1.5rem;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+
+.volver a:hover {
+  color: var(--ink);
 }
 
 .aviso {
-  border: 1px solid var(--aviso-borde);
-  background: var(--aviso-fondo);
-  border-radius: 6px;
-  padding: 0.9rem 1.1rem;
+  background: var(--warm-soft);
+  color: var(--warm-soft-ink);
+  border-radius: 1rem;
+  padding: 1rem 1.3rem;
   margin: 1rem 0 2rem;
 }
 

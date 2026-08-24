@@ -1,19 +1,33 @@
 .main {
-  --texto-suave: rgba(0, 0, 0, 0.62);
-
   max-width: 36rem;
   margin: 0 auto;
-  padding: 3rem 1rem;
+  padding: 2rem clamp(1rem, 4vw, 24px) 4rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  .main {
-    --texto-suave: rgba(255, 255, 255, 0.7);
-  }
+.main h1 {
+  font-family: var(--font-display), -apple-system, "Segoe UI", sans-serif;
+  font-weight: 700;
+  font-size: 1.75rem;
+  margin: 0 0 1rem;
 }
 
-.main h1 { font-size: 1.7rem; margin: 0 0 1rem; }
+.confirmacion {
+  margin: 0 0 1rem;
+  line-height: 1.6;
+}
 
-.confirmacion { margin: 0 0 1rem; line-height: 1.6; }
-.nota { color: var(--texto-suave); line-height: 1.6; margin: 0 0 1.5rem; }
-.enlaces { font-size: 0.9rem; }
+.nota {
+  color: var(--ink-muted);
+  line-height: 1.6;
+  margin: 0 0 1.5rem;
+}
+
+.enlaces {
+  font-size: 0.9rem;
+  color: var(--ink-muted);
+}
+
+.enlaces a {
+  font-weight: 700;
+  color: var(--ink);
+}

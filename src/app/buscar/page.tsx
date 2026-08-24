@@ -62,68 +62,101 @@ export default async function BuscarPage({ searchParams }: BuscarPageProps) {
       <h1>Buscar cursos</h1>
 
       <form method="get" className={styles.form}>
-        <input
-          type="text"
-          name="keyword"
-          placeholder="Palabra clave"
-          defaultValue={filters.keyword ?? ""}
-          aria-label="Palabra clave"
-        />
-        <input
-          type="number"
-          name="maxPrice"
-          placeholder="Precio máximo"
-          min={0}
-          step="0.01"
-          defaultValue={filters.maxPrice ?? ""}
-          aria-label="Precio máximo"
-        />
-        <input
-          type="number"
-          name="minRating"
-          placeholder="Valoración mínima"
-          min={0}
-          max={5}
-          step="0.1"
-          defaultValue={filters.minRating ?? ""}
-          aria-label="Valoración mínima"
-        />
-        <input
-          type="text"
-          name="language"
-          placeholder="Idioma"
-          defaultValue={filters.language ?? ""}
-          aria-label="Idioma"
-        />
+        <div className={styles.campo}>
+          <label htmlFor="f-keyword">Palabra clave</label>
+          <input
+            id="f-keyword"
+            type="text"
+            name="keyword"
+            placeholder="¿Qué quieres aprender?"
+            defaultValue={filters.keyword ?? ""}
+          />
+        </div>
+        <div className={`${styles.campo} ${styles.campoEstrecho}`}>
+          <label htmlFor="f-maxPrice">Precio máximo</label>
+          <input
+            id="f-maxPrice"
+            type="number"
+            name="maxPrice"
+            min={0}
+            step="0.01"
+            defaultValue={filters.maxPrice ?? ""}
+          />
+        </div>
+        <div className={`${styles.campo} ${styles.campoEstrecho}`}>
+          <label htmlFor="f-minRating">Valoración mínima</label>
+          <input
+            id="f-minRating"
+            type="number"
+            name="minRating"
+            min={0}
+            max={5}
+            step="0.1"
+            placeholder="0–5"
+            defaultValue={filters.minRating ?? ""}
+          />
+        </div>
+        <div className={`${styles.campo} ${styles.campoEstrecho}`}>
+          <label htmlFor="f-language">Idioma</label>
+          <input
+            id="f-language"
+            type="text"
+            name="language"
+            placeholder="es, en…"
+            defaultValue={filters.language ?? ""}
+          />
+        </div>
         {/* Va en el formulario para que se vea cuál está aplicada y se pueda
             quitar; si no, quien llega desde la portada no entiende por qué ve
             solo una parte del catálogo (HU-022). */}
-        <select name="category" defaultValue={filters.category ?? ""} aria-label="Categoría">
-          <option value="">Todas las categorías</option>
-          {COURSE_CATEGORIES.map((c) => (
-            <option key={c} value={c}>
-              {CATEGORY_LABELS[c]}
-            </option>
-          ))}
-        </select>
+        <div className={styles.campo}>
+          <label htmlFor="f-category">Categoría</label>
+          <select id="f-category" name="category" defaultValue={filters.category ?? ""}>
+            <option value="">Todas las categorías</option>
+            {COURSE_CATEGORIES.map((c) => (
+              <option key={c} value={c}>
+                {CATEGORY_LABELS[c]}
+              </option>
+            ))}
+          </select>
+        </div>
         {/* El orden va en el mismo formulario que los filtros: cambiarlo es
             otra búsqueda, y así vuelve sola a la página 1 al no mandarse
             `pagina` (HU-027). */}
-        <select name="orden" defaultValue={filters.orden ?? ""} aria-label="Ordenar por">
-          <option value="">Mezcla equilibrada</option>
-          {ORDENES.map((o) => (
-            <option key={o} value={o}>
-              {ETIQUETAS_ORDEN[o]}
-            </option>
-          ))}
-        </select>
+        <div className={styles.campo}>
+          <label htmlFor="f-orden">Ordenar por</label>
+          <select id="f-orden" name="orden" defaultValue={filters.orden ?? ""}>
+            <option value="">Mezcla equilibrada</option>
+            {ORDENES.map((o) => (
+              <option key={o} value={o}>
+                {ETIQUETAS_ORDEN[o]}
+              </option>
+            ))}
+          </select>
+        </div>
 
         {/* Se conserva al volver a filtrar: si se perdiera, cambiar la palabra
             clave volvería a esconder medio catálogo sin avisar (HU-026). No va
             como casilla visible porque solo tiene sentido cuando hay un filtro
             que excluye, y entonces ya se ofrece en el aviso. */}
         {filters.incluirSinDato && <input type="hidden" name="sinDato" value="1" />}
-        <button type="submit">Buscar</button>
+        <button type="submit" className={styles.botonBuscar}>
+          Buscar
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <circle cx="11" cy="11" r="7" />
+            <path d="M21 21l-4.35-4.35" />
+          </svg>
+        </button>
       </form>
 
       {/* Solo cuando de verdad hay un filtro que descarta por falta de dato.

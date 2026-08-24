@@ -1,12 +1,62 @@
+/* Sistema de diseño del sitio (rediseño 2026-08-24, dirección "SaaS vívido").
+   Centralizado aquí porque antes cada page.module.css repetía sus propias
+   variables (--borde, --texto-suave, --acento…) con valores ligeramente
+   distintos entre páginas: un color de acento en la ficha y otro en el
+   comparador. Con un solo sitio de verdad, cambiar el sistema es cambiar
+   estas líneas, no perseguir cada fichero. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: oklch(98.2% 0.008 290);
+  --surface: oklch(99.4% 0.004 290);
+  --ink: oklch(21% 0.03 290);
+  --ink-muted: oklch(46% 0.025 290);
+  --line: oklch(90.5% 0.012 290);
+
+  --accent: oklch(55% 0.19 292);
+  --accent-ink: oklch(99% 0.005 292);
+  --accent-soft: oklch(94% 0.035 292);
+  --accent-soft-ink: oklch(42% 0.15 292);
+
+  --warm: oklch(60% 0.17 40);
+  --warm-soft: oklch(95% 0.04 40);
+  --warm-soft-ink: oklch(45% 0.14 40);
+
+  --danger: oklch(55% 0.18 25);
+  --danger-soft: oklch(96% 0.03 25);
+  --danger-soft-ink: oklch(42% 0.16 25);
+
+  --shadow-sm: 0 8px 22px -16px oklch(30% 0.03 290 / 0.2);
+  --shadow-md: 0 10px 28px -18px oklch(30% 0.03 290 / 0.22);
+  --shadow-lg: 0 16px 40px -20px oklch(30% 0.03 290 / 0.28);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --bg: oklch(20% 0.016 290);
+    --surface: oklch(25% 0.018 290);
+    --ink: oklch(94% 0.012 290);
+    --ink-muted: oklch(68% 0.02 290);
+    --line: oklch(34% 0.02 290);
+
+    --accent: oklch(68% 0.18 292);
+    --accent-ink: oklch(14% 0.02 292);
+    --accent-soft: oklch(32% 0.06 292);
+    --accent-soft-ink: oklch(84% 0.08 292);
+
+    --warm: oklch(72% 0.15 40);
+    --warm-soft: oklch(30% 0.06 40);
+    --warm-soft-ink: oklch(82% 0.09 40);
+
+    --danger: oklch(70% 0.16 25);
+    --danger-soft: oklch(30% 0.05 25);
+    --danger-soft-ink: oklch(85% 0.08 25);
+
+    --shadow-sm: 0 8px 22px -14px oklch(0% 0 0 / 0.45);
+    --shadow-md: 0 10px 28px -16px oklch(0% 0 0 / 0.5);
+    --shadow-lg: 0 16px 40px -18px oklch(0% 0 0 / 0.55);
+  }
+
+  html {
+    color-scheme: dark;
   }
 }
 
@@ -24,9 +74,9 @@ body {
   min-height: 100%;
   display: flex;
   flex-direction: column;
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+  font-family: var(--font-body), -apple-system, "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -42,8 +92,9 @@ a {
   text-decoration: none;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
+/* La tipografía de titulares (Sora) se activa con esta clase, no por defecto
+   en h1–h3: varias páginas legales usan encabezados sin querer el mismo peso
+   visual que un titular de portada. */
+.display {
+  font-family: var(--font-display), -apple-system, "Segoe UI", sans-serif;
 }

@@ -1,108 +1,209 @@
 .main {
-  --borde: rgba(0, 0, 0, 0.12);
-  --texto-suave: rgba(0, 0, 0, 0.62);
-  --acento: #6d28d9;
-
   max-width: 40rem;
   margin: 0 auto;
-  padding: 3rem 1rem;
+  padding: 0 clamp(1rem, 4vw, 24px) 4rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  .main {
-    --borde: rgba(255, 255, 255, 0.16);
-    --texto-suave: rgba(255, 255, 255, 0.7);
-    --acento: #8b5cf6;
-  }
+.main h1 {
+  font-family: var(--font-display), -apple-system, "Segoe UI", sans-serif;
+  font-weight: 700;
+  font-size: 1.8rem;
+  margin: 0 0 0.75rem;
 }
 
-.main h1 { font-size: 1.7rem; margin: 0 0 1rem; }
-.identidad { margin: 0 0 1rem; }
-.nota { color: var(--texto-suave); line-height: 1.6; margin: 0 0 1.8rem; }
-.enlaces { margin-top: 2rem; font-size: 0.9rem; }
+.identidad {
+  font-size: 0.98rem;
+  margin: 0 0 0.9rem;
+}
+
+.nota {
+  color: var(--ink-muted);
+  line-height: 1.6;
+  font-size: 0.92rem;
+  margin: 0 0 1.1rem;
+}
+
+.enlaces {
+  margin-top: 2rem;
+  font-size: 0.9rem;
+  color: var(--ink-muted);
+  text-align: center;
+}
+
+.enlaces a {
+  font-weight: 700;
+  color: var(--ink);
+}
 
 .boton {
-  padding: 0.6rem 1.1rem;
-  border: 1px solid var(--borde);
-  border-radius: 6px;
-  background: transparent;
-  color: inherit;
-  font-size: 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.3rem;
+  border: none;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 0.9rem;
   cursor: pointer;
+  box-shadow: var(--shadow-sm);
 }
-.boton:hover { background: rgba(127, 127, 127, 0.12); }
+
+.boton:hover {
+  filter: brightness(1.04);
+}
+
+a.boton {
+  display: inline-flex;
+  text-decoration: none;
+  background: var(--accent-soft);
+  color: var(--accent-soft-ink);
+  box-shadow: none;
+}
 
 /* Separada del resto y con marca de peligro: lo que hay aquí no se deshace. */
 .zonaPeligro {
-  --peligro: #b91c1c;
-
-  margin-top: 3rem;
-  padding: 1.2rem;
-  border: 1px solid var(--peligro);
-  border-radius: 8px;
+  margin-top: 1.4rem;
+  padding: 1.6rem 1.75rem;
+  border-radius: 1.25rem;
+  background: var(--danger-soft);
 }
 
-.zonaPeligro h2 { font-size: 1.1rem; margin: 0 0 0.6rem; color: var(--peligro); }
-.aviso { margin: 0 0 1rem; line-height: 1.6; font-size: 0.93rem; }
+.zonaPeligro h2 {
+  font-family: var(--font-display), -apple-system, "Segoe UI", sans-serif;
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin: 0 0 0.6rem;
+  color: var(--danger-soft-ink);
+}
 
-.etiqueta { display: block; margin-bottom: 0.4rem; font-size: 0.9rem; }
+.zonaPeligro .aviso {
+  color: var(--danger-soft-ink);
+}
+
+.aviso {
+  margin: 0 0 1.1rem;
+  line-height: 1.6;
+  font-size: 0.9rem;
+}
+
+.etiqueta {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.88rem;
+  color: var(--danger-soft-ink);
+}
 
 .campo {
   width: 100%;
-  padding: 0.55rem 0.7rem;
-  border: 1px solid var(--borde);
-  border-radius: 6px;
-  background: transparent;
+  padding: 0.65rem 0.9rem;
+  border: 1.5px solid oklch(80% 0.05 25);
+  border-radius: 0.75rem;
+  background: var(--bg);
   color: inherit;
-  font-size: 0.95rem;
-  margin-bottom: 0.8rem;
+  font-family: inherit;
+  font-size: 0.92rem;
+  margin-bottom: 1rem;
 }
-
-.error { color: var(--peligro); font-size: 0.88rem; margin: 0 0 0.8rem; }
-
-.botonPeligro {
-  padding: 0.6rem 1.1rem;
-  border: 1px solid var(--peligro);
-  border-radius: 6px;
-  background: transparent;
-  color: var(--peligro);
-  font-size: 0.95rem;
-  cursor: pointer;
-}
-.botonPeligro:hover { background: rgba(185, 28, 28, 0.1); }
-.botonPeligro:disabled { opacity: 0.6; cursor: default; }
 
 @media (prefers-color-scheme: dark) {
-  .zonaPeligro { --peligro: #f87171; }
+  .campo {
+    border-color: oklch(45% 0.06 25);
+  }
 }
 
-.seccion { margin-top: 2.5rem; }
-.seccion h2 { font-size: 1.1rem; margin: 0 0 0.5rem; }
+.error {
+  color: var(--danger-soft-ink);
+  font-size: 0.85rem;
+  margin: 0 0 0.9rem;
+}
+
+.botonPeligro {
+  padding: 0.7rem 1.3rem;
+  border: none;
+  border-radius: 999px;
+  background: var(--danger);
+  color: oklch(99% 0 0);
+  font-family: var(--font-display), -apple-system, "Segoe UI", sans-serif;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.botonPeligro:hover {
+  filter: brightness(1.05);
+}
+
+.botonPeligro:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.seccion {
+  margin-top: 1.4rem;
+  background: var(--surface);
+  border-radius: 1.25rem;
+  padding: 1.6rem 1.75rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.seccion h2 {
+  font-family: var(--font-display), -apple-system, "Segoe UI", sans-serif;
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin: 0 0 0.6rem;
+}
 
 .formularioAvisos {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 1.2rem;
   flex-wrap: wrap;
 }
 
 .casilla {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.95rem;
+  gap: 0.65rem;
+  font-size: 0.92rem;
+  font-weight: 600;
   cursor: pointer;
 }
 
-.guardado {
-  margin: 0.7rem 0 0;
-  font-size: 0.9rem;
-  color: var(--acento);
+/* Igual que la casilla de comparar del buscador: sigue siendo un
+   <input type=checkbox> real, solo se le cambia el dibujo. */
+.casilla input {
+  appearance: none;
+  width: 1.2rem;
+  height: 1.2rem;
+  flex-shrink: 0;
+  border: 1.5px solid var(--line);
+  border-radius: 0.4rem;
+  background: var(--bg);
+  cursor: pointer;
+  display: grid;
+  place-content: center;
 }
 
-/* El enlace de descarga usa .boton, que está pensado para <button>: hay que
-   devolverle el aspecto de caja y quitarle el subrayado de enlace. */
-a.boton {
-  display: inline-block;
-  text-decoration: none;
+.casilla input:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.casilla input:checked::after {
+  content: "";
+  width: 0.32rem;
+  height: 0.58rem;
+  border: solid var(--accent-ink);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg) translate(-1px, -1px);
+}
+
+.guardado {
+  margin: 0.9rem 0 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--accent);
 }

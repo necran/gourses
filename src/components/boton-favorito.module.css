@@ -1,42 +1,34 @@
 .botonGuardar,
 .botonQuitar {
-  --borde: rgba(0, 0, 0, 0.12);
-  --acento: #6d28d9;
-
-  padding: 0.6rem 1.1rem;
-  border: 1px solid var(--borde);
-  border-radius: 6px;
-  background: transparent;
-  color: inherit;
-  font-size: 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border: none;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
   cursor: pointer;
+  box-shadow: var(--shadow-sm);
 }
 
 /* Guardado: se marca con el color de acento para que se distinga de un vistazo
    del estado "sin guardar", sin depender solo de la estrella llena. */
 .botonQuitar {
-  border-color: var(--acento);
-  color: var(--acento);
+  background: var(--accent-soft);
+  color: var(--accent-soft-ink);
 }
 
 .botonGuardar:hover,
 .botonQuitar:hover {
-  background: rgba(127, 127, 127, 0.12);
+  filter: brightness(1.04);
 }
 
 .invitacion {
-  color: rgba(0, 0, 0, 0.62);
+  color: var(--ink-muted);
   font-size: 0.9rem;
   margin: 0;
-}
-
-@media (prefers-color-scheme: dark) {
-  .botonGuardar,
-  .botonQuitar {
-    --borde: rgba(255, 255, 255, 0.16);
-    --acento: #8b5cf6;
-  }
-  .invitacion {
-    color: rgba(255, 255, 255, 0.7);
-  }
 }

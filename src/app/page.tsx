@@ -2,6 +2,9 @@ import Link from "next/link";
 import { createSupabaseServerClient } from "../lib/supabase/server-client";
 import { getCatalogSummary } from "../lib/courses/catalog-summary";
 import { CATEGORY_LABELS, COURSE_CATEGORIES } from "../lib/courses/categories";
+import { searchCourses, type CourseSearchResult } from "../lib/courses/search-courses";
+import { parseCourseSearchFilters } from "../lib/courses/search-filters";
+import { formatDuration } from "../lib/courses/duration";
 import styles from "./page.module.css";
 
 // Las cifras vienen de la base de datos en cada carga, así que la portada no
@@ -11,13 +14,26 @@ export const dynamic = "force-dynamic";
 const CATEGORIAS_DESTACADAS = COURSE_CATEGORIES.slice(0, 6);
 
 export default async function Home() {
+  const client = createSupabaseServerClient();
+
   // Un fallo leyendo el resumen no debe tumbar la portada: es un dato
   // decorativo, no el contenido (HU-012).
   let resumen = null;
   try {
-    resumen = await getCatalogSummary(createSupabaseServerClient());
+    resumen = await getCatalogSummary(client);
   } catch {
     resumen = null;
+  }
+
+  // Sin filtros ni orden, searchCourses reparte a partes iguales entre
+  // plataformas (HU-007): así la portada no enseña solo Udemy, que es la que
+  // tiene valoración y ganaría cualquier otro orden.
+  let destacados: CourseSearchResult[] = [];
+  try {
+    const { resultados } = await searchCourses(client, parseCourseSearchFilters({}), 6);
+    destacados = resultados;
+  } catch {
+    destacados = [];
   }
 
   return (
@@ -67,6 +83,51 @@ export default async function Home() {
           ))}
         </ul>
       </section>
+
+      {destacados.length > 0 && (
+        <section className={styles.destacados}>
+          <div className={styles.destacadosCabecera}>
+            <h2>Cursos destacados</h2>
+            <Link href="/buscar" className={styles.verTodos}>
+              Ver todos →
+            </Link>
+          </div>
+          <ul className={styles.rejillaDestacados}>
+            {destacados.map((course) => (
+              <li key={course.id} className={styles.tarjetaDestacada}>
+                {course.imageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={course.imageUrl} alt="" className={styles.miniatura} />
+                ) : (
+                  <div className={styles.miniaturaVacia} aria-hidden="true">
+                    <span>{course.source === "udemy" ? "U" : "C"}</span>
+                  </div>
+                )}
+                <p className={styles.tarjetaCategoria}>{course.source}</p>
+                <h3>
+                  <Link href={`/curso/${course.id}`}>{course.title}</Link>
+                </h3>
+                <p className={styles.tarjetaMeta}>
+                  {[
+                    course.rating !== null ? `⭐ ${course.rating}` : null,
+                    formatDuration(course.duration) ? `⏱ ${formatDuration(course.duration)}` : null,
+                    course.language,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </p>
+                {course.priceAmount !== null ? (
+                  <p className={styles.tarjetaPrecio}>
+                    {course.priceAmount} {course.priceCurrency}
+                  </p>
+                ) : (
+                  <p className={styles.tarjetaSinPrecio}>Precio no disponible en esta plataforma</p>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section className={styles.comoFunciona}>
         <h2>Cómo funciona</h2>

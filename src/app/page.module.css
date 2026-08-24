@@ -1,89 +1,90 @@
 .main {
-  --borde: rgba(0, 0, 0, 0.12);
-  --texto-suave: rgba(0, 0, 0, 0.62);
-  --fondo-suave: rgba(0, 0, 0, 0.04);
-  --acento: #6d28d9;
-
-  max-width: 880px;
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 3rem 1rem 4rem;
+  padding: 0 clamp(1rem, 4vw, 56px) 4rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  .main {
-    --borde: rgba(255, 255, 255, 0.16);
-    --texto-suave: rgba(255, 255, 255, 0.7);
-    --fondo-suave: rgba(255, 255, 255, 0.06);
-    --acento: #8b5cf6;
-  }
+.main h1,
+.main h2,
+.main h3 {
+  font-family: var(--font-display), -apple-system, "Segoe UI", sans-serif;
 }
 
 .hero {
   text-align: center;
-  margin-bottom: 3.5rem;
+  padding: clamp(2rem, 6vw, 4.25rem) 0 3rem;
 }
 
 .hero h1 {
-  font-size: clamp(1.8rem, 5vw, 2.6rem);
-  line-height: 1.15;
-  margin: 0 0 1rem;
+  font-weight: 700;
+  font-size: clamp(1.9rem, 4.4vw, 3.1rem);
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+  max-width: 46rem;
+  margin: 0 auto 1.1rem;
 }
 
 .subtitulo {
-  color: var(--texto-suave);
+  color: var(--ink-muted);
   font-size: 1.05rem;
   line-height: 1.6;
-  max-width: 40rem;
+  max-width: 34rem;
   margin: 0 auto 2rem;
 }
 
 .buscador {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.4rem;
   justify-content: center;
   max-width: 34rem;
   margin: 0 auto;
+  background: var(--surface);
+  border-radius: 999px;
+  padding: 0.4rem 0.4rem 0.4rem 1.3rem;
+  box-shadow: var(--shadow-md);
 }
 
 .campo {
-  flex: 1 1 16rem;
-  padding: 0.8rem 1rem;
+  flex: 1 1 14rem;
+  padding: 0.7rem 0;
   font-size: 1rem;
-  border: 1px solid var(--borde);
-  border-radius: 6px;
+  border: none;
   background: transparent;
   color: inherit;
+  outline: none;
 }
 
 .boton {
-  padding: 0.8rem 1.4rem;
-  font-size: 1rem;
-  font-weight: 600;
+  padding: 0.75rem 1.4rem;
+  font-size: 0.9rem;
+  font-family: var(--font-display), -apple-system, "Segoe UI", sans-serif;
+  font-weight: 700;
   border: none;
-  border-radius: 6px;
-  background: var(--acento);
-  color: #fff;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
   cursor: pointer;
 }
 
 .boton:hover {
-  filter: brightness(1.1);
+  filter: brightness(1.05);
 }
 
 .cifras {
-  color: var(--texto-suave);
-  font-size: 0.95rem;
-  margin-top: 1rem;
+  color: var(--ink-muted);
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-top: 1.2rem;
 }
 
 .categorias {
   margin-bottom: 3rem;
 }
 
-.categorias h2,
-.comoFunciona h2 {
-  font-size: 1.25rem;
+.categorias h2 {
+  font-size: 1.2rem;
+  font-weight: 700;
   margin: 0 0 1rem;
 }
 
@@ -98,22 +99,136 @@
 
 .listaCategorias a {
   display: inline-block;
-  padding: 0.5rem 0.9rem;
-  border: 1px solid var(--borde);
+  padding: 0.55rem 1rem;
   border-radius: 999px;
-  text-decoration: none;
-  color: inherit;
-  font-size: 0.95rem;
+  background: var(--accent-soft);
+  color: var(--accent-soft-ink);
+  font-weight: 600;
+  font-size: 0.9rem;
 }
 
 .listaCategorias a:hover {
-  background: var(--fondo-suave);
+  filter: brightness(1.05);
+}
+
+.destacados {
+  margin-bottom: 3.5rem;
+}
+
+.destacadosCabecera {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.4rem;
+}
+
+.destacadosCabecera h2 {
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+.verTodos {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.rejillaDestacados {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 1.4rem;
+}
+
+.tarjetaDestacada {
+  background: var(--surface);
+  border-radius: 1.25rem;
+  padding: 0.9rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.miniatura {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-radius: 0.85rem;
+  margin-bottom: 0.85rem;
+}
+
+.miniaturaVacia {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 0.85rem;
+  background: var(--accent-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.85rem;
+}
+
+.miniaturaVacia span {
+  font-family: var(--font-display), -apple-system, "Segoe UI", sans-serif;
+  font-weight: 800;
+  font-size: 2.2rem;
+  color: var(--accent-soft-ink);
+  opacity: 0.5;
+}
+
+.tarjetaCategoria {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin-bottom: 0.2rem;
+}
+
+.tarjetaDestacada h3 {
+  font-size: 0.98rem;
+  font-weight: 600;
+  line-height: 1.35;
+  margin-bottom: 0.5rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.tarjetaMeta {
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+}
+
+.tarjetaPrecio {
+  font-family: var(--font-display), -apple-system, "Segoe UI", sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.tarjetaSinPrecio {
+  font-size: 0.78rem;
+  color: var(--ink-muted);
+  font-weight: 600;
+}
+
+.comoFunciona h2 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0 0 1rem;
 }
 
 .pasos {
   padding-left: 1.2rem;
   margin: 0;
   line-height: 1.7;
+  color: var(--ink);
 }
 
 .pasos li {

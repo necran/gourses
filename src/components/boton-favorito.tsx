@@ -41,7 +41,20 @@ export async function BotonFavorito({ courseId }: BotonFavoritoProps) {
         // alguien que navega con lector de pantalla se quede sin saber qué pasó.
         aria-pressed={guardado}
       >
-        {guardado ? "★ Quitar de favoritos" : "☆ Guardar en favoritos"}
+        <svg
+          width="15"
+          height="15"
+          viewBox="0 0 24 24"
+          fill={guardado ? "currentColor" : "none"}
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M12 3l2.9 6.26L22 10.27l-5 4.87 1.18 6.88L12 18.77l-6.18 3.25L7 15.14 2 10.27l7.1-1.01L12 3z" />
+        </svg>
+        {guardado ? "Quitar de favoritos" : "Guardar en favoritos"}
       </button>
     </form>
   );

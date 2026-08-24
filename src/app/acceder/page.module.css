@@ -1,66 +1,120 @@
 .main {
-  --borde: rgba(0, 0, 0, 0.12);
-  --texto-suave: rgba(0, 0, 0, 0.62);
-  --acento: #6d28d9;
-  --error: #b91c1c;
-  --exito-fondo: rgba(21, 128, 61, 0.12);
-  --exito-borde: rgba(21, 128, 61, 0.5);
-
-  max-width: 34rem;
+  max-width: 27rem;
   margin: 0 auto;
-  padding: 3rem 1rem;
+  padding: 2rem clamp(1rem, 4vw, 24px) 4rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  .main {
-    --borde: rgba(255, 255, 255, 0.16);
-    --texto-suave: rgba(255, 255, 255, 0.7);
-    --acento: #8b5cf6;
-    --error: #fca5a5;
-    --exito-fondo: rgba(74, 222, 128, 0.14);
-    --exito-borde: rgba(74, 222, 128, 0.5);
-  }
+.volver {
+  margin: 0 0 1.6rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+  text-align: center;
 }
 
-.volver { margin: 0 0 1.5rem; font-size: 0.9rem; }
-.main h1 { font-size: 1.7rem; margin: 0 0 0.75rem; }
-.intro { color: var(--texto-suave); line-height: 1.6; margin: 0 0 1.8rem; }
+.volver a:hover {
+  color: var(--ink);
+}
 
-.formulario { display: flex; flex-direction: column; gap: 0.5rem; }
-.etiqueta { font-size: 0.9rem; font-weight: 600; }
+.main h1 {
+  font-family: var(--font-display), -apple-system, "Segoe UI", sans-serif;
+  font-weight: 700;
+  font-size: 1.55rem;
+  margin: 0 0 0.75rem;
+  text-align: center;
+}
+
+.intro {
+  color: var(--ink-muted);
+  line-height: 1.6;
+  font-size: 0.92rem;
+  margin: 0 0 1.6rem;
+  text-align: center;
+}
+
+.intro strong {
+  color: var(--ink);
+}
+
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: var(--surface);
+  border-radius: 1.4rem;
+  padding: 1.75rem 1.75rem 1.4rem;
+  box-shadow: var(--shadow-lg);
+}
+
+.etiqueta {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--ink-muted);
+}
 
 .campo {
-  padding: 0.75rem 0.9rem;
+  padding: 0.8rem 1rem;
   font-size: 1rem;
-  border: 1px solid var(--borde);
-  border-radius: 6px;
-  background: transparent;
+  border: 1.5px solid var(--line);
+  border-radius: 0.75rem;
+  background: var(--bg);
   color: inherit;
+  outline: none;
+}
+
+.campo:focus {
+  border-color: var(--accent);
 }
 
 .boton {
-  align-self: flex-start;
-  margin-top: 0.4rem;
-  padding: 0.7rem 1.2rem;
+  margin-top: 0.6rem;
+  padding: 0.85rem 1.2rem;
   border: none;
-  border-radius: 6px;
-  background: var(--acento);
-  color: #fff;
-  font-weight: 600;
+  border-radius: 0.75rem;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-family: var(--font-display), -apple-system, "Segoe UI", sans-serif;
+  font-weight: 700;
   font-size: 0.95rem;
   cursor: pointer;
+  box-shadow: 0 10px 24px -10px oklch(55% 0.19 292 / 0.5);
 }
-.boton:hover { filter: brightness(1.1); }
-.boton:disabled { opacity: 0.6; cursor: progress; }
 
-.error { color: var(--error); font-size: 0.9rem; margin: 0.2rem 0 0; }
+.boton:hover {
+  filter: brightness(1.05);
+}
+
+.boton:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.error {
+  color: var(--danger);
+  font-size: 0.88rem;
+  margin: 0.2rem 0 0;
+}
 
 .exito {
-  border: 1px solid var(--exito-borde);
-  background: var(--exito-fondo);
-  border-radius: 8px;
-  padding: 1rem 1.2rem;
+  background: var(--surface);
+  border-radius: 1.4rem;
+  padding: 1.5rem 1.75rem;
   line-height: 1.6;
+  box-shadow: var(--shadow-lg);
 }
 
-.aviso { color: var(--texto-suave); font-size: 0.85rem; margin-top: 2rem; line-height: 1.5; }
+.aviso {
+  color: var(--ink-muted);
+  font-size: 0.82rem;
+  margin-top: 1.6rem;
+  line-height: 1.55;
+  text-align: center;
+}
+
+.aviso a {
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
