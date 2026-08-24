@@ -9,18 +9,16 @@ y equivocarlas rompe el correo del dominio.
 | Pieza | Estado |
 |---|---|
 | Dominio en Resend | `gourses.com`, región Irlanda (eu-west-1) |
-| Registros DNS en IONOS | **añadidos y propagados** (2026-08-18) |
-| `RESEND_API_KEY` en GitHub | pendiente |
-| SMTP propio en Supabase | pendiente |
+| Registros DNS en IONOS | **añadidos y verificados** (dominio *Verified* el 2026-08-20) |
+| `RESEND_API_KEY` en GitHub | pendiente de rehacer si se creó una clave nueva (ver más abajo) |
+| SMTP propio en Supabase | **configurado y funcionando** (2026-08-20) |
+| Plantillas de los correos de acceso | en el repositorio, pendientes de subir al panel |
 
-Mientras falte la clave, el paso de avisos del workflow se salta solo y la web
-sigue usando el correo integrado de Supabase, limitado a **2 mensajes por hora en
-todo el proyecto**.
-
-El dominio queda en «Pending» hasta que los resolutores de Resend vean los
-registros. Los tres están publicados y comprobados contra el DNS público, y el
-DKIM coincide carácter por carácter (218) con el que Resend espera, así que no
-hay nada más que hacer: es esperar. Resend avisa de que puede tardar horas.
+El acceso a la web ya sale por Resend, con el límite de Auth en **30 correos por
+hora** en vez de los 2 del proveedor integrado de Supabase. Los avisos de precio
+(HU-021) van por otro camino —la API de Resend desde el workflow— y siguen
+dependiendo de `RESEND_API_KEY`: mientras falte, ese paso se salta solo y las
+bajadas se registran en el log en vez de enviarse.
 
 ## Los tres registros añadidos
 
@@ -142,3 +140,53 @@ funcione:
 
 Al reintentar, contar hasta 60: *Minimum interval per user* está en 60 s, así
 que dos intentos seguidos con el mismo correo fallan aunque ya esté arreglado.
+
+## Plantillas de los correos de acceso (2026-08-24)
+
+Con el SMTP propio ya funcionando, el correo de acceso seguía llegando en la
+plantilla de fábrica de Supabase, en inglés («Follow this link to login»), en un
+sitio que está entero en español. El primer correo que recibe alguien que se da
+de alta era ese.
+
+### Dónde vive ahora la plantilla
+
+En `supabase/plantillas-correo/*.html`, no en el panel. El panel no tiene
+historial ni revisión: un cambio hecho ahí no aparece en ningún diff, y no hay
+forma de saber qué se está enviando de verdad. Con el fichero en el repositorio
+sí, y además los tests de `src/lib/correo/plantillas-auth.test.ts` comprueban lo
+que se manda antes de mandarlo.
+
+    npm run correo:plantillas            # compara panel ↔ repositorio, no escribe
+    npm run correo:plantillas -- --aplicar
+
+Por defecto no escribe: enseña las diferencias y sale con error. Equivocarse
+escribiendo en la configuración de Auth deja a todo el mundo sin poder entrar,
+así que subir se pide a propósito. Necesita `SUPABASE_ACCESS_TOKEN` (token
+personal de la Management API) y `SUPABASE_PROJECT_REF` en `.env.local`.
+
+### Son dos plantillas, no una
+
+Esto es lo que no es obvio: `signInWithOtp` **no manda siempre el mismo correo**.
+
+| Quién escribe su correo | Plantilla de Supabase | Fichero |
+|---|---|---|
+| Ya tiene cuenta | *Magic Link* | `enlace-de-acceso.html` |
+| Es la primera vez | *Confirm signup* | `confirmar-registro.html` |
+
+Traducir solo la primera deja en inglés justo la mitad que reciben los que
+llegan nuevos, que es la que más importa. Un test comprueba que están las dos.
+
+### Qué se vigila en los tests
+
+- Que no quede ningún `{{ }}` sin rellenar. Una errata como `{{ .ConfirmationUrl }}`
+  no falla en Supabase: manda el correo con el enlace **vacío**, y nadie entra.
+- Que el enlace aparezca también como texto copiable, no solo dentro del `href`.
+- Que ningún enlace apunte a un dominio que no sea `gourses.com` — la política de
+  privacidad promete que no hay rastreadores, y el seguimiento de clics de Resend
+  reescribe los enlaces sin que se note.
+- Que no sobreviva ninguna frase de la plantilla de fábrica.
+
+### El Supabase del NAS sigue en inglés
+
+El script apunta a Supabase Cloud. El del NAS usa su proveedor integrado y solo
+lo ve quien desarrolla, así que no se toca.

@@ -15,7 +15,8 @@
     "migrate": "node --env-file=.env.local scripts/apply-migrations.mjs",
     "ingest:coursera": "node --env-file=.env.local scripts/ingest-coursera.mjs",
     "ingest:udemy": "node --env-file=.env.local scripts/ingest-udemy.mjs",
-    "test:integration": "node --env-file=.env.local node_modules/.bin/vitest run --no-file-parallelism tests/integration"
+    "test:integration": "node --env-file=.env.local node_modules/.bin/vitest run --no-file-parallelism tests/integration",
+    "correo:plantillas": "node --env-file=.env.local scripts/aplicar-plantillas-correo.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",
