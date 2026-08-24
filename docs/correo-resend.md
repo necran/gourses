@@ -12,7 +12,7 @@ y equivocarlas rompe el correo del dominio.
 | Registros DNS en IONOS | **añadidos y verificados** (dominio *Verified* el 2026-08-20) |
 | `RESEND_API_KEY` en GitHub | pendiente de rehacer si se creó una clave nueva (ver más abajo) |
 | SMTP propio en Supabase | **configurado y funcionando** (2026-08-20) |
-| Plantillas de los correos de acceso | en el repositorio, pendientes de subir al panel |
+| Plantillas de los correos de acceso | **en español y subidas al panel** (2026-08-24) |
 
 El acceso a la web ya sale por Resend, con el límite de Auth en **30 correos por
 hora** en vez de los 2 del proveedor integrado de Supabase. Los avisos de precio
