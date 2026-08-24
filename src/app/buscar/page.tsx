@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createSupabaseServerClient } from "../../lib/supabase/server-client";
 import {
+  excluyePorFaltaDeDato,
   parseCourseSearchFilters,
   type CourseSearchFilters,
   type RawSearchParams,
@@ -11,6 +12,13 @@ import { MAX_COMPARADOS } from "../../lib/courses/compare";
 import { CATEGORY_LABELS, COURSE_CATEGORIES } from "../../lib/courses/categories";
 import styles from "./page.module.css";
 
+// Nombra en el aviso solo lo que se está filtrando, para que no hable de
+// valoraciones cuando solo se ha puesto un precio.
+function textoDatoQueFalta(filters: CourseSearchFilters): string {
+  if (filters.maxPrice !== null && filters.minRating !== null) return "precio o valoración";
+  return filters.maxPrice !== null ? "precio" : "valoración";
+}
+
 interface BuscarPageProps {
   searchParams: Promise<RawSearchParams>;
 }
@@ -20,6 +28,12 @@ interface BuscarPageProps {
 // Se arma con los filtros **ya saneados**, no con lo que venía en la dirección:
 // así un parámetro basura que alguien haya colado no se reenvía tal cual en los
 // enlaces de la página.
+function enlaceIncluyendoSinDato(filters: CourseSearchFilters): string {
+  // Vuelve a la primera página: la búsqueda pasa a tener otros resultados, así
+  // que seguir en la página 7 de la anterior no significa nada.
+  return enlacePagina({ ...filters, incluirSinDato: true }, 1);
+}
+
 function enlacePagina(filters: CourseSearchFilters, pagina: number): string {
   const params = new URLSearchParams();
   if (filters.keyword) params.set("keyword", filters.keyword);
@@ -27,6 +41,7 @@ function enlacePagina(filters: CourseSearchFilters, pagina: number): string {
   if (filters.minRating !== null) params.set("minRating", String(filters.minRating));
   if (filters.language) params.set("language", filters.language);
   if (filters.category) params.set("category", filters.category);
+  if (filters.incluirSinDato) params.set("sinDato", "1");
   if (pagina > 1) params.set("pagina", String(pagina));
   const query = params.toString();
   return query ? `/buscar?${query}` : "/buscar";
@@ -87,8 +102,24 @@ export default async function BuscarPage({ searchParams }: BuscarPageProps) {
             </option>
           ))}
         </select>
+        {/* Se conserva al volver a filtrar: si se perdiera, cambiar la palabra
+            clave volvería a esconder medio catálogo sin avisar (HU-026). No va
+            como casilla visible porque solo tiene sentido cuando hay un filtro
+            que excluye, y entonces ya se ofrece en el aviso. */}
+        {filters.incluirSinDato && <input type="hidden" name="sinDato" value="1" />}
         <button type="submit">Buscar</button>
       </form>
+
+      {/* Solo cuando de verdad hay un filtro que descarta por falta de dato.
+          Un aviso permanente es ruido y se deja de leer (HU-026). */}
+      {excluyePorFaltaDeDato(filters) && (
+        <p className={styles.avisoSinDato} role="status">
+          Los cursos que no publican {textoDatoQueFalta(filters)} quedan fuera de esta
+          búsqueda. Coursera no publica ni precios ni valoraciones, así que se queda
+          fuera su catálogo entero.{" "}
+          <Link href={enlaceIncluyendoSinDato(filters)}>Incluirlos de todos modos</Link>
+        </p>
+      )}
 
       {resultados.length === 0 ? (
         <p role="status">

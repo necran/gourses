@@ -122,3 +122,13 @@
 .paginaInactiva {
   opacity: 0.4;
 }
+
+/* Aviso de que un filtro está descartando cursos por falta de dato (HU-026).
+   Se ve, pero no compite con los resultados: no es un error. */
+.avisoSinDato {
+  margin: 1rem 0;
+  padding: 0.75rem 1rem;
+  border-left: 3px solid currentColor;
+  opacity: 0.85;
+  font-size: 0.95rem;
+}

@@ -12,6 +12,22 @@ export interface CourseSearchFilters {
   language: string | null;
   /** Página de resultados, empezando en 1 (HU-025). */
   pagina: number;
+  /**
+   * Si los filtros de precio y valoración deben admitir también los cursos que
+   * **no publican** ese dato (HU-026). Por defecto no: quien pide «menos de
+   * 20 €» no quiere ruido de precio desconocido. Pero se puede pedir, porque
+   * lo contrario esconde los 4.000 cursos de Coursera sin decir nada.
+   */
+  incluirSinDato: boolean;
+}
+
+/**
+ * Si la búsqueda tiene algún filtro que descarta cursos **por no tener el
+ * dato**, no por incumplirlo. Es la condición para avisar: un aviso que sale
+ * siempre es ruido y se deja de leer (HU-026).
+ */
+export function excluyePorFaltaDeDato(filters: CourseSearchFilters): boolean {
+  return !filters.incluirSinDato && (filters.maxPrice !== null || filters.minRating !== null);
 }
 
 const MAX_KEYWORD_LENGTH = 200;
@@ -30,6 +46,14 @@ const MAX_KEYWORD_LENGTH = 200;
 export const MAX_PAGINA = 200;
 const MAX_LANGUAGE_LENGTH = 35;
 const MAX_RATING = 5;
+
+/**
+ * Tope del precio máximo. No hay curso que se acerque, así que no recorta
+ * ninguna búsqueda real; está para que el valor sea siempre un número corto.
+ * Desde HU-026 el precio se interpola en el texto de un filtro `.or()` de
+ * PostgREST, y `String(1e21)` da `"1e+21"`, que ahí no significa nada.
+ */
+const MAX_PRICE = 100_000;
 
 function firstValue(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
@@ -73,6 +97,12 @@ function parsePagina(raw: string | undefined): number {
   return Math.min(valor, MAX_PAGINA);
 }
 
+// Una casilla marcada, no un número: solo cuenta el "sí" explícito. Cualquier
+// otra cosa —ausente, vacía, "0", basura— es que no se ha pedido.
+function parseIncluirSinDato(raw: string | undefined): boolean {
+  return raw === "1" || raw === "true";
+}
+
 function parseLanguage(raw: string | undefined): string | null {
   if (raw === undefined) return null;
   const trimmed = raw.trim().slice(0, MAX_LANGUAGE_LENGTH);
@@ -86,9 +116,10 @@ export function parseCourseSearchFilters(params: RawSearchParams): CourseSearchF
   return {
     keyword: parseKeyword(firstValue(params.keyword)),
     category: parseCategory(firstValue(params.category)),
-    maxPrice: parseNonNegativeNumber(firstValue(params.maxPrice)),
+    maxPrice: parseNonNegativeNumber(firstValue(params.maxPrice), MAX_PRICE),
     minRating: parseNonNegativeNumber(firstValue(params.minRating), MAX_RATING),
     language: parseLanguage(firstValue(params.language)),
     pagina: parsePagina(firstValue(params.pagina)),
+    incluirSinDato: parseIncluirSinDato(firstValue(params.sinDato)),
   };
 }

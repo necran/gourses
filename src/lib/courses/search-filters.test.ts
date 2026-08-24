@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { MAX_PAGINA, parseCourseSearchFilters } from "./search-filters";
+import {
+  MAX_PAGINA,
+  excluyePorFaltaDeDato,
+  parseCourseSearchFilters,
+} from "./search-filters";
 
 describe("parseCourseSearchFilters", () => {
   it("combina palabra clave, precio, valoración e idioma cuando todos son válidos", () => {
@@ -17,6 +21,7 @@ describe("parseCourseSearchFilters", () => {
       minRating: 4,
       language: "es",
       pagina: 1,
+      incluirSinDato: false,
     });
   });
 
@@ -30,6 +35,7 @@ describe("parseCourseSearchFilters", () => {
       // La página es el único filtro que no puede ser nulo: siempre se está
       // mirando alguna, y sin parámetro se mira la primera.
       pagina: 1,
+      incluirSinDato: false,
     });
   });
 
@@ -138,5 +144,56 @@ describe("parseCourseSearchFilters", () => {
     it("sin categoría en la dirección, no se filtra", () => {
       expect(parseCourseSearchFilters({}).category).toBeNull();
     });
+  });
+});
+
+describe("incluir cursos sin el dato (HU-026)", () => {
+  it("por defecto no se incluyen", () => {
+    expect(parseCourseSearchFilters({}).incluirSinDato).toBe(false);
+  });
+
+  it("se activa con el sí explícito", () => {
+    expect(parseCourseSearchFilters({ sinDato: "1" }).incluirSinDato).toBe(true);
+    expect(parseCourseSearchFilters({ sinDato: "true" }).incluirSinDato).toBe(true);
+  });
+
+  // Nada de "cualquier cosa que no sea vacío vale": es una elección del
+  // visitante, y "0" o basura no es haberla tomado.
+  it.each(["0", "false", "", "sí", "no", "2"])("no se activa con %j", (raw) => {
+    expect(parseCourseSearchFilters({ sinDato: raw }).incluirSinDato).toBe(false);
+  });
+
+  it("recorta un precio máximo desproporcionado", () => {
+    // El precio acaba dentro del texto de un filtro .or() de PostgREST; sin
+    // tope, String(1e21) daría "1e+21", que allí no significa nada.
+    expect(parseCourseSearchFilters({ maxPrice: "1e21" }).maxPrice).toBe(100_000);
+    expect(String(parseCourseSearchFilters({ maxPrice: "1e21" }).maxPrice)).not.toContain("e");
+  });
+});
+
+describe("excluyePorFaltaDeDato", () => {
+  it("no avisa cuando no hay filtro de precio ni de valoración", () => {
+    expect(excluyePorFaltaDeDato(parseCourseSearchFilters({ keyword: "python" }))).toBe(false);
+  });
+
+  it("avisa con un precio máximo", () => {
+    expect(excluyePorFaltaDeDato(parseCourseSearchFilters({ maxPrice: "20" }))).toBe(true);
+  });
+
+  it("avisa con una valoración mínima", () => {
+    expect(excluyePorFaltaDeDato(parseCourseSearchFilters({ minRating: "4" }))).toBe(true);
+  });
+
+  // Ya no se está dejando nada fuera por falta de dato, así que no hay de qué
+  // avisar: repetir el aviso después de aceptarlo es ruido.
+  it("deja de avisar en cuanto se piden incluidos", () => {
+    expect(
+      excluyePorFaltaDeDato(parseCourseSearchFilters({ maxPrice: "20", sinDato: "1" }))
+    ).toBe(false);
+  });
+
+  // Un precio de cero es un filtro real («solo gratis»), no la ausencia de uno.
+  it("avisa también con precio máximo cero", () => {
+    expect(excluyePorFaltaDeDato(parseCourseSearchFilters({ maxPrice: "0" }))).toBe(true);
   });
 });

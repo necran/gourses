@@ -164,11 +164,21 @@ async function searchCoursesFromSource(
   if (filters.category !== null) {
     query = query.eq("category", filters.category);
   }
+  // Un curso sin precio no incumple «menos de 20 €»: es que no se sabe. En SQL
+  // `price_amount <= 20` es NULL para él, y una condición nula descarta la fila
+  // — que es como los 4.000 cursos de Coursera desaparecían en cuanto alguien
+  // tocaba este filtro. Se sigue descartándolos por defecto, porque quien pide
+  // un precio máximo no quiere ruido de precio desconocido, pero ahora se puede
+  // pedir lo contrario (HU-026).
   if (filters.maxPrice !== null) {
-    query = query.lte("price_amount", filters.maxPrice);
+    query = filters.incluirSinDato
+      ? query.or(`price_amount.lte.${filters.maxPrice},price_amount.is.null`)
+      : query.lte("price_amount", filters.maxPrice);
   }
   if (filters.minRating !== null) {
-    query = query.gte("rating", filters.minRating);
+    query = filters.incluirSinDato
+      ? query.or(`rating.gte.${filters.minRating},rating.is.null`)
+      : query.gte("rating", filters.minRating);
   }
   if (filters.language !== null) {
     query = query.ilike("language", filters.language);
