@@ -5,6 +5,7 @@ import {
   ORDENES,
   excluyePorFaltaDeDato,
   parseCourseSearchFilters,
+  textoRecuento,
   type CourseSearchFilters,
   type RawSearchParams,
 } from "../../lib/courses/search-filters";
@@ -54,7 +55,7 @@ export default async function BuscarPage({ searchParams }: BuscarPageProps) {
   const rawParams = await searchParams;
   const filters = parseCourseSearchFilters(rawParams);
   const client = createSupabaseServerClient();
-  const { resultados, pagina, hayMas } = await searchCourses(client, filters);
+  const { resultados, pagina, hayMas, total } = await searchCourses(client, filters);
 
   return (
     <main className={styles.main}>
@@ -136,17 +137,23 @@ export default async function BuscarPage({ searchParams }: BuscarPageProps) {
         </p>
       )}
 
+      {/* Antes de decidir si merece la pena mirar los resultados (HU-028). Sin
+          condición: "0 resultados" es tan información como cualquier otro
+          número, y textoRecuento ya dice "no se ha encontrado ninguno" en ese
+          caso, así que no hace falta un mensaje aparte para la página 1. */}
+      <p className={styles.recuento} role="status">
+        {textoRecuento(total)}
+      </p>
+
       {resultados.length === 0 ? (
-        <p role="status">
-          {pagina > 1 ? (
-            <>
-              Esta página ya no tiene resultados.{" "}
-              <Link href={enlacePagina(filters, 1)}>Volver a la primera</Link>
-            </>
-          ) : (
-            "No se han encontrado cursos con esos criterios."
-          )}
-        </p>
+        // Si total fuera 0 ya lo habría dicho el recuento de arriba: este caso
+        // es total > 0 con una página más allá del final.
+        pagina > 1 && (
+          <p role="status">
+            Esta página ya no tiene resultados.{" "}
+            <Link href={enlacePagina(filters, 1)}>Volver a la primera</Link>
+          </p>
+        )
       ) : (
         // Formulario aparte del de filtros (no se pueden anidar). Envía por GET
         // a /comparar, así que la comparación queda en la dirección y se puede

@@ -76,7 +76,7 @@ test.describe("HU-007 — buscador de cursos", () => {
     await page.getByRole("button", { name: "Buscar" }).click();
 
     await expect(page.getByRole("status")).toHaveText(
-      "No se han encontrado cursos con esos criterios."
+      "No se ha encontrado ningún curso con esos criterios."
     );
     await expect(page.locator("main li")).toHaveCount(0);
   });

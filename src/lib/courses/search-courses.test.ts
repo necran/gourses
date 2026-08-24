@@ -101,7 +101,7 @@ describe("paginarIntercalado (HU-025)", () => {
   }
 
   it("la primera página trae los primeros resultados", () => {
-    const pagina = paginarIntercalado(grupos(10, 10), 1, 4);
+    const pagina = paginarIntercalado(grupos(10, 10), 1, 4, 20);
 
     expect(pagina.resultados.map((c) => c.id)).toEqual([
       "udemy-0",
@@ -113,7 +113,7 @@ describe("paginarIntercalado (HU-025)", () => {
   });
 
   it("la segunda página sigue donde acabó la primera", () => {
-    expect(paginarIntercalado(grupos(10, 10), 2, 4).resultados.map((c) => c.id)).toEqual([
+    expect(paginarIntercalado(grupos(10, 10), 2, 4, 20).resultados.map((c) => c.id)).toEqual([
       "udemy-2",
       "coursera-2",
       "udemy-3",
@@ -126,7 +126,7 @@ describe("paginarIntercalado (HU-025)", () => {
   it("recorriendo todas las páginas se ve cada curso una sola vez", () => {
     const vistos: string[] = [];
     for (let p = 1; p <= 5; p += 1) {
-      vistos.push(...paginarIntercalado(grupos(10, 10), p, 4).resultados.map((c) => c.id));
+      vistos.push(...paginarIntercalado(grupos(10, 10), p, 4, 20).resultados.map((c) => c.id));
     }
 
     expect(new Set(vistos).size).toBe(vistos.length);
@@ -136,7 +136,7 @@ describe("paginarIntercalado (HU-025)", () => {
   // El motivo de intercalar sigue vigente en la página 3, no solo en la 1: si
   // se pierde, Coursera vuelve a desaparecer de la búsqueda.
   it("mantiene las dos plataformas en páginas profundas", () => {
-    const pagina = paginarIntercalado(grupos(30, 30), 5, 4);
+    const pagina = paginarIntercalado(grupos(30, 30), 5, 4, 20);
 
     expect(pagina.resultados.filter((c) => c.source === "udemy")).toHaveLength(2);
     expect(pagina.resultados.filter((c) => c.source === "coursera")).toHaveLength(2);
@@ -144,16 +144,16 @@ describe("paginarIntercalado (HU-025)", () => {
 
   it("dice que hay más cuando sobra al menos un resultado", () => {
     // 4 por página y 9 en total: la segunda página no es la última.
-    expect(paginarIntercalado(grupos(5, 4), 2, 4).hayMas).toBe(true);
+    expect(paginarIntercalado(grupos(5, 4), 2, 4, 20).hayMas).toBe(true);
   });
 
   it("no dice que hay más en la última página exacta", () => {
     // 8 resultados justos en dos páginas de 4: no hay nada detrás.
-    expect(paginarIntercalado(grupos(4, 4), 2, 4).hayMas).toBe(false);
+    expect(paginarIntercalado(grupos(4, 4), 2, 4, 20).hayMas).toBe(false);
   });
 
   it("una página más allá del final sale vacía en vez de repetir la última", () => {
-    const pagina = paginarIntercalado(grupos(2, 2), 9, 4);
+    const pagina = paginarIntercalado(grupos(2, 2), 9, 4, 20);
 
     expect(pagina.resultados).toEqual([]);
     expect(pagina.hayMas).toBe(false);
@@ -162,9 +162,15 @@ describe("paginarIntercalado (HU-025)", () => {
   // Cuando una fuente se agota, la otra rellena: la página sigue completa en
   // vez de quedarse a medias.
   it("completa la página con la fuente que queda si la otra se acaba", () => {
-    const pagina = paginarIntercalado(grupos(9, 2), 2, 4);
+    const pagina = paginarIntercalado(grupos(9, 2), 2, 4, 20);
 
     expect(pagina.resultados).toHaveLength(4);
     expect(pagina.resultados.every((c) => c.source === "udemy")).toBe(true);
+  });
+
+  // El total no lo calcula paginarIntercalado: lo recibe hecho, porque cada
+  // fuente lo cuenta en su propia consulta (HU-028).
+  it("el total es el que se le pasa, no el tamaño de la página", () => {
+    expect(paginarIntercalado(grupos(9, 2), 1, 4, 11).total).toBe(11);
   });
 });

@@ -4,6 +4,7 @@ import {
   ORDENES,
   excluyePorFaltaDeDato,
   parseCourseSearchFilters,
+  textoRecuento,
 } from "./search-filters";
 
 describe("parseCourseSearchFilters", () => {
@@ -229,5 +230,25 @@ describe("orden (HU-027)", () => {
     expect(parseCourseSearchFilters({ orden: ["precio-asc", "valoracion-desc"] }).orden).toBe(
       "precio-asc"
     );
+  });
+});
+
+describe("textoRecuento (HU-028)", () => {
+  it("dice que no hay ninguno, no un cero suelto", () => {
+    expect(textoRecuento(0)).toBe("No se ha encontrado ningún curso con esos criterios.");
+  });
+
+  it("usa el singular con uno solo", () => {
+    expect(textoRecuento(1)).toBe("1 curso encontrado.");
+  });
+
+  it("usa el plural con más de uno", () => {
+    expect(textoRecuento(2)).toBe("2 cursos encontrados.");
+  });
+
+  // El catálogo tiene 8.796 cursos: el separador de miles no es un capricho,
+  // es lo que hace legible el número real.
+  it("separa los miles", () => {
+    expect(textoRecuento(8796)).toBe("8.796 cursos encontrados.");
   });
 });

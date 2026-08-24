@@ -25,6 +25,12 @@ export interface CourseSearchPage {
   pagina: number;
   /** Si hay al menos un resultado más después de esta página. */
   hayMas: boolean;
+  /**
+   * Cuántos cursos cumplen la búsqueda **en total**, no cuántos caben en esta
+   * página (HU-028). Con reparto equilibrado son dos consultas, una por fuente,
+   * así que es la suma de las dos.
+   */
+  total: number;
 }
 
 // PostgREST interpreta `,`, `(` y `)` como separadores dentro del valor de un
@@ -71,6 +77,11 @@ function mapRow(row: CourseRow): CourseSearchResult {
 // Reparte los resultados alternando fuentes: uno de cada una por ronda, en el
 // orden en que vienen (mejor valorados primero dentro de su fuente). Si una se
 // agota, el resto se completa con las demás.
+interface ResultadoFuente {
+  filas: CourseSearchResult[];
+  total: number;
+}
+
 export function interleaveBySource(
   groups: CourseSearchResult[][],
   limit: number
@@ -119,13 +130,20 @@ export async function searchCourses(
   // cada fuente en una página depende de si la otra se agotó antes, y eso solo
   // se sabe intercalando desde el principio. El extra es lo que permite decir
   // si hay página siguiente sin una segunda consulta que la cuente (HU-025).
-  const groups = await Promise.all(
+  const porFuente = await Promise.all(
     COURSE_SOURCES.map((source) =>
       searchCoursesFromSource(client, filters, source, pagina * limit + 1)
     )
   );
 
-  return paginarIntercalado(groups, pagina, limit);
+  return paginarIntercalado(
+    porFuente.map((f) => f.filas),
+    pagina,
+    limit,
+    // La suma de los totales de cada fuente: cada una cuenta la suya, así que
+    // no se puede sumar en una sola consulta como en el camino ordenado.
+    porFuente.reduce((suma, f) => suma + f.total, 0)
+  );
 }
 
 // Una sola consulta global. Aquí sí se puede saltar directamente al trozo que
@@ -151,7 +169,7 @@ async function searchCoursesOrdenado(
 
   // Se pide uno de más para saber si hay página siguiente, igual que en el
   // camino intercalado.
-  const { data, error } = await query
+  const { data, error, count } = await query
     .order("id", { ascending: true })
     .range(desde, desde + limit);
 
@@ -165,14 +183,26 @@ async function searchCoursesOrdenado(
     resultados: filas.slice(0, limit),
     pagina,
     hayMas: filas.length > limit,
+    // `count` no falta nunca en la práctica: se pide `{ count: "exact" }` en
+    // toda consulta y PostgREST lo devuelve salvo error, que ya se lanza antes
+    // de llegar aquí. El resguardo es solo para no confiar ciegamente en un
+    // contrato externo. `filas.length` NO valdría como resguardo: incluye la
+    // fila de más que se pide para saber si hay página siguiente, así que
+    // contaría un curso de más justo en la última página.
+    total: count ?? desde + Math.min(filas.length, limit),
   };
 }
 
+// `count: "exact"` viaja en la misma petición que los resultados: PostgREST lo
+// devuelve en la cabecera Content-Range, así que no hay consulta extra (HU-028).
+// Es un COUNT sobre el conjunto filtrado; con 8.796 filas no se nota. Conviene
+// volver a mirarlo si el catálogo crece un orden de magnitud.
 function seleccionBase(client: SupabaseClient) {
   return client
     .from("courses")
     .select(
-      "id, source, title, description, price_amount, price_currency, rating, language, image_url, affiliate_url, duration_min_minutes, duration_max_minutes"
+      "id, source, title, description, price_amount, price_currency, rating, language, image_url, affiliate_url, duration_min_minutes, duration_max_minutes",
+      { count: "exact" }
     );
 }
 
@@ -189,7 +219,8 @@ function seleccionBase(client: SupabaseClient) {
 export function paginarIntercalado(
   groups: CourseSearchResult[][],
   pagina: number,
-  limit: number
+  limit: number,
+  total: number
 ): CourseSearchPage {
   const fin = pagina * limit;
   const intercalados = interleaveBySource(groups, fin + 1);
@@ -198,6 +229,7 @@ export function paginarIntercalado(
     resultados: intercalados.slice(fin - limit, fin),
     pagina,
     hayMas: intercalados.length > fin,
+    total,
   };
 }
 
@@ -206,10 +238,10 @@ async function searchCoursesFromSource(
   filters: CourseSearchFilters,
   source: CourseSource,
   limit: number
-): Promise<CourseSearchResult[]> {
+): Promise<ResultadoFuente> {
   const query = aplicarFiltros(seleccionBase(client).eq("source", source), filters);
 
-  const { data, error } = await query
+  const { data, error, count } = await query
     .order("rating", { ascending: false, nullsFirst: false })
     .order("updated_at", { ascending: false })
     // Desempate por un campo único, necesario desde que hay paginación
@@ -229,7 +261,7 @@ async function searchCoursesFromSource(
     throw new Error(`Fallo al buscar cursos: ${error.message}`);
   }
 
-  return (data ?? []).map(mapRow);
+  return { filas: (data ?? []).map(mapRow), total: count ?? 0 };
 }
 
 // Los filtros son los mismos se ordene como se ordene, así que viven en un solo

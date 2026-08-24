@@ -38,6 +38,26 @@ export const ETIQUETAS_ORDEN: Record<OrdenResultados, string> = {
   "valoracion-desc": "Mejor valorados",
 };
 
+// Separador de miles a mano, con punto: `toLocaleString("es-ES")` depende de
+// que el entorno traiga los datos ICU de ese locale, y no siempre los trae
+// (comprobado: en este proyecto Node los da sin separar). Escribirlo a mano
+// no depende de nada.
+function conSeparadorDeMiles(n: number): string {
+  return Math.trunc(n)
+    .toString()
+    .replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
+
+/**
+ * Texto del recuento de resultados (HU-028). Aparte, sencilla y sin JSX, para
+ * poder probar el singular/plural y los números grandes sin montar la página.
+ */
+export function textoRecuento(total: number): string {
+  if (total === 0) return "No se ha encontrado ningún curso con esos criterios.";
+  if (total === 1) return "1 curso encontrado.";
+  return `${conSeparadorDeMiles(total)} cursos encontrados.`;
+}
+
 /**
  * Si la búsqueda tiene algún filtro que descarta cursos **por no tener el
  * dato**, no por incumplirlo. Es la condición para avisar: un aviso que sale

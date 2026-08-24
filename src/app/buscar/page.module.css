@@ -132,3 +132,11 @@
   opacity: 0.85;
   font-size: 0.95rem;
 }
+
+/* Recuento de resultados (HU-028). Va antes de la lista, para decidir si
+   merece la pena mirarla antes de mirarla. */
+.recuento {
+  margin: 0.5rem 0 1rem;
+  font-size: 0.9rem;
+  opacity: 0.75;
+}
