@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseCourseSearchFilters } from "./search-filters";
+import { MAX_PAGINA, parseCourseSearchFilters } from "./search-filters";
 
 describe("parseCourseSearchFilters", () => {
   it("combina palabra clave, precio, valoración e idioma cuando todos son válidos", () => {
@@ -16,6 +16,7 @@ describe("parseCourseSearchFilters", () => {
       maxPrice: 49.99,
       minRating: 4,
       language: "es",
+      pagina: 1,
     });
   });
 
@@ -26,6 +27,45 @@ describe("parseCourseSearchFilters", () => {
       maxPrice: null,
       minRating: null,
       language: null,
+      // La página es el único filtro que no puede ser nulo: siempre se está
+      // mirando alguna, y sin parámetro se mira la primera.
+      pagina: 1,
+    });
+  });
+
+  describe("página (HU-025)", () => {
+    it("sin parámetro empieza por la primera", () => {
+      expect(parseCourseSearchFilters({}).pagina).toBe(1);
+    });
+
+    it("acepta una página válida", () => {
+      expect(parseCourseSearchFilters({ pagina: "7" }).pagina).toBe(7);
+    });
+
+    // Una dirección compartida con la página estropeada tiene que seguir
+    // enseñando cursos: se vuelve a la primera en vez de romper o vaciar.
+    it.each(["0", "-3", "abc", "2.5", "", "   ", "Infinity", "NaN"])(
+      "vuelve a la primera con %j",
+      (raw) => {
+        expect(parseCourseSearchFilters({ pagina: raw }).pagina).toBe(1);
+      }
+    );
+
+    // "1e3" es 1000 y se admite como tal: no es basura, es la misma página
+    // escrita de otra forma. Acaba recortada por el tope, como cualquier 1000.
+    it("lee la notación exponencial como el número que es", () => {
+      expect(parseCourseSearchFilters({ pagina: "1e3" }).pagina).toBe(MAX_PAGINA);
+      expect(parseCourseSearchFilters({ pagina: "1e1" }).pagina).toBe(10);
+    });
+
+    // El tope no es de producto: acota lo que puede pedir un extraño, porque la
+    // consulta trae los resultados hasta el final de la página pedida.
+    it("recorta una página desproporcionada al tope", () => {
+      expect(parseCourseSearchFilters({ pagina: "99999999" }).pagina).toBe(MAX_PAGINA);
+    });
+
+    it("se queda con el primer valor si llega repetida", () => {
+      expect(parseCourseSearchFilters({ pagina: ["3", "9"] }).pagina).toBe(3);
     });
   });
 

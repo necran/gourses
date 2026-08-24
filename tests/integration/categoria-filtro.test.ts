@@ -57,7 +57,7 @@ describeIfConfigured("HU-022 — filtro por categoría", () => {
 
   it("devuelve solo los cursos de la categoría pedida", async () => {
     const filtros = parseCourseSearchFilters({ category: "datos-e-ia", keyword: MARCA });
-    const todos = await searchCourses(supabase, filtros, 200);
+    const { resultados: todos } = await searchCourses(supabase, filtros, 200);
 
     expect(titulos(todos)).toEqual(["zzzhu022 Machine learning with Python"]);
   }, 30_000);
@@ -66,21 +66,21 @@ describeIfConfigured("HU-022 — filtro por categoría", () => {
   // clave, y ningún curso en inglés la contiene.
   it("buscar la etiqueta visible como texto no encuentra nada", async () => {
     const filtros = parseCourseSearchFilters({ keyword: "Datos e IA" });
-    const todos = await searchCourses(supabase, filtros, 200);
+    const { resultados: todos } = await searchCourses(supabase, filtros, 200);
 
     expect(titulos(todos)).toHaveLength(0);
   }, 30_000);
 
   it("una categoría inventada no filtra, en vez de vaciar la búsqueda", async () => {
     const filtros = parseCourseSearchFilters({ category: "no-existe", keyword: MARCA });
-    const todos = await searchCourses(supabase, filtros, 200);
+    const { resultados: todos } = await searchCourses(supabase, filtros, 200);
 
     expect(titulos(todos)).toHaveLength(3);
   }, 30_000);
 
   it("la categoría se combina con la palabra clave", async () => {
     const filtros = parseCourseSearchFilters({ category: "desarrollo", keyword: "TypeScript" });
-    const todos = await searchCourses(supabase, filtros, 200);
+    const { resultados: todos } = await searchCourses(supabase, filtros, 200);
 
     expect(titulos(todos)).toEqual(["zzzhu022 Advanced TypeScript patterns"]);
   }, 30_000);

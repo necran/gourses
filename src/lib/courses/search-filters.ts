@@ -10,9 +10,24 @@ export interface CourseSearchFilters {
   maxPrice: number | null;
   minRating: number | null;
   language: string | null;
+  /** Página de resultados, empezando en 1 (HU-025). */
+  pagina: number;
 }
 
 const MAX_KEYWORD_LENGTH = 200;
+
+/**
+ * Hasta qué página se puede saltar de un tirón.
+ *
+ * No es un límite de producto sino de coste: la consulta trae los resultados
+ * **hasta el final** de la página pedida para poder intercalar las fuentes, así
+ * que la profundidad la marca quien escribe la dirección. Sin tope, un
+ * `?pagina=99999999` obligaría a recorrer el catálogo entero por cada visita.
+ *
+ * 200 páginas son 10.000 resultados, más que el catálogo actual (8.796), así
+ * que hoy no esconde nada: solo pone un techo a lo que puede pedir un extraño.
+ */
+export const MAX_PAGINA = 200;
 const MAX_LANGUAGE_LENGTH = 35;
 const MAX_RATING = 5;
 
@@ -48,6 +63,16 @@ function parseNonNegativeNumber(raw: string | undefined, max?: number): number |
   return value;
 }
 
+// Una página inválida no es motivo para no enseñar nada: se vuelve a la
+// primera, que es lo que la persona quería ver de todos modos. Se aceptan solo
+// enteros: `?pagina=2.5` no significa nada.
+function parsePagina(raw: string | undefined): number {
+  if (raw === undefined || raw.trim() === "") return 1;
+  const valor = Number(raw);
+  if (!Number.isInteger(valor) || valor < 1) return 1;
+  return Math.min(valor, MAX_PAGINA);
+}
+
 function parseLanguage(raw: string | undefined): string | null {
   if (raw === undefined) return null;
   const trimmed = raw.trim().slice(0, MAX_LANGUAGE_LENGTH);
@@ -64,5 +89,6 @@ export function parseCourseSearchFilters(params: RawSearchParams): CourseSearchF
     maxPrice: parseNonNegativeNumber(firstValue(params.maxPrice)),
     minRating: parseNonNegativeNumber(firstValue(params.minRating), MAX_RATING),
     language: parseLanguage(firstValue(params.language)),
+    pagina: parsePagina(firstValue(params.pagina)),
   };
 }

@@ -46,7 +46,7 @@ describeIfConfigured("HU-007 — searchCourses", () => {
 
   it("filtra por palabra clave en título o descripción", async () => {
     const filters = parseCourseSearchFilters({ keyword: "rust" });
-    const results = await searchCourses(supabase, filters, 100);
+    const { resultados: results } = await searchCourses(supabase, filters, 100);
     const titles = results.map((r) => r.title);
 
     expect(titles).toContain("Curso de prueba HU-007: introducción a Rust");
@@ -62,7 +62,7 @@ describeIfConfigured("HU-007 — searchCourses", () => {
       maxPrice: "50",
       minRating: "4",
     });
-    const results = await searchCourses(supabase, filters, 100);
+    const { resultados: results } = await searchCourses(supabase, filters, 100);
 
     expect(results.map((r) => r.title)).toEqual([
       "Curso de prueba HU-007: introducción a Rust",
@@ -71,7 +71,7 @@ describeIfConfigured("HU-007 — searchCourses", () => {
 
   it("filtra por idioma", async () => {
     const filters = parseCourseSearchFilters({ keyword: "Curso de prueba HU-007", language: "es" });
-    const results = await searchCourses(supabase, filters, 100);
+    const { resultados: results } = await searchCourses(supabase, filters, 100);
 
     expect(results.map((r) => r.title).sort()).toEqual([
       "Curso de prueba HU-007: cocina italiana",
@@ -81,7 +81,7 @@ describeIfConfigured("HU-007 — searchCourses", () => {
 
   it("una búsqueda sin coincidencias devuelve una lista vacía, no un error", async () => {
     const filters = parseCourseSearchFilters({ keyword: "zzz-no-existe-ningun-curso-asi" });
-    const results = await searchCourses(supabase, filters, 100);
+    const { resultados: results } = await searchCourses(supabase, filters, 100);
 
     expect(results).toEqual([]);
   });

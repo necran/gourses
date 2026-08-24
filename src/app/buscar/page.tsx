@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { createSupabaseServerClient } from "../../lib/supabase/server-client";
-import { parseCourseSearchFilters, type RawSearchParams } from "../../lib/courses/search-filters";
+import {
+  parseCourseSearchFilters,
+  type CourseSearchFilters,
+  type RawSearchParams,
+} from "../../lib/courses/search-filters";
 import { searchCourses } from "../../lib/courses/search-courses";
 import { formatDuration } from "../../lib/courses/duration";
 import { MAX_COMPARADOS } from "../../lib/courses/compare";
@@ -11,11 +15,28 @@ interface BuscarPageProps {
   searchParams: Promise<RawSearchParams>;
 }
 
+// Construye la dirección de otra página conservando la búsqueda (HU-025).
+//
+// Se arma con los filtros **ya saneados**, no con lo que venía en la dirección:
+// así un parámetro basura que alguien haya colado no se reenvía tal cual en los
+// enlaces de la página.
+function enlacePagina(filters: CourseSearchFilters, pagina: number): string {
+  const params = new URLSearchParams();
+  if (filters.keyword) params.set("keyword", filters.keyword);
+  if (filters.maxPrice !== null) params.set("maxPrice", String(filters.maxPrice));
+  if (filters.minRating !== null) params.set("minRating", String(filters.minRating));
+  if (filters.language) params.set("language", filters.language);
+  if (filters.category) params.set("category", filters.category);
+  if (pagina > 1) params.set("pagina", String(pagina));
+  const query = params.toString();
+  return query ? `/buscar?${query}` : "/buscar";
+}
+
 export default async function BuscarPage({ searchParams }: BuscarPageProps) {
   const rawParams = await searchParams;
   const filters = parseCourseSearchFilters(rawParams);
   const client = createSupabaseServerClient();
-  const results = await searchCourses(client, filters);
+  const { resultados, pagina, hayMas } = await searchCourses(client, filters);
 
   return (
     <main className={styles.main}>
@@ -69,12 +90,22 @@ export default async function BuscarPage({ searchParams }: BuscarPageProps) {
         <button type="submit">Buscar</button>
       </form>
 
-      {results.length === 0 ? (
-        <p role="status">No se han encontrado cursos con esos criterios.</p>
+      {resultados.length === 0 ? (
+        <p role="status">
+          {pagina > 1 ? (
+            <>
+              Esta página ya no tiene resultados.{" "}
+              <Link href={enlacePagina(filters, 1)}>Volver a la primera</Link>
+            </>
+          ) : (
+            "No se han encontrado cursos con esos criterios."
+          )}
+        </p>
       ) : (
         // Formulario aparte del de filtros (no se pueden anidar). Envía por GET
         // a /comparar, así que la comparación queda en la dirección y se puede
         // compartir, y funciona sin JavaScript de cliente (HU-017).
+        <>
         <form method="get" action="/comparar">
         <div className={styles.barraComparar}>
           <button type="submit" className={styles.botonComparar}>
@@ -85,7 +116,7 @@ export default async function BuscarPage({ searchParams }: BuscarPageProps) {
           </span>
         </div>
         <ul className={styles.results}>
-          {results.map((course) => (
+          {resultados.map((course) => (
             <li key={course.id} className={styles.card}>
               <input
                 type="checkbox"
@@ -124,6 +155,31 @@ export default async function BuscarPage({ searchParams }: BuscarPageProps) {
           ))}
         </ul>
         </form>
+
+        {/* Enlaces, no botones: pasar de página es navegar, así que tiene que
+            poder compartirse, abrirse en otra pestaña y funcionar sin
+            JavaScript, igual que el resto del buscador (HU-025). Los extremos
+            van como texto y no como enlace muerto. */}
+        <nav className={styles.paginacion} aria-label="Paginación de resultados">
+          {pagina > 1 ? (
+            <Link href={enlacePagina(filters, pagina - 1)} rel="prev">
+              ← Anterior
+            </Link>
+          ) : (
+            <span className={styles.paginaInactiva}>← Anterior</span>
+          )}
+
+          <span className={styles.paginaActual}>Página {pagina}</span>
+
+          {hayMas ? (
+            <Link href={enlacePagina(filters, pagina + 1)} rel="next">
+              Siguiente →
+            </Link>
+          ) : (
+            <span className={styles.paginaInactiva}>Siguiente →</span>
+          )}
+        </nav>
+        </>
       )}
     </main>
   );

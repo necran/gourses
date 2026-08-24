@@ -19,6 +19,14 @@ export interface CourseSearchResult {
 
 const DEFAULT_LIMIT = 50;
 
+export interface CourseSearchPage {
+  resultados: CourseSearchResult[];
+  /** Página servida, empezando en 1. */
+  pagina: number;
+  /** Si hay al menos un resultado más después de esta página. */
+  hayMas: boolean;
+}
+
 // PostgREST interpreta `,`, `(` y `)` como separadores dentro del valor de un
 // filtro .or(); si el texto de búsqueda del visitante los contiene sin
 // escapar, rompe la sintaxis del filtro en vez de tratarse como texto literal.
@@ -94,12 +102,46 @@ export async function searchCourses(
   client: SupabaseClient,
   filters: CourseSearchFilters,
   limit: number = DEFAULT_LIMIT
-): Promise<CourseSearchResult[]> {
+): Promise<CourseSearchPage> {
+  const pagina = Math.max(1, filters.pagina);
+
+  // Se pide a cada fuente todo lo que va **hasta el final** de la página, más
+  // un resultado. No se puede pedir solo el trozo de esta página: cuántos pone
+  // cada fuente en una página depende de si la otra se agotó antes, y eso solo
+  // se sabe intercalando desde el principio. El extra es lo que permite decir
+  // si hay página siguiente sin una segunda consulta que la cuente (HU-025).
   const groups = await Promise.all(
-    COURSE_SOURCES.map((source) => searchCoursesFromSource(client, filters, source, limit))
+    COURSE_SOURCES.map((source) =>
+      searchCoursesFromSource(client, filters, source, pagina * limit + 1)
+    )
   );
 
-  return interleaveBySource(groups, limit);
+  return paginarIntercalado(groups, pagina, limit);
+}
+
+/**
+ * Trocea en páginas la lista ya intercalada (HU-025).
+ *
+ * Va aparte de `searchCourses` porque es donde vive lo que puede salir mal
+ * —repetir un curso entre páginas, perder la alternancia, decir que hay
+ * siguiente cuando no la hay— y así se prueba sin base de datos de por medio.
+ *
+ * Espera que cada grupo llegue con los resultados hasta el final de la página
+ * pedida **más uno**; ese sobrante es lo que delata que hay más.
+ */
+export function paginarIntercalado(
+  groups: CourseSearchResult[][],
+  pagina: number,
+  limit: number
+): CourseSearchPage {
+  const fin = pagina * limit;
+  const intercalados = interleaveBySource(groups, fin + 1);
+
+  return {
+    resultados: intercalados.slice(fin - limit, fin),
+    pagina,
+    hayMas: intercalados.length > fin,
+  };
 }
 
 async function searchCoursesFromSource(
@@ -135,6 +177,17 @@ async function searchCoursesFromSource(
   const { data, error } = await query
     .order("rating", { ascending: false, nullsFirst: false })
     .order("updated_at", { ascending: false })
+    // Desempate por un campo único, necesario desde que hay paginación
+    // (HU-025). Los 4.000 cursos de Coursera tienen `rating` nulo y muchos
+    // comparten `updated_at` porque entraron en la misma pasada, así que sin un
+    // tercer criterio hay miles de filas empatadas y Postgres no promete
+    // devolver los empates en el mismo orden entre dos consultas — bastaría un
+    // plan distinto para que la página 2 repitiera cursos de la 1.
+    //
+    // Hoy, contra la base real, el orden sale estable también sin esto: el test
+    // de integración pasa igual quitándolo. Se mantiene porque la garantía la
+    // da el ORDER BY, no la casualidad de que el plan de hoy sea el de mañana.
+    .order("id", { ascending: true })
     .limit(limit);
 
   if (error) {
