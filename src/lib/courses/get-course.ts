@@ -23,6 +23,8 @@ export interface CourseDetail {
   numSubscribers: number | null;
   whatYouWillLearn: string[] | null;
   requirements: string[] | null;
+  /** Resumen generado con IA a partir de la descripción real (HU-030). */
+  resumenIA: string | null;
   priceHistory: PriceHistoryEntry[];
 }
 
@@ -55,6 +57,7 @@ interface CourseRow {
   num_subscribers: number | null;
   what_you_will_learn: string[] | null;
   requirements: string[] | null;
+  resumen_ia: string | null;
 }
 
 interface PriceHistoryRow {
@@ -90,11 +93,12 @@ function mapRow(row: CourseRow): Omit<CourseDetail, "priceHistory"> {
     numSubscribers: row.num_subscribers,
     whatYouWillLearn: row.what_you_will_learn,
     requirements: row.requirements,
+    resumenIA: row.resumen_ia,
   };
 }
 
 const CAMPOS_CURSO =
-  "id, source, title, description, price_amount, price_currency, rating, level, language, instructor, image_url, affiliate_url, category, duration_min_minutes, duration_max_minutes, num_reviews, num_subscribers, what_you_will_learn, requirements";
+  "id, source, title, description, price_amount, price_currency, rating, level, language, instructor, image_url, affiliate_url, category, duration_min_minutes, duration_max_minutes, num_reviews, num_subscribers, what_you_will_learn, requirements, resumen_ia";
 
 // Recupera varios cursos de una vez para el comparador (HU-017). Los ids ya
 // vienen validados por parseCompareIds, pero se vuelven a filtrar aquí porque

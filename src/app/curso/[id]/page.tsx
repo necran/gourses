@@ -155,6 +155,17 @@ export default async function CoursePage({ params }: CoursePageProps) {
           )}
         </section>
 
+        {/* Marcado explícitamente como generado, y separado de la descripción
+            real: nunca se mezclan como si fueran lo mismo (HU-030). Solo
+            Udemy tiene resumen —Coursera queda fuera de alcance—, así que no
+            hay que distinguir aquí de dónde viene: si existe, es de IA. */}
+        {course.resumenIA && (
+          <section className={styles.resumenIA}>
+            <p>{course.resumenIA}</p>
+            <p className={styles.resumenIAEtiqueta}>Resumen generado automáticamente</p>
+          </section>
+        )}
+
         {course.description && (
           <section>
             <h2>Descripción</h2>

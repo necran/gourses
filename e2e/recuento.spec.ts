@@ -38,7 +38,13 @@ test.describe("HU-028 — cuántos resultados hay", () => {
   test("en la segunda página el número sigue siendo el total, no el de la página", async ({
     page,
   }) => {
-    await page.goto("/buscar");
+    // Con palabra clave, no sin filtros: otras suites e2e siembran y borran
+    // cursos reales en paralelo (HU-029, HU-030), y sin filtro este test
+    // compara el tamaño del catálogo entero entre dos cargas de página —
+    // exactamente lo que esos cursos de prueba cambian mientras corren. Un
+    // curso llamado "Curso HU-030 ..." no coincide con "python", así que el
+    // recuento que se compara aquí queda fuera de esa carrera.
+    await page.goto("/buscar?keyword=python");
     const enPrimera = await page.getByText(/cursos encontrados/).textContent();
 
     await page.getByRole("link", { name: "Siguiente" }).click();

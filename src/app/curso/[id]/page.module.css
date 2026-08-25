@@ -182,3 +182,27 @@
   border-radius: 999px;
   background: var(--accent);
 }
+
+.resumenIA {
+  background: var(--accent-soft);
+  border-radius: 1rem;
+  padding: 1.1rem 1.4rem;
+  margin-bottom: 1.6rem;
+}
+
+.resumenIA p:first-child {
+  color: var(--accent-soft-ink);
+  font-size: 1.02rem;
+  line-height: 1.6;
+  margin-bottom: 0.5rem;
+}
+
+.resumenIAEtiqueta {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--accent-soft-ink);
+  opacity: 0.75;
+  margin: 0;
+}
