@@ -150,7 +150,8 @@ cuando haya varios meses de histórico.
 ## Deuda que sigue abierta
 
 - La primera ejecución con el catálogo completo aún no se ha lanzado: los despliegues
-  y la ingesta programada dependen de que se reanuden los créditos de Netlify el 9 de
-  septiembre de 2026. En local ya funciona.
+  y la ingesta programada dependen de que se reanuden los créditos de Netlify, el 10 de
+  septiembre de 2026 (el periodo de facturación va del día 10 al 9 del siguiente, no del
+  9 al 9 como se anotó al principio). En local ya funciona.
 - Coursera sigue sin precio ni valoración, así que una parte del catálogo no se puede
   comparar en lo que más importa.

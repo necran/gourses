@@ -49,7 +49,11 @@ No hay excepciones a este orden ni "hecho con pendientes".
 Netlify cobra por créditos y el plan gratuito da **300 al mes**. Un despliegue de
 producción cuesta del orden de **10**, así que publicar al cerrar cada historia agota
 la cuota en unos pocos días de trabajo intenso — pasó el 18 de agosto de 2026, y dejó
-el sitio sin poder publicar hasta el 9 de septiembre.
+el sitio sin poder publicar hasta que empezara el siguiente periodo de facturación.
+
+El periodo de facturación va del día 10 de un mes al 9 del siguiente (comprobado en el
+propio aviso de Netlify el 8 de septiembre de 2026): los créditos no se reinician el
+día 9, sino al empezar el periodo nuevo, el día **10**.
 
 Lo que consume no es el tráfico (60 MB de ancho de banda en todo un mes, 1–2 créditos
 diarios entre funciones y peticiones) sino **la cantidad de publicaciones**.
