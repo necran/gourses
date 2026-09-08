@@ -44,12 +44,14 @@ sin una petición extra por fuente.
 
 ## Checklist de tests (obligatorio antes de cerrar)
 
-- [ ] Unitarios: el texto del recuento (cero, uno, muchos, miles)
-- [ ] Integración: el total es el de la búsqueda y no cambia al pasar de página, en los
+- [x] Unitarios: el texto del recuento (cero, uno, muchos, miles)
+- [x] Integración: el total es el de la búsqueda y no cambia al pasar de página, en los
       dos caminos de consulta (con orden y sin orden)
-- [ ] E2E: un test por cada criterio de aceptación de arriba
-- [ ] `/security-review` sin hallazgos críticos ni altos
+- [x] E2E: un test por cada criterio de aceptación de arriba
+- [x] `/security-review` sin hallazgos críticos ni altos
 
 ## Estado
 
-`En progreso`
+`Cerrada`
+
+Cerrada en el commit `7a79211`. El fichero de la historia se quedó sin actualizar en su momento — el código, los tests y la revisión de seguridad ya estaban en verde; esto solo pone el papel al día.
