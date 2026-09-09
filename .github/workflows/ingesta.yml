@@ -26,9 +26,13 @@ concurrency:
 jobs:
   ingesta:
     runs-on: ubuntu-latest
-    # Medido en HU-023: la ingesta completa de Udemy son unos 29 min. Se deja el
-    # doble de margen para que una noche lenta no la deje a medias.
-    timeout-minutes: 60
+    # HU-023 midió ~29 min y dejó el doble de margen (60 min), pero desde que se
+    # activó el catálogo ampliado (20 de agosto de 2026) el job viene agotando ese
+    # tope casi todas las noches, cancelándose a medias y saltándose Coursera y los
+    # avisos de precio por el `if: !cancelled()` de los pasos siguientes.
+    # Medido de nuevo el 9 de septiembre de 2026 contra la API real: 46 min. El
+    # margen de 60 min ya no alcanza; se sube a 90 min sobre esa medición.
+    timeout-minutes: 90
 
     env:
       # La conexión directa de Supabase es solo IPv6; se usa el pooler.

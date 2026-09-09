@@ -155,3 +155,17 @@ cuando haya varios meses de histórico.
   9 al 9 como se anotó al principio). En local ya funciona.
 - Coursera sigue sin precio ni valoración, así que una parte del catálogo no se puede
   comparar en lo que más importa.
+
+## El tope de 60 min se quedó corto en producción (descubierto el 9 de septiembre de 2026)
+
+Desde que este catálogo ampliado llegó a producción (20 de agosto de 2026), la ingesta
+nocturna venía agotando el `timeout-minutes: 60` casi todas las noches, cancelándose a
+medias — y por el `if: !cancelled()` de los pasos siguientes, eso se llevaba por delante
+la ingesta de Coursera **y los avisos de bajada de precio de HU-021** durante unas tres
+semanas, sin que nada lo señalara: una ejecución cancelada no manda ningún aviso.
+
+Medido de nuevo contra la API real: **46 min**, un 59 % más que la proyección original
+de 29 min. La causa concreta de la diferencia no se investigó a fondo (candidatas: más
+429 acumulados que en la medición de agosto, o un catálogo real algo mayor que la
+muestra), pero con solo 14 min de margen sobre el tope no hacía falta afinar la causa
+para saber que había que ampliarlo. Se subió `timeout-minutes` a 90 min.
