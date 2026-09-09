@@ -39,6 +39,17 @@ Esta historia no depende de ninguna decisión de hosting ni de ninguna cuenta, a
 - Corregido de paso: `<html lang="en">` decía inglés en un sitio en español, lo que afecta a lectores de pantalla y a buscadores.
 - El test de humo (`e2e/smoke.spec.ts`) comprobaba el titular del andamio de `create-next-app`; se reescribe para verificar que la portada levanta, sin acoplarse a un texto concreto.
 
+## Ajuste posterior: de 6 a 12 cursos destacados (9 de septiembre de 2026)
+
+Con 6 la portada se veía escasa. Se subió a 12 y se añadió un botón visible
+"Ver todo el catálogo" bajo la rejilla, en vez de scroll infinito: eso exigiría
+estado de cliente y rompería el principio del sitio de que la selección/el
+estado vive en la URL (HU-017, HU-025), además de perjudicar el SEO de la
+portada (contenido que solo aparece tras JavaScript). El catálogo completo,
+con paginación real, sigue viviendo en `/buscar`. Cambio de una constante y
+una plantilla, sin lógica nueva que probar aparte de lo que ya cubren los
+tests existentes de esta historia.
+
 ## Pendiente para otra historia
 
 - **Títulos por página**: hoy todas heredan el título por defecto. Para SEO, la ficha de curso debería llevar el nombre del curso en el título; 413 páginas con el mismo título se penalizan.
