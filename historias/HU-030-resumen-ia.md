@@ -125,3 +125,24 @@ tocar el sistema de aislamiento de tests del proyecto entero.
 - Coursera sigue sin resumen: su descripción ya es corta de por sí.
 - El resumen no se usa en los datos estructurados ni en el meta de descripción, a
   propósito: ahí sigue mandando el texto real de la plataforma.
+
+## El modelo se retiró en producción, sin previo aviso (9 de septiembre de 2026)
+
+Al lanzar por fin el job contra el catálogo completo, todas las llamadas fallaban en
+silencio: el script solo informa de fallos al terminar, y con miles de candidatos a
+4,5 s cada uno eso podía tardar horas en dar la cara. Se probó una llamada suelta
+aparte y salió el motivo real: la API respondía **404**, `gemini-2.5-flash` ya
+**"no longer available to new users"**, con `gemini-3.6-flash` como sustituto
+indicado en el propio mensaje de error.
+
+Se cambió el modelo por defecto y se relanzó: guarda resúmenes con normalidad. Los
+límites del nivel gratuito para `gemini-3.6-flash` no aparecen con cifras concretas en
+la documentación pública en esta fecha (solo remite al panel de cada cuenta), así que
+se mantiene el mismo ritmo conservador (una petición cada 4,5 s) en vez de arriesgar
+sin verificar el nuevo límite.
+
+**Lección para el propio job**: fallar en silencio hasta el resumen final es una
+carencia real cuando el motivo es sistémico (una clave inválida, un modelo retirado)
+y no por-curso. No se toca ahora — no es parte de esta historia—, pero conviene que el
+adaptador aborte pronto si los primeros N intentos fallan todos con el mismo error, en
+vez de agotar el lote entero para decirlo.

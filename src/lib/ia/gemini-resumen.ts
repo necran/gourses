@@ -9,19 +9,28 @@ import { construirPrompt, limpiarResumen, type CursoParaResumir, type GeneradorD
 // ninguna suscripción existente y hay que pagarla aparte (aunque sea poco:
 // unos 4-5 € por el catálogo entero con Haiku). Gemini tiene un nivel
 // gratuito de verdad en modelos Flash, sin tarjeta.
-const MODELO_POR_DEFECTO = "gemini-2.5-flash";
+//
+// gemini-2.5-flash se retiró para cuentas nuevas (comprobado el 9 de
+// septiembre de 2026: la API respondía 404 "no longer available to new
+// users", indicando gemini-3.6-flash como sustituto). Sin esto el job fallaba
+// en silencio en todos los cursos: la espera de ritmo se aplica antes de cada
+// llamada aunque falle, así que con miles de candidatos el error solo se veía
+// al cabo de horas, en el resumen final de fallidos.
+const MODELO_POR_DEFECTO = "gemini-3.6-flash";
 
 // Suficiente para 2-3 frases con margen; no es la tarea para dejarle escribir
 // sin límite.
 const MAX_TOKENS_SALIDA = 300;
 
-// El nivel gratuito de los modelos Flash admite del orden de 15 peticiones
-// por minuto (verificado en la documentación de Google AI Studio,
-// 2026-08-25). Se deja un margen amplio: a una petición cada 4,5 s salen
-// ~13,3 al minuto, por debajo del límite aunque la cifra exacta varíe algo
-// por cuenta o región. Va dentro del adaptador y no en la concurrencia del
-// job para que el ritmo se respete pase lo que pase con la opción de
-// concurrencia que se le pida.
+// El nivel gratuito de los modelos Flash admitía del orden de 15 peticiones
+// por minuto con gemini-2.5-flash (verificado en la documentación de Google
+// AI Studio, 2026-08-25). Al migrar a gemini-3.6-flash (2026-09-09) la
+// documentación pública ya no lista cifras concretas de RPM/RPD para el nivel
+// gratuito —solo remite al panel de cada cuenta en aistudio.google.com—, así
+// que se mantiene el mismo ritmo conservador en vez de arriesgar sin verificar
+// el nuevo límite: a una petición cada 4,5 s salen ~13,3 al minuto. Va dentro
+// del adaptador y no en la concurrencia del job para que el ritmo se respete
+// pase lo que pase con la opción de concurrencia que se le pida.
 const INTERVALO_MINIMO_MS = 4500;
 
 function creaEsperaDeRitmo(intervaloMs: number): () => Promise<void> {
