@@ -69,11 +69,18 @@ export default async function CompararPage({ searchParams }: CompararPageProps) 
               <th scope="col" className={styles.esquina}>
                 <span className={styles.oculto}>Campo</span>
               </th>
-              {cursos.map((c) => (
-                <th key={c.id} scope="col" className={styles.cabeceraCurso}>
-                  <Link href={`/curso/${c.id}`}>{c.title}</Link>
-                </th>
-              ))}
+              {cursos.map((c) => {
+                // El resto de la comparación viaja en la URL de la ficha
+                // (HU-031): así, si desde allí se pulsa "Añadir a la
+                // comparación" para otro curso, no hace falta recordar cuáles
+                // eran — ya van en el propio enlace.
+                const otrosIds = cursos.filter((otro) => otro.id !== c.id).map((otro) => otro.id);
+                return (
+                  <th key={c.id} scope="col" className={styles.cabeceraCurso}>
+                    <Link href={`/curso/${c.id}?comparando=${otrosIds.join(",")}`}>{c.title}</Link>
+                  </th>
+                );
+              })}
             </tr>
           </thead>
           <tbody>

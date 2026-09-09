@@ -16,10 +16,17 @@ import {
 import { TITULAR } from "../../../lib/legal/titular";
 import { BotonFavorito } from "../../../components/boton-favorito";
 import { conSeparadorDeMiles } from "../../../lib/formato-numero";
+import {
+  MAX_COMPARADOS,
+  hrefAnadirAComparacion,
+  parseCompareIds,
+  puedeAnadirseAComparacion,
+} from "../../../lib/courses/compare";
 import styles from "./page.module.css";
 
 interface CoursePageProps {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ comparando?: string | string[] }>;
 }
 
 // Cada ficha lleva su propio título y descripción: son la puerta de entrada
@@ -49,7 +56,7 @@ function formatPrice(amount: number, currency: string | null): string {
   return currency ? `${amount} ${currency}` : String(amount);
 }
 
-export default async function CoursePage({ params }: CoursePageProps) {
+export default async function CoursePage({ params, searchParams }: CoursePageProps) {
   const { id } = await params;
   const client = createSupabaseServerClient();
   const course = await getCourseById(client, id);
@@ -57,6 +64,13 @@ export default async function CoursePage({ params }: CoursePageProps) {
   // Un id inválido o inexistente lleva a la página de "no encontrado" de Next,
   // nunca a un error sin manejar.
   if (!course) notFound();
+
+  // HU-031: si se llega desde una comparación (el enlace de /comparar lleva
+  // el resto de ids), se ofrece añadir este curso a ella; si no, se ofrece
+  // empezar una nueva desde /buscar. `comparando` es entrada externa —mismo
+  // trato que `ids` en /comparar— así que se sanea con la misma función.
+  const { comparando } = await searchParams;
+  const otrosIds = parseCompareIds(comparando);
 
   const price = resolvePriceDisplay(
     course.priceAmount,
@@ -134,6 +148,25 @@ export default async function CoursePage({ params }: CoursePageProps) {
           {/* Guardar no depende de que la plataforma tenga enlace de salida, así
               que va fuera del bloque de abajo. */}
           <BotonFavorito courseId={course.id} />
+
+          {/* HU-031: si se llega desde /comparar, se ofrece añadir este curso
+              a esa comparación; si no, se ofrece empezar una nueva. Ninguna
+              de las dos depende de si el curso tiene enlace de salida. */}
+          {otrosIds.length > 0 ? (
+            puedeAnadirseAComparacion(course.id, otrosIds) ? (
+              <Link href={hrefAnadirAComparacion(course.id, otrosIds)} className={styles.botonComparar}>
+                Añadir a la comparación
+              </Link>
+            ) : (
+              <p className={styles.avisoComparar}>
+                Esa comparación ya tiene {MAX_COMPARADOS} cursos. Quita uno antes de añadir este.
+              </p>
+            )
+          ) : (
+            <Link href={`/buscar?preseleccionado=${course.id}`} className={styles.botonComparar}>
+              Comparar este curso
+            </Link>
+          )}
 
           {enlace && (
             <div className={styles.acciones}>

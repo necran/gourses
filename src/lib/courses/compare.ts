@@ -40,6 +40,21 @@ export function parseCompareIds(raw: string | string[] | undefined): string[] {
   return validos;
 }
 
+// HU-031: añadir un curso a una comparación ya en marcha desde su ficha.
+// `otrosIds` llega ya saneado por `parseCompareIds` (viene de la URL de la
+// ficha, así que es entrada externa igual que en /comparar). A diferencia de
+// `parseCompareIds`, aquí no se recorta en silencio si no cabe: se avisa,
+// porque la persona está decidiendo si añadir uno más, no compartiendo un
+// enlace ya cerrado.
+export function puedeAnadirseAComparacion(courseId: string, otrosIds: string[]): boolean {
+  return otrosIds.includes(courseId) || otrosIds.length < MAX_COMPARADOS;
+}
+
+export function hrefAnadirAComparacion(courseId: string, otrosIds: string[]): string {
+  const combinados = otrosIds.includes(courseId) ? otrosIds : [...otrosIds, courseId];
+  return `/comparar?ids=${combinados.map(encodeURIComponent).join(",")}`;
+}
+
 export interface CompareCell {
   /** Texto a mostrar, o null si ese curso no tiene ese dato. */
   valor: string | null;

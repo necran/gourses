@@ -11,8 +11,9 @@ import {
 } from "../../lib/courses/search-filters";
 import { searchCourses } from "../../lib/courses/search-courses";
 import { formatDuration } from "../../lib/courses/duration";
-import { MAX_COMPARADOS } from "../../lib/courses/compare";
+import { isValidCourseId } from "../../lib/courses/get-course";
 import { CATEGORY_LABELS, COURSE_CATEGORIES } from "../../lib/courses/categories";
+import { BarraComparar, CasillaComparar } from "../../components/barra-comparar";
 import styles from "./page.module.css";
 
 // Nombra en el aviso solo lo que se está filtrando, para que no hable de
@@ -51,9 +52,18 @@ function enlacePagina(filters: CourseSearchFilters, pagina: number): string {
   return query ? `/buscar?${query}` : "/buscar";
 }
 
+// HU-031: se llega aquí desde el botón "Comparar este curso" de una ficha,
+// con su id ya listo para marcar. Si no es un id válido se ignora sin más —
+// es un parámetro decorativo, no filtra ni cambia los resultados.
+function preseleccionadoDesde(raw: string | string[] | undefined): string | null {
+  const valor = Array.isArray(raw) ? raw[0] : raw;
+  return valor && isValidCourseId(valor) ? valor : null;
+}
+
 export default async function BuscarPage({ searchParams }: BuscarPageProps) {
   const rawParams = await searchParams;
   const filters = parseCourseSearchFilters(rawParams);
+  const preseleccionado = preseleccionadoDesde(rawParams.preseleccionado);
   const client = createSupabaseServerClient();
   const { resultados, pagina, hayMas, total } = await searchCourses(client, filters);
 
@@ -193,23 +203,14 @@ export default async function BuscarPage({ searchParams }: BuscarPageProps) {
         // compartir, y funciona sin JavaScript de cliente (HU-017).
         <>
         <form method="get" action="/comparar">
-        <div className={styles.barraComparar}>
-          <button type="submit" className={styles.botonComparar}>
-            Comparar seleccionados
-          </button>
-          <span className={styles.ayudaComparar}>
-            Marca de 2 a {MAX_COMPARADOS} cursos
-          </span>
-        </div>
+        <BarraComparar />
         <ul className={styles.results}>
           {resultados.map((course) => (
             <li key={course.id} className={styles.card}>
-              <input
-                type="checkbox"
-                name="ids"
-                value={course.id}
-                className={styles.casilla}
-                aria-label={`Seleccionar ${course.title} para comparar`}
+              <CasillaComparar
+                courseId={course.id}
+                title={course.title}
+                defaultChecked={course.id === preseleccionado}
               />
               {course.imageUrl && (
                 // eslint-disable-next-line @next/next/no-img-element

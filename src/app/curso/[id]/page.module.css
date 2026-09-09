@@ -125,6 +125,32 @@
   filter: brightness(1.05);
 }
 
+/* Secundario a propósito: "comparar" no es la acción principal de la
+   ficha —ir a la plataforma sí lo es—, así que no compite en peso visual
+   con .boton (HU-031). */
+.botonComparar {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.6rem 1.2rem;
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  color: var(--ink);
+  font-family: var(--font-display), -apple-system, "Segoe UI", sans-serif;
+  font-weight: 700;
+  font-size: 0.88rem;
+}
+
+.botonComparar:hover {
+  border-color: var(--ink);
+}
+
+.avisoComparar {
+  color: var(--ink-muted);
+  font-size: 0.85rem;
+  max-width: 16rem;
+  text-align: right;
+}
+
 .descripcion {
   white-space: pre-line;
   line-height: 1.7;

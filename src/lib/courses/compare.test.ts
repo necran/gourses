@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { MAX_COMPARADOS, buildCompareRows, parseCompareIds } from "./compare";
+import {
+  MAX_COMPARADOS,
+  buildCompareRows,
+  hrefAnadirAComparacion,
+  parseCompareIds,
+  puedeAnadirseAComparacion,
+} from "./compare";
 import type { CourseDetail } from "./get-course";
 
 const A = "3f2504e0-4f89-41d3-9a0c-0305e82c3301";
@@ -70,6 +76,30 @@ describe("parseCompareIds", () => {
 
   it("no deja pasar intentos de inyección por la dirección", () => {
     expect(parseCompareIds(["' or 1=1 --", "*", "id.neq.0"])).toEqual([]);
+  });
+});
+
+describe("puedeAnadirseAComparacion (HU-031)", () => {
+  it("permite añadir cuando queda hueco", () => {
+    expect(puedeAnadirseAComparacion(E, [A, B])).toBe(true);
+  });
+
+  it("no permite añadir cuando ya está al máximo", () => {
+    expect(puedeAnadirseAComparacion(E, [A, B, C, D])).toBe(false);
+  });
+
+  it("permite \"añadir\" un curso que ya está en la comparación, aunque esté al máximo", () => {
+    expect(puedeAnadirseAComparacion(A, [A, B, C, D])).toBe(true);
+  });
+});
+
+describe("hrefAnadirAComparacion (HU-031)", () => {
+  it("combina el curso actual con los que ya estaban", () => {
+    expect(hrefAnadirAComparacion(C, [A, B])).toBe(`/comparar?ids=${A},${B},${C}`);
+  });
+
+  it("no duplica el curso actual si ya estaba incluido", () => {
+    expect(hrefAnadirAComparacion(A, [A, B])).toBe(`/comparar?ids=${A},${B}`);
   });
 });
 
