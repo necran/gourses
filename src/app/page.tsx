@@ -13,6 +13,13 @@ export const dynamic = "force-dynamic";
 
 const CATEGORIAS_DESTACADAS = COURSE_CATEGORIES.slice(0, 6);
 
+// Antes eran 6: se veían demasiado pocos para dar una idea real del
+// catálogo. 12 sigue siendo una muestra —el catálogo completo, con
+// paginación de verdad, vive en /buscar (HU-025)— pero llena la portada sin
+// necesitar scroll infinito ni estado de cliente, que romperían el principio
+// del sitio de que todo vive en la URL (HU-017).
+const CURSOS_DESTACADOS = 12;
+
 export default async function Home() {
   const client = createSupabaseServerClient();
 
@@ -30,7 +37,7 @@ export default async function Home() {
   // tiene valoración y ganaría cualquier otro orden.
   let destacados: CourseSearchResult[] = [];
   try {
-    const { resultados } = await searchCourses(client, parseCourseSearchFilters({}), 6);
+    const { resultados } = await searchCourses(client, parseCourseSearchFilters({}), CURSOS_DESTACADOS);
     destacados = resultados;
   } catch {
     destacados = [];
@@ -126,6 +133,16 @@ export default async function Home() {
               </li>
             ))}
           </ul>
+
+          {/* Doce cursos son una muestra, no el catálogo: este botón deja
+              claro que hay muchísimos más y lleva al buscador de verdad, con
+              paginación (HU-025), en vez de dejar que alguien piense que
+              esto es todo lo que hay. */}
+          <p className={styles.verTodosDestacado}>
+            <Link href="/buscar" className={styles.botonVerTodos}>
+              Ver todo el catálogo →
+            </Link>
+          </p>
         </section>
       )}
 

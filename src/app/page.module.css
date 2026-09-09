@@ -135,6 +135,28 @@
   white-space: nowrap;
 }
 
+.verTodosDestacado {
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.botonVerTodos {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.75rem 1.6rem;
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  font-family: var(--font-display), -apple-system, "Segoe UI", sans-serif;
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--ink);
+}
+
+.botonVerTodos:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 .rejillaDestacados {
   list-style: none;
   padding: 0;
