@@ -1,8 +1,44 @@
-import { describe, expect, it } from "vitest";
-import { resolveApiUrl } from "./fetch-catalog";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { fetchCategories, resolveApiUrl } from "./fetch-catalog";
 import { UdemyShapeError } from "./normalize";
 
 const BASE = "https://www.udemy.com";
+
+function mockFetchResponse(body: unknown) {
+  return vi.fn().mockResolvedValue({
+    ok: true,
+    status: 200,
+    statusText: "OK",
+    json: async () => body,
+  });
+}
+
+// HU-033: la API de Udemy filtra qué catálogo devuelve según Accept-Language.
+describe("locale de la petición (HU-033)", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("sin locale en las credenciales, no manda Accept-Language", async () => {
+    const fetchMock = mockFetchResponse({ results: [] });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await fetchCategories({ baseUrl: BASE, clientId: "a", clientSecret: "b" });
+
+    const headers = fetchMock.mock.calls[0][1].headers as Record<string, string>;
+    expect(headers["Accept-Language"]).toBeUndefined();
+  });
+
+  it("con locale en las credenciales, lo manda tal cual", async () => {
+    const fetchMock = mockFetchResponse({ results: [] });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await fetchCategories({ baseUrl: BASE, clientId: "a", clientSecret: "b", locale: "es" });
+
+    const headers = fetchMock.mock.calls[0][1].headers as Record<string, string>;
+    expect(headers["Accept-Language"]).toBe("es");
+  });
+});
 
 describe("resolveApiUrl", () => {
   it("resuelve una ruta relativa contra la base", () => {

@@ -45,6 +45,12 @@ const concurrenciaDetalle = process.env.UDEMY_CONCURRENCIA
 // Por defecto sí: recorrer solo las 13 categorías raíz dejaba el catálogo en 425
 // cursos, y con ese tamaño casi nadie encuentra lo que busca.
 const includeSubcategories = process.env.UDEMY_INCLUDE_SUBCATEGORIES !== "false";
+// Sin valor por defecto a propósito (HU-033): la API de Udemy filtra el
+// catálogo según esta cabecera, así que cambiar el valor por defecto
+// cambiaría en silencio qué trae la ingesta habitual. Se deja vacío
+// —sin Accept-Language, como hasta ahora— salvo que se pida explícitamente
+// (ver .github/workflows/ingesta-es.yml, que sí lo fija a "es").
+const locale = process.env.UDEMY_LOCALE || undefined;
 
 // Pool y no Client: la ingesta escribe desde varias tareas a la vez, y sobre
 // una sola conexión `pg` las encola y avisa de que dejará de permitirlo.
@@ -54,7 +60,7 @@ const client = new Pool({ connectionString: databaseUrl, max: concurrenciaDetall
 try {
   const store = createPostgresCourseStore(client);
   const result = await runUdemyIngestJob({
-    creds: { baseUrl, clientId, clientSecret },
+    creds: { baseUrl, clientId, clientSecret, locale },
     store,
     includeSubcategories,
     maxScopes,
@@ -63,7 +69,8 @@ try {
     concurrenciaDetalle,
   });
   console.log(
-    `Ámbitos recorridos: ${result.scopes}, procesados: ${result.processed}, guardados: ${result.saved}`
+    `Idioma: ${locale ?? "(por defecto, sin Accept-Language)"}. ` +
+      `Ámbitos recorridos: ${result.scopes}, procesados: ${result.processed}, guardados: ${result.saved}`
   );
   if (result.failedCourses.length > 0) {
     console.warn(`Cursos fallidos (${result.failedCourses.length}):`, result.failedCourses.slice(0, 10));

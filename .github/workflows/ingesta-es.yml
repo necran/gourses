@@ -1,0 +1,56 @@
+# Ingesta programada del catálogo de Udemy en español (HU-033).
+#
+# Pasada aparte, no un paso más de ingesta.yml: la API de Udemy filtra el
+# catálogo que devuelve según Accept-Language (comprobado el 9 de septiembre
+# de 2026), y el catálogo en español no es una traducción del de inglés — es
+# mayormente distinto (medido: solo 14 de 50 cursos coinciden en una
+# categoría de prueba). Añadirlo a la misma pasada nocturna podría aumentar
+# el catálogo de Udemy en torno a un 70 % y no cabría ni en el tope de 90 min
+# que ya tiene ingesta.yml, que además ya iba justo solo con inglés.
+name: Ingesta de catálogo (Udemy, español)
+
+on:
+  schedule:
+    # 04:17 UTC es la pasada en inglés (ingesta.yml). Esta va 3 horas después
+    # para no competir por la misma cuota acumulada de la API de Udemy
+    # (HU-023: el límite no es por segundo, es acumulado).
+    - cron: "17 7 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  # Grupo propio: no se solapa consigo misma, pero tampoco bloquea ni se deja
+  # bloquear por la pasada en inglés — son catálogos independientes.
+  group: ingesta-es
+  cancel-in-progress: false
+
+jobs:
+  ingesta-es:
+    runs-on: ubuntu-latest
+    # Sin medir todavía contra una ejecución completa real (a diferencia del
+    # tope de ingesta.yml, que sí está basado en una medición). Mismo tope de
+    # partida por prudencia; ajustar en cuanto haya una primera ejecución real
+    # que dé un número, como se hizo con la pasada en inglés (HU-023).
+    timeout-minutes: 90
+
+    env:
+      DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+      UDEMY_CLIENT_ID: ${{ secrets.UDEMY_CLIENT_ID }}
+      UDEMY_CLIENT_SECRET: ${{ secrets.UDEMY_CLIENT_SECRET }}
+      UDEMY_AFFILIATE_API_BASE_URL: https://www.udemy.com
+      UDEMY_LOCALE: es
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+
+      - run: npm ci
+
+      - name: Ingesta de Udemy en español
+        run: node scripts/ingest-udemy.mjs

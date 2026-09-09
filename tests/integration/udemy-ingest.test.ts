@@ -129,6 +129,48 @@ describeIfConfigured("HU-005 — ingesta de Udemy", () => {
     expect(rows[0].total).toBe(0);
   });
 
+  // HU-033: la API de Udemy filtra el catálogo según Accept-Language, no lo
+  // traduce. Se comprueba contra la API real que pedir "es" trae cursos
+  // distintos a los que trae sin locale, no una versión traducida del mismo
+  // catálogo — es la premisa completa de tener una pasada de ingesta aparte.
+  it("con locale 'es', trae un catálogo distinto al de por defecto (HU-033)", async () => {
+    const store = createPostgresCourseStore(client);
+
+    const sinLocale = await runUdemyIngestJob({
+      creds,
+      store,
+      maxScopes: 1,
+      maxPagesPerScope: 1,
+      pageSize: 20,
+    });
+    const { rows: idsSinLocale } = await client.query(
+      `select source_id from courses where source = 'udemy'`
+    );
+
+    await client.query("delete from courses where source = 'udemy'");
+
+    const conLocaleEs = await runUdemyIngestJob({
+      creds: { ...creds, locale: "es" },
+      store,
+      maxScopes: 1,
+      maxPagesPerScope: 1,
+      pageSize: 20,
+    });
+    const { rows: idsConEs } = await client.query(
+      `select source_id from courses where source = 'udemy'`
+    );
+
+    expect(sinLocale.saved).toBeGreaterThan(0);
+    expect(conLocaleEs.saved).toBeGreaterThan(0);
+
+    const setSinLocale = new Set(idsSinLocale.map((r) => r.source_id));
+    const nuevosConEs = idsConEs.filter((r) => !setSinLocale.has(r.source_id));
+    // No hace falta que sean completamente distintos (algún curso puede
+    // aparecer en las dos listas), pero si "es" no aportara nada nuevo, no
+    // tendría sentido esta historia entera.
+    expect(nuevosConEs.length).toBeGreaterThan(0);
+  }, 60_000);
+
   it("un curso de Udemy y uno de Coursera conviven sin colisión de (source, source_id)", async () => {
     await client.query(
       `insert into courses (source, source_id, title) values ('coursera', 'shared-id', 'Curso de Coursera')`

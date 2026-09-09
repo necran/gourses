@@ -7,6 +7,15 @@ export interface UdemyCredentials {
   baseUrl: string;
   clientId: string;
   clientSecret: string;
+  /**
+   * Idioma del catálogo a pedir (HU-033). La API de Udemy filtra qué cursos
+   * devuelve según la cabecera Accept-Language de la petición —comprobado
+   * contra la API real el 9 de septiembre de 2026: sin cabecera, devuelve
+   * solo catálogo en inglés (en_US); con "es", un catálogo en español
+   * mayormente distinto, no una traducción del mismo—. Sin este campo, el
+   * comportamiento no cambia: no se manda la cabecera, igual que hasta ahora.
+   */
+  locale?: string;
 }
 
 export interface UdemyCategory {
@@ -49,9 +58,13 @@ export function resolveApiUrl(baseUrl: string, pathOrUrl: string): URL {
 }
 
 async function getJson(creds: UdemyCredentials, url: URL): Promise<unknown> {
-  const response = await fetch(url, {
-    headers: { Authorization: authHeader(creds), Accept: "application/json" },
-  });
+  const headers: Record<string, string> = {
+    Authorization: authHeader(creds),
+    Accept: "application/json",
+  };
+  if (creds.locale) headers["Accept-Language"] = creds.locale;
+
+  const response = await fetch(url, { headers });
 
   if (!response.ok) {
     // Sin reintentos aquí: la política de reintentos/backoff la decide el
