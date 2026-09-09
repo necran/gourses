@@ -100,6 +100,26 @@ export function interleaveBySource(
   return result;
 }
 
+// Prioriza sin filtrar (HU-032): dentro de un grupo ya traído de la base, los
+// cursos en el idioma preferido pasan delante, pero ninguno desaparece — es
+// una partición estable, igual criterio que interleaveBySource: no reordena
+// dentro de cada grupo, solo los agrupa. `idioma` ya viene saneado a un
+// código de dos letras por preferredLanguageFrom; da igual si no coincide con
+// ninguno de verdad, simplemente no habrá coincidencias.
+export function priorizarIdioma(
+  cursos: readonly CourseSearchResult[],
+  idioma: string | null
+): CourseSearchResult[] {
+  if (idioma === null) return [...cursos];
+
+  const preferidos: CourseSearchResult[] = [];
+  const resto: CourseSearchResult[] = [];
+  for (const curso of cursos) {
+    (curso.language?.toLowerCase() === idioma ? preferidos : resto).push(curso);
+  }
+  return [...preferidos, ...resto];
+}
+
 // Lee de 'courses' vía PostgREST/anon (RLS pública de HU-004), nunca llama a
 // una API externa de curso en caliente (ver .claude/rules/ingesta-fuentes.md).
 //
@@ -112,7 +132,12 @@ export function interleaveBySource(
 export async function searchCourses(
   client: SupabaseClient,
   filters: CourseSearchFilters,
-  limit: number = DEFAULT_LIMIT
+  limit: number = DEFAULT_LIMIT,
+  // Idioma preferido del visitante (HU-032), ya saneado por
+  // preferredLanguageFrom. Aparte de `filters` a propósito: no es algo que la
+  // persona haya escrito ni algo que deba viajar en el enlace de la página —
+  // se recalcula cada visita desde la cabecera Accept-Language.
+  preferredLanguage: string | null = null
 ): Promise<CourseSearchPage> {
   const pagina = Math.max(1, filters.pagina);
 
@@ -120,7 +145,8 @@ export async function searchCourses(
   // alternar una de cada no está ordenado por precio por mucho que cada mitad
   // lo esté. Así que se consulta una sola vez, ordenada de verdad, y los cursos
   // sin ese dato caen al final. Quien ha pedido ordenar por precio ha pedido
-  // justo eso (HU-027).
+  // justo eso (HU-027). Mismo motivo por el que aquí tampoco se prioriza por
+  // idioma (HU-032): un orden explícito manda tal cual, sin sesgos añadidos.
   if (filters.orden !== null) {
     return searchCoursesOrdenado(client, filters, filters.orden, pagina, limit);
   }
@@ -136,7 +162,7 @@ export async function searchCourses(
     )
   );
 
-  return paginarIntercalado(
+  const pagina1 = paginarIntercalado(
     porFuente.map((f) => f.filas),
     pagina,
     limit,
@@ -144,6 +170,24 @@ export async function searchCourses(
     // no se puede sumar en una sola consulta como en el camino ordenado.
     porFuente.reduce((suma, f) => suma + f.total, 0)
   );
+
+  // HU-032, y solo en la página 1: se reordena el array **ya paginado**, no
+  // antes de intercalar. Se probó reordenar cada fuente antes de intercalar
+  // (parecía más "limpio") y tenía un fallo real: el elemento de más que se
+  // trae solo para saber si hay página siguiente podía colarse delante por
+  // ser del idioma preferido, empujando fuera a uno que sí tocaba mostrar —
+  // ese curso desaparecía sin más, porque la página 2 continúa desde el corte
+  // de verdad (sin idioma de por medio), no desde donde reordenar lo dejara.
+  // Reordenando después, sobre el resultado ya decidido, es imposible que
+  // cambie **qué** cursos se muestran, solo el orden en que se ven — así no
+  // hay ninguna forma de que rompa el «sin repetir, sin saltarse ninguno» de
+  // HU-025. Solo en la página 1 porque es la única vez que tiene sentido: en
+  // cualquier otra, el conjunto ya está fijado por el corte de la anterior.
+  if (pagina === 1 && preferredLanguage !== null) {
+    return { ...pagina1, resultados: priorizarIdioma(pagina1.resultados, preferredLanguage) };
+  }
+
+  return pagina1;
 }
 
 // Una sola consulta global. Aquí sí se puede saltar directamente al trozo que

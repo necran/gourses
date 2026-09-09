@@ -1,8 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { escapeOrFilterValue, interleaveBySource, paginarIntercalado } from "./search-courses";
+import {
+  escapeOrFilterValue,
+  interleaveBySource,
+  paginarIntercalado,
+  priorizarIdioma,
+} from "./search-courses";
 import type { CourseSearchResult } from "./search-courses";
 
-function curso(source: string, n: number): CourseSearchResult {
+function curso(source: string, n: number, language: string | null = null): CourseSearchResult {
   return {
     id: `${source}-${n}`,
     source: source as CourseSearchResult["source"],
@@ -11,12 +16,63 @@ function curso(source: string, n: number): CourseSearchResult {
     priceAmount: null,
     priceCurrency: null,
     rating: null,
-    language: null,
+    language,
     imageUrl: null,
     affiliateUrl: null,
     duration: null,
   };
 }
+
+describe("priorizarIdioma (HU-032)", () => {
+  it("sin idioma preferido, no cambia nada", () => {
+    const cursos = [curso("udemy", 1, "en"), curso("udemy", 2, "es")];
+    expect(priorizarIdioma(cursos, null)).toEqual(cursos);
+  });
+
+  it("pasa los del idioma preferido delante, sin descartar los demás", () => {
+    const en1 = curso("udemy", 1, "en");
+    const es1 = curso("udemy", 2, "es");
+    const en2 = curso("udemy", 3, "en");
+    const es2 = curso("udemy", 4, "es");
+
+    const resultado = priorizarIdioma([en1, es1, en2, es2], "es");
+
+    expect(resultado.map((c) => c.id)).toEqual(["udemy-2", "udemy-4", "udemy-1", "udemy-3"]);
+  });
+
+  it("dentro de cada grupo conserva el orden de llegada (mejor valorado primero)", () => {
+    const es1 = curso("udemy", 1, "es");
+    const es2 = curso("udemy", 2, "es");
+    const en1 = curso("udemy", 3, "en");
+
+    const resultado = priorizarIdioma([es1, en1, es2], "es");
+    expect(resultado.map((c) => c.id)).toEqual(["udemy-1", "udemy-2", "udemy-3"]);
+  });
+
+  it("un curso sin idioma cae en «los demás», nunca en los preferidos", () => {
+    const sinIdioma = curso("udemy", 1, null);
+    const es = curso("udemy", 2, "es");
+
+    expect(priorizarIdioma([sinIdioma, es], "es").map((c) => c.id)).toEqual([
+      "udemy-2",
+      "udemy-1",
+    ]);
+  });
+
+  it("no distingue mayúsculas del idioma guardado", () => {
+    const cursos = [curso("udemy", 1, "ES")];
+    expect(priorizarIdioma(cursos, "es").map((c) => c.id)).toEqual(["udemy-1"]);
+  });
+
+  it("si nada coincide, el orden no cambia", () => {
+    const cursos = [curso("udemy", 1, "en"), curso("udemy", 2, "fr")];
+    expect(priorizarIdioma(cursos, "es")).toEqual(cursos);
+  });
+
+  it("una lista vacía no rompe", () => {
+    expect(priorizarIdioma([], "es")).toEqual([]);
+  });
+});
 
 describe("escapeOrFilterValue", () => {
   it("deja intacto un texto de búsqueda normal", () => {

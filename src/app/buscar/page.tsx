@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import { createSupabaseServerClient } from "../../lib/supabase/server-client";
 import {
   ETIQUETAS_ORDEN,
@@ -10,6 +11,7 @@ import {
   type RawSearchParams,
 } from "../../lib/courses/search-filters";
 import { searchCourses } from "../../lib/courses/search-courses";
+import { preferredLanguageFrom } from "../../lib/courses/preferred-language";
 import { formatDuration } from "../../lib/courses/duration";
 import { isValidCourseId } from "../../lib/courses/get-course";
 import { CATEGORY_LABELS, COURSE_CATEGORIES } from "../../lib/courses/categories";
@@ -65,7 +67,23 @@ export default async function BuscarPage({ searchParams }: BuscarPageProps) {
   const filters = parseCourseSearchFilters(rawParams);
   const preseleccionado = preseleccionadoDesde(rawParams.preseleccionado);
   const client = createSupabaseServerClient();
-  const { resultados, pagina, hayMas, total } = await searchCourses(client, filters);
+
+  // HU-032: si falla la lectura de la cabecera, se busca igual sin priorizar
+  // — es una preferencia de orden, no una condición de la que dependa poder
+  // buscar.
+  let idiomaPreferido: string | null = null;
+  try {
+    idiomaPreferido = preferredLanguageFrom((await headers()).get("accept-language"));
+  } catch {
+    idiomaPreferido = null;
+  }
+
+  const { resultados, pagina, hayMas, total } = await searchCourses(
+    client,
+    filters,
+    undefined,
+    idiomaPreferido
+  );
 
   return (
     <main className={styles.main}>

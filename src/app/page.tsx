@@ -1,9 +1,11 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import { createSupabaseServerClient } from "../lib/supabase/server-client";
 import { getCatalogSummary } from "../lib/courses/catalog-summary";
 import { CATEGORY_LABELS, COURSE_CATEGORIES } from "../lib/courses/categories";
 import { searchCourses, type CourseSearchResult } from "../lib/courses/search-courses";
 import { parseCourseSearchFilters } from "../lib/courses/search-filters";
+import { preferredLanguageFrom } from "../lib/courses/preferred-language";
 import { formatDuration } from "../lib/courses/duration";
 import styles from "./page.module.css";
 
@@ -32,12 +34,27 @@ export default async function Home() {
     resumen = null;
   }
 
+  // HU-032: se prioriza sin filtrar, así que un fallo leyendo la cabecera no
+  // debería poder darse, pero si algún día lo hiciera, más vale mostrar el
+  // orden normal que tumbar la portada por esto.
+  let idiomaPreferido: string | null = null;
+  try {
+    idiomaPreferido = preferredLanguageFrom((await headers()).get("accept-language"));
+  } catch {
+    idiomaPreferido = null;
+  }
+
   // Sin filtros ni orden, searchCourses reparte a partes iguales entre
   // plataformas (HU-007): así la portada no enseña solo Udemy, que es la que
   // tiene valoración y ganaría cualquier otro orden.
   let destacados: CourseSearchResult[] = [];
   try {
-    const { resultados } = await searchCourses(client, parseCourseSearchFilters({}), CURSOS_DESTACADOS);
+    const { resultados } = await searchCourses(
+      client,
+      parseCourseSearchFilters({}),
+      CURSOS_DESTACADOS,
+      idiomaPreferido
+    );
     destacados = resultados;
   } catch {
     destacados = [];
