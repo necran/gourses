@@ -16,7 +16,16 @@ import { construirPrompt, limpiarResumen, type CursoParaResumir, type GeneradorD
 // en silencio en todos los cursos: la espera de ritmo se aplica antes de cada
 // llamada aunque falle, así que con miles de candidatos el error solo se veía
 // al cabo de horas, en el resumen final de fallidos.
-const MODELO_POR_DEFECTO = "gemini-3.6-flash";
+//
+// gemini-3.6-flash (probado ese mismo día) tiene una cuota gratuita de solo
+// **20 peticiones al día por proyecto** (visible en el propio error 429:
+// "GenerateRequestsPerDayPerProjectPerModel-FreeTier", limit 20) — inútil para
+// un catálogo de miles de cursos. Se cambió a la variante "lite" de la misma
+// generación: los modelos *-flash-lite vienen recibiendo cuotas diarias
+// gratuitas bastante más altas que su "flash" completo hermano en todas las
+// generaciones anteriores de Gemini, aunque Google no publica la cifra exacta
+// por adelantado (solo aparece si se agota, en el mensaje del propio 429).
+const MODELO_POR_DEFECTO = "gemini-3.5-flash-lite";
 
 // Suficiente para 2-3 frases con margen; no es la tarea para dejarle escribir
 // sin límite.

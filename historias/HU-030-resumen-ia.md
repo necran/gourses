@@ -146,3 +146,28 @@ carencia real cuando el motivo es sistémico (una clave inválida, un modelo ret
 y no por-curso. No se toca ahora — no es parte de esta historia—, pero conviene que el
 adaptador aborte pronto si los primeros N intentos fallan todos con el mismo error, en
 vez de agotar el lote entero para decirlo.
+
+## Segundo tropiezo el mismo día: la cuota gratuita de gemini-3.6-flash es de 20 al día
+
+Con el modelo ya corrigiendo el 404, el job seguía guardando resúmenes a un ritmo muy
+por debajo del esperado (23 en más de una hora, con el ritmo teórico dando para más de
+800). Una llamada suelta reveló el motivo real, esta vez en el propio mensaje del 429:
+
+```
+Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests,
+limit: 20, model: gemini-3.6-flash
+```
+
+**20 peticiones al día por proyecto**, no por minuto. Inservible para un catálogo de
+miles de cursos: a ese ritmo, resumirlo entero llevaría cientos de días. La cifra no
+está publicada de antemano en ningún sitio —Google solo la revela dentro del propio
+error, al agotarla—, así que no había forma de anticiparla sin probar en cuenta real.
+
+Se cambió a **`gemini-3.5-flash-lite`**: la variante "lite" de la misma generación,
+bajo la premisa de que los modelos *-flash-lite vienen recibiendo cuotas diarias más
+altas que su hermano "flash" completo en generaciones anteriores de Gemini. Probado
+con 5 candidatos reales aparte del job (para no depender del resumen final, que tarda
+horas en aparecer): ~4,5 s por llamada, sin errores, en línea con el ritmo esperado.
+Relanzado; sigue corriendo en el momento de escribir esto, sin visibilidad aún de si
+su propia cuota diaria aguanta el catálogo completo — se sabrá al cabo de las horas
+que tarde, o al toparse con el mismo tipo de 429 si la cuota es también insuficiente.
