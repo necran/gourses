@@ -88,6 +88,24 @@ describe("plantillas de correo de Supabase Auth", () => {
       it("dice qué hacer si no lo has pedido tú", () => {
         expect(renderizada(plantilla.id)).toMatch(/si no has sido tú/i);
       });
+
+      // La política de privacidad promete que no hay rastreadores, y una imagen
+      // remota en un correo **es** un rastreador: al abrirlo, el cliente pide el
+      // fichero y quien lo sirve se entera de cuándo y desde dónde se ha leído.
+      // El correo se dibuja solo con texto y fondos, así que no debe haber
+      // ninguna. La regla hermana para los enlaces ya está más arriba.
+      it("no carga ninguna imagen remota", () => {
+        const html = leerPlantilla(plantilla.id);
+        const remotas = [...html.matchAll(/<img\b[^>]*\bsrc=["']?(https?:)?\/\//gi)];
+
+        expect(remotas).toHaveLength(0);
+      });
+
+      // El correo se manda a gente hispanohablante y lo pueden leer lectores de
+      // pantalla: sin `lang`, el sintetizador lo pronuncia como si fuera inglés.
+      it("declara que está en español", () => {
+        expect(leerPlantilla(plantilla.id)).toMatch(/<html[^>]*\blang="es"/);
+      });
     });
   }
 });

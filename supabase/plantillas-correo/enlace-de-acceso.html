@@ -1,24 +1,105 @@
-<p>Hola:</p>
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <meta name="supported-color-schemes" content="light dark">
+    <title>Tu enlace para entrar en Gourses</title>
+    <style>
+      /* Los estilos de verdad van en línea, atributo por atributo: Gmail y
+         Outlook tiran esta hoja entera. Aquí solo va lo que no se puede poner
+         en línea —consultas de medios— y por eso todo lo de dentro es una
+         mejora, nunca algo de lo que dependa que el correo se entienda. */
+      @media (prefers-color-scheme: dark) {
+        .fondo { background: #11101a !important; }
+        .tarjeta { background: #1b1a26 !important; border-color: #2c2a3d !important; }
+        .texto { color: #eceaf5 !important; }
+        .apagado { color: #a09eb4 !important; }
+        .caja-enlace { background: #11101a !important; border-color: #2c2a3d !important; }
+        .separador { border-color: #2c2a3d !important; }
+        /* El morado del sitio se aclara en oscuro, igual que en la web. */
+        .boton { background: #9d7ffc !important; }
+        .boton a { color: #11101a !important; }
+        .marca { color: #eceaf5 !important; }
+      }
+      @media (max-width: 620px) {
+        .relleno { padding: 28px 22px !important; }
+        .titulo { font-size: 22px !important; }
+      }
+    </style>
+  </head>
+  <body class="fondo" style="margin:0; padding:0; background:#f4f2fb; -webkit-text-size-adjust:100%;">
+    <!-- Adelanto: es lo que se lee en la bandeja de entrada, debajo del asunto.
+         Sin esto, el cliente de correo enseña el primer texto que encuentre. -->
+    <div style="display:none; max-height:0; overflow:hidden; opacity:0; color:transparent; height:0; width:0;">
+      Tu enlace para entrar, sin contraseña. Caduca pronto y solo sirve una vez.
+    </div>
 
-<p>
-  Has pedido entrar en <strong>gourses.com</strong>. Pulsa aquí y entrarás
-  directamente, sin escribir ninguna contraseña:
-</p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="fondo" style="background:#f4f2fb;">
+      <tr>
+        <td align="center" style="padding:32px 16px;">
+          <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%; max-width:600px;">
 
-<p><a href="{{ .ConfirmationURL }}">Entrar en mi cuenta</a></p>
+            <tr>
+              <td align="center" style="padding-bottom:20px;">
+                <span class="marca" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:20px; font-weight:800; letter-spacing:-0.02em; color:#11101a;">gourses</span>
+              </td>
+            </tr>
 
-<p>El enlace caduca en poco tiempo y solo sirve una vez.</p>
+            <tr>
+              <td class="tarjeta" style="background:#ffffff; border:1px solid #e4e0f2; border-radius:14px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td class="relleno" style="padding:36px 40px;">
 
-<p style="font-size:0.9em;color:#666">
-  Si el botón no funciona, copia esta dirección en tu navegador:<br>
-  {{ .ConfirmationURL }}
-</p>
+                      <h1 class="titulo texto" style="margin:0 0 14px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:25px; line-height:1.25; font-weight:700; color:#11101a;">Entra en tu cuenta</h1>
 
-<hr>
+                      <p class="texto" style="margin:0 0 26px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:16px; line-height:1.6; color:#33323f;">
+                        Has pedido entrar en <strong>gourses.com</strong>. Pulsa el botón y entrarás directamente, sin escribir ninguna contraseña.
+                      </p>
 
-<p style="font-size:0.9em;color:#666">
-  Si no has sido tú, no hace falta que hagas nada: mientras no se pulse el
-  enlace, nadie entra en tu cuenta. Este correo solo se envía cuando alguien lo
-  pide desde <a href="https://gourses.com/acceder">gourses.com</a>; nunca te
-  escribimos publicidad.
-</p>
+                      <!-- Botón en tabla y no un <a> suelto: así conserva el
+                           fondo y el área pulsable en Outlook. -->
+                      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 26px;">
+                        <tr>
+                          <td class="boton" align="center" bgcolor="#7853d5" style="background:#7853d5; border-radius:999px;">
+                            <a href="{{ .ConfirmationURL }}" style="display:inline-block; padding:15px 34px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:16px; font-weight:700; line-height:1; color:#fcfbff; text-decoration:none;">Entrar en mi cuenta</a>
+                          </td>
+                        </tr>
+                      </table>
+
+                      <p class="apagado" style="margin:0 0 22px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:14px; line-height:1.6; color:#575665;">
+                        El enlace caduca en poco tiempo y solo sirve una vez.
+                      </p>
+
+                      <p class="apagado" style="margin:0 0 8px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:13px; line-height:1.5; color:#575665;">
+                        ¿No funciona el botón? Copia esta dirección en tu navegador:
+                      </p>
+                      <!-- En texto y no como enlace: es para copiar a mano, y
+                           así se ve entera antes de pulsar nada. -->
+                      <p class="caja-enlace apagado" style="margin:0; padding:12px 14px; background:#f7f6fd; border:1px solid #e4e0f2; border-radius:8px; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12px; line-height:1.5; color:#575665; word-break:break-all;">{{ .ConfirmationURL }}</p>
+
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="relleno" style="padding:24px 40px 0;">
+                <p class="apagado" style="margin:0 0 12px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:13px; line-height:1.6; color:#575665;">
+                  <strong>Si no has sido tú</strong>, no hace falta que hagas nada: mientras no se pulse el enlace, nadie entra en tu cuenta.
+                </p>
+                <p class="apagado" style="margin:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:13px; line-height:1.6; color:#575665;">
+                  Este correo solo se envía cuando alguien lo pide desde <a href="https://gourses.com/acceder" style="color:#7853d5; text-decoration:underline;">gourses.com</a>. Nunca te escribimos publicidad.
+                </p>
+              </td>
+            </tr>
+
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
