@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getUsuarioActual } from "../../lib/supabase/session-client";
 import { AccederForm } from "./form";
+import { avisoAcceso } from "../../lib/auth/aviso-acceso";
 import styles from "./page.module.css";
 
 export const metadata: Metadata = {
@@ -11,9 +12,16 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function AccederPage() {
+export default async function AccederPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [clave: string]: string | string[] | undefined }>;
+}) {
   // Quien ya ha entrado no tiene nada que hacer aquí.
   if (await getUsuarioActual()) redirect("/mi-cuenta");
+
+  // Lo manda `acceder/callback` cuando el enlace del correo no sirve.
+  const aviso = avisoAcceso((await searchParams).error);
 
   return (
     <main className={styles.main}>
@@ -26,6 +34,12 @@ export default async function AccederPage() {
         Escribe tu correo y te enviamos un enlace para entrar. <strong>No hay contraseñas</strong>:
         nada que recordar y nada que se pueda filtrar.
       </p>
+
+      {aviso && (
+        <p className={styles.avisoEnlace} role="alert">
+          {aviso}
+        </p>
+      )}
 
       <AccederForm />
 
