@@ -2,29 +2,62 @@
 .botonQuitar {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.25rem;
-  border: none;
+  gap: 0.55rem;
+  padding: 0.72rem 1.35rem;
   border-radius: 999px;
-  background: var(--surface);
-  color: var(--ink);
-  font-family: inherit;
+  font-family: var(--font-display), -apple-system, "Segoe UI", sans-serif;
   font-size: 0.9rem;
   font-weight: 700;
   cursor: pointer;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease,
+    background 0.12s ease,
+    border-color 0.12s ease;
+}
+
+/* Sin guardar: chip elevado sobre el panel (el panel es --surface y antes el
+   botón también, así que no se veía). Borde y corazón en rosa para que se lea
+   como "márcalo como favorito" antes de pulsarlo. */
+.botonGuardar {
+  background: var(--bg);
+  color: var(--ink);
+  border: 1.5px solid var(--fav);
   box-shadow: var(--shadow-sm);
 }
 
-/* Guardado: se marca con el color de acento para que se distinga de un vistazo
-   del estado "sin guardar", sin depender solo de la estrella llena. */
-.botonQuitar {
-  background: var(--accent-soft);
-  color: var(--accent-soft-ink);
+.botonGuardar .icono {
+  color: var(--fav);
 }
 
-.botonGuardar:hover,
+.botonGuardar:hover {
+  background: var(--fav-soft);
+  transform: translateY(-1px);
+}
+
+/* Guardado: relleno rosa y corazón lleno. Cambio de fondo, no solo de icono:
+   así el estado se distingue de un vistazo y sin depender del color (el texto
+   ya cambia a "Quitar de favoritos"). */
+.botonQuitar {
+  background: var(--fav-soft);
+  color: var(--fav-soft-ink);
+  border: 1.5px solid var(--fav);
+  box-shadow: var(--shadow-sm);
+}
+
+.botonQuitar .icono {
+  color: var(--fav);
+}
+
 .botonQuitar:hover {
-  filter: brightness(1.04);
+  filter: brightness(1.03);
+  transform: translateY(-1px);
+}
+
+.botonGuardar:active,
+.botonQuitar:active {
+  transform: translateY(0);
+  box-shadow: none;
 }
 
 .invitacion {

@@ -59,7 +59,11 @@ test.describe("HU-027 — ordenar los resultados", () => {
     await page.goto("/buscar");
     await page.getByLabel("Ordenar por").selectOption("precio-asc");
     await page.getByRole("button", { name: "Buscar" }).click();
-    await expect(page).toHaveURL(/orden=precio-asc/);
+    // waitForURL y no expect(page).toHaveURL: este solo mira la barra de
+    // direcciones, que cambia en cuanto la navegación se confirma, con el HTML
+    // aún llegando. Leer la lista en ese instante devuelve una página a
+    // medias. waitForURL espera además al evento load.
+    await page.waitForURL(/orden=precio-asc/);
 
     const precios = (await lineas(page)).map(precioDe);
     expect(precios.filter((p) => p !== null).length).toBeGreaterThan(1);
@@ -95,7 +99,10 @@ test.describe("HU-027 — ordenar los resultados", () => {
     await page.goto("/buscar");
     await page.getByLabel("Ordenar por").selectOption("valoracion-desc");
     await page.getByRole("button", { name: "Buscar" }).click();
-    await expect(page).toHaveURL(/orden=valoracion-desc/);
+    // Igual que arriba: sin esperar al load, esta primera captura salía a
+    // veces con media página, y como abajo se compara con `toEqual` contra la
+    // recarga (que sí espera), el test caía ~1 de cada 3.
+    await page.waitForURL(/orden=valoracion-desc/);
 
     const direccion = page.url();
     const esperados = await lineas(page);

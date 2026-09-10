@@ -12,7 +12,8 @@ y equivocarlas rompe el correo del dominio.
 | Registros DNS en IONOS | **añadidos y verificados** (dominio *Verified* el 2026-08-20) |
 | `RESEND_API_KEY` en GitHub | pendiente de rehacer si se creó una clave nueva (ver más abajo) |
 | SMTP propio en Supabase | **configurado y funcionando** (2026-08-20) |
-| Plantillas de los correos de acceso | **en español y subidas al panel** (2026-08-24) |
+| Plantillas de los correos de acceso | **en español**, en Cloud (2026-08-24) y en el NAS (2026-09-10) |
+| Correo en desarrollo (NAS) | **Mailpit**, buzón en http://192.168.1.139:8025 (2026-09-10) |
 
 El acceso a la web ya sale por Resend, con el límite de Auth en **30 correos por
 hora** en vez de los 2 del proveedor integrado de Supabase. Los avisos de precio
@@ -188,5 +189,121 @@ llegan nuevos, que es la que más importa. Un test comprueba que están las dos.
 
 ### El Supabase del NAS sigue en inglés
 
-El script apunta a Supabase Cloud. El del NAS usa su proveedor integrado y solo
-lo ve quien desarrolla, así que no se toca.
+El script apunta a Supabase Cloud. El del NAS usa Mailpit y sus propias
+plantillas; se suben con `npm run correo:plantillas-nas` (ver abajo).
+
+## Correo en desarrollo: Mailpit en el NAS (2026-09-10)
+
+Este documento decía que el NAS «usa su proveedor integrado». No existe tal
+cosa: un Supabase self-hosted no trae ninguno. Lo que tenía era la configuración
+de ejemplo del compose —`SMTP_HOST=supabase-mail`, puerto 2500, que es el
+Inbucket de la demo— apuntando a **un contenedor que nunca se levantó**. Por eso
+el acceso en local fallaba siempre con:
+
+    POST /auth/v1/otp → 500 {"error_code":"unexpected_failure","msg":"Error sending confirmation email"}
+
+Que es indistinguible, desde la web, del fallo de credenciales de Resend de
+agosto. Se separan mirando el log de Auth: aquel decía `535 Authentication
+credentials invalid`; este no llegaba ni a conectar.
+
+### Qué hay montado ahora
+
+Un **Mailpit** en `/volume1/docker/gourses-supabase/docker-compose.override.yml`,
+con el nombre de contenedor `supabase-mail` para que la configuración de GoTrue
+valga tal cual. Buzón web en **http://192.168.1.139:8025** — ahí llegan los
+enlaces de acceso de desarrollo.
+
+Mailpit y no el SMTP de Resend a propósito: en desarrollo se prueba el acceso
+con direcciones reales, y un SMTP de verdad las entrega de verdad. Mailpit no
+sale a internet, no gasta cuota y no puede escribirle a nadie por error.
+
+### Las tres cosas que había que tocar, y por qué
+
+1. **`COMPOSE_FILE`** en el `.env` del NAS estaba fijado a `docker-compose.yml`,
+   y eso **desactiva la carga automática** de `docker-compose.override.yml`. Sin
+   añadirlo a mano, el servicio nuevo no existe (`no such service`). Ahora es
+   `docker-compose.yml:docker-compose.override.yml`.
+2. **`SMTP_USER` / `SMTP_PASS` vaciados.** Con las credenciales de ejemplo
+   puestas, GoTrue intenta autenticarse y se niega a mandar la contraseña por un
+   canal en claro: `error: "unencrypted connection"`, otra vez 500. Mailpit no
+   pide autenticación, así que lo correcto es no mandarla. Si algún día se pone
+   un SMTP real aquí, vuelven a hacer falta — con TLS.
+3. **`ADDITIONAL_REDIRECT_URLS`** estaba vacío, así que GoTrue solo aceptaba su
+   `SITE_URL` (`http://192.168.1.139:3000`) y **sobrescribía en silencio** el
+   `redirect_to` que pedía la app. El enlace del correo te sacaba de local. Ahora
+   incluye `http://localhost:3000/**` y `http://127.0.0.1:3000/**`.
+
+Copia del fichero anterior en `.env.bak-antes-mailpit`, en esa misma carpeta.
+
+### La otra mitad: `NEXT_PUBLIC_SITE_URL`
+
+`emailRedirectTo` estaba fijado a `TITULAR.url` (`https://gourses.com`), o sea
+que el enlace de acceso generado en local apuntaba a producción. Ahora sale de
+`urlSitio()` (`src/lib/auth/sitio.ts`), que lee `NEXT_PUBLIC_SITE_URL`.
+
+No se deduce de la cabecera `Host`: quien llama la controla y acabaría dentro de
+un enlace enviado por correo, que es la forma de convertir el acceso en un
+redirector a un sitio ajeno.
+
+En producción se fija en `netlify.toml`, en `[build.environment]`, y no en el
+panel de Netlify: no es un secreto —`NEXT_PUBLIC_` la incrusta en el bundle del
+navegador— y en el panel no habría diff ni historial. Lleva el mismo valor que
+la canónica, así que **no arregla ningún fallo en producción**: solo evita que
+la vuelta del enlace de acceso dependa de un dato pensado para el sitemap. Y
+como `NEXT_PUBLIC_` se resuelve al compilar, solo surte efecto al volver a
+publicar — motivo de más para que viaje con el siguiente lote de historias en
+vez de gastar un despliegue propio.
+
+Los `TITULAR.url` de sitemap, robots y datos estructurados se quedan como están:
+ahí la dirección canónica es lo que toca.
+
+### Las plantillas en español, también en el NAS
+
+    npm run correo:plantillas-nas
+
+Mismo fichero de origen que en Cloud (`supabase/plantillas-correo/*.html`), otro
+camino de subida, porque un Supabase self-hosted no tiene Management API.
+Necesita `NAS_SSH_DESTINO` y `NAS_SUPABASE_DIR` en `.env.local`.
+
+Dos cosas de `GOTRUE_MAILER_TEMPLATES_*` que cuestan un rato averiguar:
+
+**Es una URL, no una ruta de fichero.** Montar los HTML en el contenedor y
+apuntar a `/etc/gotrue/...` no funciona: GoTrue lo resuelve contra su `SITE_URL`
+y sale a buscarlo por HTTP.
+
+    templatemailer: template type "magic_link":
+    Get "http://192.168.1.139:3000/etc/gotrue/plantillas/enlace-de-acceso.html":
+    connection refused
+
+**Y cuando no la encuentra, no falla: cae en la plantilla de fábrica en inglés.**
+El correo llega, el `/otp` devuelve 200 y no hay ni un aviso de que la plantilla
+propia se ha ignorado. La única forma de saberlo es mirar el correo que llega o
+el log de Auth.
+
+Por eso las sirve un contenedor `supabase-plantillas` dentro de la red de Docker.
+Es un **busybox httpd**, no un nginx: los ficheros están en un volumen del NAS
+con ACL extendida, y nginx baja sus procesos de trabajo al usuario `nginx`, al
+que la ACL le niega la lectura aunque el fichero sea 777 — daba 403 y, otra vez,
+el correo en inglés sin decir nada. `httpd` no baja privilegios.
+
+GoTrue cachea las plantillas, así que el script reinicia `auth` al terminar.
+
+### «No hemos podido enviar el enlace» cuando sí se ha enviado
+
+Supabase solo admite **un correo por minuto y dirección**. Pulsar dos veces
+seguidas —lo más normal del mundo cuando el correo tarda unos segundos— devolvía
+`429 over_email_send_rate_limit`, y la página lo contaba como un fallo de envío
+aunque el enlace estuviera ya en la bandeja de entrada. Encima empujaba a seguir
+insistiendo, que es lo único que no ayuda.
+
+Ahora el 429 responde **lo mismo** que un envío correcto («Revisa tu correo»).
+Igual que no distingue si la cuenta existe: un mensaje distinto cuando el envío
+es reciente delataría que alguien acaba de pedir acceso con esa dirección. La
+decisión vive en `src/lib/auth/resultado-envio.ts`, fuera del server action,
+porque un fichero `"use server"` solo puede exportar funciones asíncronas y ahí
+dentro no habría forma de probarla.
+
+En el NAS el mínimo está bajado a `5s` (`GOTRUE_SMTP_MAX_FREQUENCY` en el
+override), que con 60 s probar el acceso es un suplicio. En producción se queda
+el valor por defecto: son la defensa contra usar el formulario para inundar el
+buzón de otra persona.

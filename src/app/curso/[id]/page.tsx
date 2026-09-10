@@ -56,6 +56,26 @@ function formatPrice(amount: number, currency: string | null): string {
   return currency ? `${amount} ${currency}` : String(amount);
 }
 
+// Dos fichas una al lado de otra: es lo que hace "comparar" en este sitio.
+function IconoComparar() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <rect x="3" y="4" width="7" height="16" rx="1.5" />
+      <rect x="14" y="4" width="7" height="16" rx="1.5" />
+    </svg>
+  );
+}
+
 export default async function CoursePage({ params, searchParams }: CoursePageProps) {
   const { id } = await params;
   const client = createSupabaseServerClient();
@@ -155,6 +175,7 @@ export default async function CoursePage({ params, searchParams }: CoursePagePro
           {otrosIds.length > 0 ? (
             puedeAnadirseAComparacion(course.id, otrosIds) ? (
               <Link href={hrefAnadirAComparacion(course.id, otrosIds)} className={styles.botonComparar}>
+                <IconoComparar />
                 Añadir a la comparación
               </Link>
             ) : (
@@ -164,6 +185,7 @@ export default async function CoursePage({ params, searchParams }: CoursePagePro
             )
           ) : (
             <Link href={`/buscar?preseleccionado=${course.id}`} className={styles.botonComparar}>
+              <IconoComparar />
               Comparar este curso
             </Link>
           )}

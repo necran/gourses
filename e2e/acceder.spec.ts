@@ -63,6 +63,29 @@ test.describe("HU-018 — cuentas", () => {
 
     await expect(page).toHaveURL(/\/acceder\?error=enlace/);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Entrar en tu cuenta");
+
+    // Y lo dice. Comprobar solo la redirección dejaba pasar justo el fallo que
+    // tenía: el parámetro llegaba y la página lo ignoraba, así que quien abría
+    // un enlace caducado volvía al formulario sin ninguna explicación.
+    // Acotado a `main`: Next monta siempre un `role="alert"` propio, el
+    // anunciador de rutas, y sin acotar el selector recoge los dos.
+    const aviso = page.locator("main").getByRole("alert");
+    await expect(aviso).toContainText(/ya no sirve/i);
+    // Sin decir el motivo exacto: caducado, ya usado o manipulado se responden
+    // igual, como hace el propio callback.
+    await expect(aviso).not.toContainText(/caducad[oa]$|manipulad/i);
+    // Y deja a mano lo único que hay que hacer.
+    await expect(page.getByRole("button", { name: /Enviarme el enlace/i })).toBeVisible();
+  });
+
+  // La dirección la escribe quien quiera. Si el parámetro se mostrara tal cual,
+  // se podría mandar a alguien un enlace que enseñara un mensaje falso con la
+  // pinta de venir del sitio.
+  test("no muestra un aviso inventado en la dirección", async ({ page }) => {
+    await page.goto("/acceder?error=" + encodeURIComponent("Llama al 900 123 456"));
+
+    await expect(page.locator("main")).not.toContainText("900 123 456");
+    await expect(page.locator("main").getByRole("alert")).toHaveCount(0);
   });
 
   test("la política de privacidad ya no afirma que no hay cuentas", async ({ page }) => {
