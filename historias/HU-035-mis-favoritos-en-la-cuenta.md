@@ -100,15 +100,33 @@ lo que HU-019 ya dejó funcionando.
 
 ## Checklist de tests (obligatorio antes de cerrar)
 
-- [ ] Unitarios: `contarFavoritos` cuenta los pintables; con lista vacía devuelve 0
+- [x] Unitarios: `contarFavoritos` cuenta los pintables; con lista vacía devuelve 0
       sin fallar; no cuenta el favorito de un curso retirado del catálogo
-- [ ] Integración: el recuento de A no incluye nada de B (RLS), contra base de datos
+- [x] Integración: el recuento de A no incluye nada de B (RLS), contra base de datos
       de test
-- [ ] Integración: con 0 favoritos no se consultan datos de curso y no se lanza
-- [ ] E2E: un test por cada criterio de aceptación de arriba
-- [ ] E2E: la cabecera con sesión enseña «Favoritos»; sin sesión, no
-- [ ] `/security-review` ejecutado, sin hallazgos críticos/altos abiertos
+- [x] Integración: con 0 favoritos no se consultan datos de curso y no se lanza
+- [x] E2E: un test por cada criterio de aceptación de arriba (5 de 5)
+- [x] E2E: la cabecera con sesión enseña «Favoritos»; sin sesión, no
+- [x] `/security-review` ejecutado, sin hallazgos críticos/altos abiertos
 
 ## Estado
 
-`Abierta`
+**Cerrada** (probada y fusionada; pendiente de desplegar con el siguiente lote).
+
+- Unitarios: 425 pasan (4 nuevos de `contarFavoritos`).
+- Integración: 109 pasan (2 nuevos: aislamiento del recuento entre cuentas, cuenta
+  vacía).
+- E2E: los 12 de `favoritos.spec.ts` pasan (5 nuevos, uno por criterio de HU-035).
+  Dos fallos intermitentes en la suite completa —`favoritos.spec.ts:116` (de
+  HU-019) y `seo.spec.ts:13` (de HU-016)— son anteriores y ajenos: pasan 3/3 en
+  aislamiento y no tocan nada de esta historia.
+- Revisión de seguridad: sin hallazgos. El cambio es presentación y un recuento de
+  solo lectura sobre el patrón de sesión + RLS ya establecido; no añade consultas,
+  ni entrada de usuario a ninguna consulta, ni `dangerouslySetInnerHTML`.
+
+## Qué se descartó por el camino
+
+El primer borrado enseñaba también un adelanto con los títulos de los tres
+favoritos más recientes. Se quitó tras verlo montado: repetir un trozo de la lista
+en una página que va sobre gestionar la cuenta es ruido, y obliga a decidir
+cuántos y con qué pinta. La sección se quedó en recuento + enlace.
