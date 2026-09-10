@@ -42,8 +42,9 @@ export async function BotonFavorito({ courseId }: BotonFavoritoProps) {
         aria-pressed={guardado}
       >
         <svg
-          width="15"
-          height="15"
+          className={styles.icono}
+          width="17"
+          height="17"
           viewBox="0 0 24 24"
           fill={guardado ? "currentColor" : "none"}
           stroke="currentColor"
@@ -52,7 +53,7 @@ export async function BotonFavorito({ courseId }: BotonFavoritoProps) {
           strokeLinejoin="round"
           aria-hidden="true"
         >
-          <path d="M12 3l2.9 6.26L22 10.27l-5 4.87 1.18 6.88L12 18.77l-6.18 3.25L7 15.14 2 10.27l7.1-1.01L12 3z" />
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
         </svg>
         {guardado ? "Quitar de favoritos" : "Guardar en favoritos"}
       </button>
