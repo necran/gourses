@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { createSupabaseSessionClient } from "../../lib/supabase/session-client";
 import { isValidEmail, normalizeEmail } from "../../lib/auth/email";
-import { TITULAR } from "../../lib/legal/titular";
+import { urlSitio } from "../../lib/auth/sitio";
 
 export interface AccederEstado {
   error?: string;
@@ -29,7 +29,7 @@ export async function enviarEnlace(
   const { error } = await client.auth.signInWithOtp({
     email: correo,
     options: {
-      emailRedirectTo: `${TITULAR.url}/acceder/callback`,
+      emailRedirectTo: `${urlSitio()}/acceder/callback`,
     },
   });
 
