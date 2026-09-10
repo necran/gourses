@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createSupabaseSessionClient } from "../../lib/supabase/session-client";
 import { isValidEmail, normalizeEmail } from "../../lib/auth/email";
 import { urlSitio } from "../../lib/auth/sitio";
+import { resultadoEnvio } from "../../lib/auth/resultado-envio";
 
 export interface AccederEstado {
   error?: string;
@@ -33,16 +34,7 @@ export async function enviarEnlace(
     },
   });
 
-  if (error) {
-    // No se devuelve el mensaje de Supabase tal cual: puede revelar detalles
-    // del estado de la cuenta o del propio servicio.
-    return {
-      error:
-        "No hemos podido enviar el enlace ahora mismo. Inténtalo de nuevo en unos minutos.",
-    };
-  }
-
-  return { enviado: true };
+  return resultadoEnvio(error);
 }
 
 export async function cerrarSesion() {

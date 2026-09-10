@@ -287,3 +287,23 @@ que la ACL le niega la lectura aunque el fichero sea 777 — daba 403 y, otra ve
 el correo en inglés sin decir nada. `httpd` no baja privilegios.
 
 GoTrue cachea las plantillas, así que el script reinicia `auth` al terminar.
+
+### «No hemos podido enviar el enlace» cuando sí se ha enviado
+
+Supabase solo admite **un correo por minuto y dirección**. Pulsar dos veces
+seguidas —lo más normal del mundo cuando el correo tarda unos segundos— devolvía
+`429 over_email_send_rate_limit`, y la página lo contaba como un fallo de envío
+aunque el enlace estuviera ya en la bandeja de entrada. Encima empujaba a seguir
+insistiendo, que es lo único que no ayuda.
+
+Ahora el 429 responde **lo mismo** que un envío correcto («Revisa tu correo»).
+Igual que no distingue si la cuenta existe: un mensaje distinto cuando el envío
+es reciente delataría que alguien acaba de pedir acceso con esa dirección. La
+decisión vive en `src/lib/auth/resultado-envio.ts`, fuera del server action,
+porque un fichero `"use server"` solo puede exportar funciones asíncronas y ahí
+dentro no habría forma de probarla.
+
+En el NAS el mínimo está bajado a `5s` (`GOTRUE_SMTP_MAX_FREQUENCY` en el
+override), que con 60 s probar el acceso es un suplicio. En producción se queda
+el valor por defecto: son la defensa contra usar el formulario para inundar el
+buzón de otra persona.
