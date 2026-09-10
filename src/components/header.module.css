@@ -33,24 +33,30 @@
   color: var(--ink);
 }
 
-.primary {
+/* Las variantes van ancladas a `.nav a` a propósito: `.nav a` pesa más que una
+   clase suelta, así que un `.primary { color }` a secas perdía y el botón
+   acababa pintando texto `--ink-muted` sobre fondo `--accent`, ilegible. */
+.nav a.primary {
   background: var(--accent);
   color: var(--accent-ink);
   box-shadow: 0 8px 20px -8px oklch(55% 0.19 292 / 0.55);
 }
 
-.primary:hover {
+.nav a.primary:hover,
+.nav a.primary:focus-visible {
   background: var(--accent);
   color: var(--accent-ink);
-  filter: brightness(1.05);
+  filter: brightness(1.08);
 }
 
-.here {
+.nav a.here {
   background: var(--accent-soft);
   color: var(--accent-soft-ink);
 }
 
-.here:hover {
+.nav a.here:hover,
+.nav a.here:focus-visible {
   background: var(--accent-soft);
   color: var(--accent-soft-ink);
+  filter: brightness(0.97);
 }
