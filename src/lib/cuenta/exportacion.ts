@@ -16,6 +16,8 @@ export interface EntradaExportacion {
   correo: string | null;
   /** Fecha de alta de la cuenta, en ISO. */
   altaEn: string | null;
+  /** Último acceso, en ISO. Lo declara `/privacidad` como dato guardado. */
+  ultimoAccesoEn: string | null;
   avisosDeBajadaDePrecio: boolean;
   favoritos: FavoriteCourse[];
 }
@@ -39,6 +41,7 @@ export interface DatosExportados {
   cuenta: {
     correo: string | null;
     altaEn: string | null;
+    ultimoAccesoEn: string | null;
   };
   preferencias: {
     avisosDeBajadaDePrecio: boolean;
@@ -84,6 +87,7 @@ export function componerExportacion(
     cuenta: {
       correo: entrada.correo,
       altaEn: entrada.altaEn,
+      ultimoAccesoEn: entrada.ultimoAccesoEn,
     },
     preferencias: {
       avisosDeBajadaDePrecio: entrada.avisosDeBajadaDePrecio,

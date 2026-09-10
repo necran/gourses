@@ -46,6 +46,7 @@ export async function GET(request: Request) {
   const datos = componerExportacion({
     correo: user.email ?? null,
     altaEn: user.created_at ?? null,
+    ultimoAccesoEn: user.last_sign_in_at ?? null,
     avisosDeBajadaDePrecio: avisos,
     favoritos,
   });
