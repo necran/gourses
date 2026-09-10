@@ -11,6 +11,18 @@
   # exige una versión moderna. Se fija para que el build no cambie de runtime
   # sin avisar.
   NODE_VERSION = "24"
+  # Dirección base de la instancia publicada. La usa el enlace de acceso por
+  # correo (`urlSitio()`, en src/lib/auth/sitio.ts) para saber a dónde tiene que
+  # volver; sin ella cae en la canónica del titular, que aquí es la misma, pero
+  # entonces esa vuelta depende de un dato pensado para el sitemap.
+  #
+  # Va aquí y no en el panel de Netlify a propósito: no es un secreto —el
+  # prefijo NEXT_PUBLIC_ la incrusta en el bundle del navegador— y en el panel
+  # no habría diff ni historial de quién la cambió.
+  #
+  # Ojo: NEXT_PUBLIC_ se resuelve al compilar, no al ejecutar. Cambiar esto
+  # exige volver a publicar para que surta efecto.
+  NEXT_PUBLIC_SITE_URL = "https://gourses.com"
 
 # Cabeceras de seguridad.
 [[headers]]

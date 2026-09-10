@@ -243,8 +243,16 @@ que el enlace de acceso generado en local apuntaba a producción. Ahora sale de
 
 No se deduce de la cabecera `Host`: quien llama la controla y acabaría dentro de
 un enlace enviado por correo, que es la forma de convertir el acceso en un
-redirector a un sitio ajeno. **En producción hay que definirla** (Netlify →
-variables de entorno) o el enlace usará la canónica, que allí es la correcta.
+redirector a un sitio ajeno.
+
+En producción se fija en `netlify.toml`, en `[build.environment]`, y no en el
+panel de Netlify: no es un secreto —`NEXT_PUBLIC_` la incrusta en el bundle del
+navegador— y en el panel no habría diff ni historial. Lleva el mismo valor que
+la canónica, así que **no arregla ningún fallo en producción**: solo evita que
+la vuelta del enlace de acceso dependa de un dato pensado para el sitemap. Y
+como `NEXT_PUBLIC_` se resuelve al compilar, solo surte efecto al volver a
+publicar — motivo de más para que viaje con el siguiente lote de historias en
+vez de gastar un despliegue propio.
 
 Los `TITULAR.url` de sitemap, robots y datos estructurados se quedan como están:
 ahí la dirección canónica es lo que toca.
