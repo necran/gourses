@@ -139,3 +139,97 @@ test.describe("HU-019 — favoritos", () => {
     }
   });
 });
+
+// Un test por criterio de aceptación de HU-035.
+test.describe("HU-035 — «Mis favoritos» en la cuenta", () => {
+  test.skip(!HAY_CREDENCIALES, "Requiere las variables de Supabase en .env.local");
+
+  // Guarda el primer curso del catálogo y devuelve su título.
+  async function guardarPrimerCurso(page: Page): Promise<string> {
+    const titulo = await irAlPrimerCurso(page);
+    await page.getByRole("button", { name: guardar }).click();
+    await expect(page.getByRole("button", { name: quitar })).toBeVisible();
+    return titulo;
+  }
+
+  test("con favoritos, la cuenta tiene una sección «Mis favoritos» con el recuento y un enlace a la lista", async ({
+    page,
+    context,
+  }) => {
+    const { userId } = await abrirSesion(context, correoUnico("seccion"));
+    try {
+      const titulo = await guardarPrimerCurso(page);
+      await page.goto("/mi-cuenta");
+
+      const seccion = page
+        .locator("section")
+        .filter({ has: page.getByRole("heading", { name: "Mis favoritos" }) });
+      await expect(seccion).toBeVisible();
+      await expect(seccion).toContainText(/1 curso guardado/i);
+      await expect(seccion.getByRole("link", { name: /ver mis favoritos/i })).toHaveAttribute(
+        "href",
+        "/favoritos"
+      );
+      // Solo el recuento y el enlace: la sección no repite la lista de cursos.
+      await expect(seccion.getByRole("link", { name: titulo })).toHaveCount(0);
+    } finally {
+      await borrarUsuario(userId);
+    }
+  });
+
+  test("sin favoritos, la sección explica cómo guardar el primero y lleva a buscar, sin parecer un error", async ({
+    page,
+    context,
+  }) => {
+    const { userId } = await abrirSesion(context, correoUnico("seccion-vacia"));
+    try {
+      await page.goto("/mi-cuenta");
+
+      const seccion = page
+        .locator("section")
+        .filter({ has: page.getByRole("heading", { name: "Mis favoritos" }) });
+      await expect(seccion).toContainText(/aún no has guardado ningún curso/i);
+      await expect(seccion.getByRole("link", { name: /buscar cursos/i })).toBeVisible();
+      // No hay recuento ni lista: es un punto de partida, no un cero suelto.
+      await expect(seccion).not.toContainText(/curso guardado/i);
+    } finally {
+      await borrarUsuario(userId);
+    }
+  });
+
+  test("con sesión, la cabecera enlaza a «Favoritos»", async ({ page, context }) => {
+    const { userId } = await abrirSesion(context, correoUnico("cabecera"));
+    try {
+      await page.goto("/buscar");
+      const cabecera = page.getByRole("navigation", { name: "Principal" });
+      const enlace = cabecera.getByRole("link", { name: "Favoritos" });
+      await expect(enlace).toHaveAttribute("href", "/favoritos");
+
+      await enlace.click();
+      await expect(page).toHaveURL(/\/favoritos$/);
+    } finally {
+      await borrarUsuario(userId);
+    }
+  });
+
+  test("sin sesión, la cabecera no enlaza a «Favoritos»", async ({ page }) => {
+    await page.goto("/buscar");
+    const cabecera = page.getByRole("navigation", { name: "Principal" });
+    await expect(cabecera.getByRole("link", { name: "Favoritos" })).toHaveCount(0);
+  });
+
+  test("desde /favoritos se puede volver a la cuenta y seguir a buscar", async ({
+    page,
+    context,
+  }) => {
+    const { userId } = await abrirSesion(context, correoUnico("nav"));
+    try {
+      await page.goto("/favoritos");
+      const main = page.locator("main");
+      await expect(main.getByRole("link", { name: /mi cuenta/i })).toBeVisible();
+      await expect(main.getByRole("link", { name: /buscar más cursos/i })).toBeVisible();
+    } finally {
+      await borrarUsuario(userId);
+    }
+  });
+});

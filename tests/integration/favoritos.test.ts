@@ -11,7 +11,7 @@
 // sesión de cada usuario, como en el navegador.
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { guardarFavorito } from "../../src/lib/favorites/favorites.ts";
+import { contarFavoritos, guardarFavorito } from "../../src/lib/favorites/favorites.ts";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -158,6 +158,30 @@ describeIfConfigured("HU-019 — aislamiento de los favoritos", () => {
 
     expect(data ?? []).toEqual([]);
   }, 30_000);
+
+  // HU-035: el recuento de `/mi-cuenta` sale por la sesión y la RLS, igual que
+  // la lista. Aquí importa que lo de A no arrastre nada de B, ni siquiera si la
+  // implementación olvidara filtrar en algún punto.
+  it("el recuento de A cuenta solo lo suyo", async () => {
+    await expect(contarFavoritos(sesionA)).resolves.toBe(1);
+    await expect(contarFavoritos(sesionB)).resolves.toBe(1);
+  }, 30_000);
+
+  // Con cero favoritos no se debe consultar la tabla de cursos ni lanzar: es
+  // un punto de partida, no un error.
+  it("el recuento de una cuenta sin favoritos es 0 y no falla", async () => {
+    const { data: efimero } = await admin!.auth.admin.createUser({
+      email: `zzz-hu035-vacio-${SUFIJO}@example.com`,
+      email_confirm: true,
+    });
+    const id = efimero!.user!.id;
+    try {
+      const sesionVacia = await sesionDe(`zzz-hu035-vacio-${SUFIJO}@example.com`);
+      await expect(contarFavoritos(sesionVacia)).resolves.toBe(0);
+    } finally {
+      await admin!.auth.admin.deleteUser(id);
+    }
+  }, 60_000);
 
   // Si se borra la cuenta, sus favoritos se van con ella (on delete cascade).
   it("al borrar la cuenta desaparecen sus favoritos", async () => {

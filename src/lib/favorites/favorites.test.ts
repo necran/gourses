@@ -1,5 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
-import { esFavorito, guardarFavorito, listarFavoritos, quitarFavorito } from "./favorites";
+import {
+  contarFavoritos,
+  esFavorito,
+  guardarFavorito,
+  listarFavoritos,
+  quitarFavorito,
+} from "./favorites";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 const ID_VALIDO = "3f2504e0-4f89-41d3-9a0c-0305e82c3301";
@@ -83,6 +89,74 @@ describe("HU-019 — favoritos", () => {
     it("un error al leer no se disfraza de 'no es favorito'", async () => {
       const { client } = clienteFalso({ data: null, error: { message: "boom" } });
       await expect(esFavorito(client, ID_VALIDO)).rejects.toThrow(/comprobar el favorito/i);
+    });
+  });
+
+  // HU-035: el recuento de `/mi-cuenta` cuenta sobre `listarFavoritos`, así que
+  // hereda su trato de los cursos retirados del catálogo.
+  describe("contarFavoritos", () => {
+    const IDS = [
+      "11111111-1111-4111-8111-111111111111",
+      "22222222-2222-4222-8222-222222222222",
+      "33333333-3333-4333-8333-333333333333",
+    ];
+
+    // Cliente que responde según la tabla: los ids de favoritos por un lado, las
+    // filas de curso por otro.
+    function clientePorTabla(idsFav: string[], idsCurso: string[]) {
+      const filasCurso = idsCurso.map((id) => ({
+        id,
+        source: "udemy",
+        title: "Curso",
+        description: null,
+        price_amount: null,
+        price_currency: null,
+        rating: null,
+        level: null,
+        language: null,
+        instructor: null,
+        image_url: null,
+        affiliate_url: null,
+        category: null,
+        duration_min_minutes: null,
+        duration_max_minutes: null,
+        num_reviews: null,
+        num_subscribers: null,
+        what_you_will_learn: null,
+        requirements: null,
+        resumen_ia: null,
+      }));
+
+      const favoritos = {
+        select: vi.fn(() => favoritos),
+        order: vi.fn(() =>
+          Promise.resolve({ data: idsFav.map((course_id) => ({ course_id })), error: null })
+        ),
+      };
+      const courses = {
+        select: vi.fn(() => courses),
+        in: vi.fn(() => Promise.resolve({ data: filasCurso, error: null })),
+      };
+
+      return {
+        from: vi.fn((tabla: string) => (tabla === "favorites" ? favoritos : courses)),
+      } as unknown as SupabaseClient;
+    }
+
+    it("cuenta los favoritos pintables", async () => {
+      await expect(contarFavoritos(clientePorTabla(IDS, IDS))).resolves.toBe(3);
+    });
+
+    it("sin favoritos devuelve 0, sin fallar", async () => {
+      await expect(contarFavoritos(clientePorTabla([], []))).resolves.toBe(0);
+    });
+
+    // Un favorito cuyo curso ya no está en el catálogo no cuenta: el número
+    // coincide con lo que se ve al abrir /favoritos.
+    it("no cuenta el favorito de un curso retirado del catálogo", async () => {
+      // Tres favoritos, pero el del medio ya no tiene curso.
+      const client = clientePorTabla(IDS, [IDS[0], IDS[2]]);
+      await expect(contarFavoritos(client)).resolves.toBe(2);
     });
   });
 

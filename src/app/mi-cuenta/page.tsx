@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupabaseSessionClient, getUsuarioActual } from "../../lib/supabase/session-client";
+import { contarFavoritos } from "../../lib/favorites/favorites";
 import { avisosActivados } from "../../lib/alertas/preferencias";
 import { cerrarSesion } from "../acceder/actions";
 import { BorrarCuentaForm } from "./borrar-form";
@@ -23,6 +24,16 @@ export default async function MiCuentaPage() {
   const client = await createSupabaseSessionClient();
   const avisos = await avisosActivados(client);
 
+  // El recuento es informativo: si falla, la sección lo dice pero el resto de la
+  // página —cerrar sesión, exportar, borrar— sigue disponible. `null` distingue
+  // «no se pudo cargar» de «tienes 0».
+  let numFavoritos: number | null = null;
+  try {
+    numFavoritos = await contarFavoritos(client);
+  } catch {
+    numFavoritos = null;
+  }
+
   return (
     <main className={styles.main}>
       <h1>Mi cuenta</h1>
@@ -35,9 +46,33 @@ export default async function MiCuentaPage() {
         marcas como favoritos.
       </p>
 
-      <p className={styles.nota}>
-        <Link href="/favoritos">Ver mis favoritos</Link>
-      </p>
+      <section className={styles.seccion}>
+        <h2>Mis favoritos</h2>
+        {numFavoritos === null ? (
+          <p className={styles.nota}>
+            No hemos podido cargar tus favoritos ahora mismo.{" "}
+            <Link href="/favoritos">Abrir la lista</Link>
+          </p>
+        ) : numFavoritos === 0 ? (
+          <p className={styles.nota}>
+            Aún no has guardado ningún curso. Cuando encuentres uno que te interese, pulsa
+            «Guardar en favoritos» en su ficha. <Link href="/buscar">Buscar cursos</Link>
+          </p>
+        ) : (
+          <>
+            <p className={styles.nota}>
+              Tienes{" "}
+              <strong>
+                {numFavoritos} {numFavoritos === 1 ? "curso guardado" : "cursos guardados"}
+              </strong>
+              .
+            </p>
+            <a className={styles.boton} href="/favoritos">
+              Ver mis favoritos
+            </a>
+          </>
+        )}
+      </section>
 
       <AvisosForm activados={avisos} />
 
