@@ -23,20 +23,32 @@ La causa está en dos sitios:
    preseleccionado desde una ficha (`?preseleccionado=`, HU-031) sobrevive a un cambio
    de página, aunque eso no se había notado porque esa vía solo marca uno.
 
-HU-031 fijó un principio que esta historia no toca: **la selección vive en la URL,
-nunca en estado del navegador** — nada de cookies ni de JavaScript de cliente para
-recordarla entre páginas. El fallo no es que ese principio esté mal, es que no se
-aplicó a la paginación: la URL nunca llegó a llevar la selección acumulada, solo la
-de la página actual.
+HU-031 fijó un principio que esta historia **sí toca, a propósito y con el visto
+bueno de quien decide el producto**: hasta ahora, «la selección vive en la URL, nunca
+en estado del navegador» significaba también «nada de JavaScript de cliente para
+recordarla entre páginas». Esta historia añade una pieza de JavaScript pequeña y bien
+acotada —lee las casillas marcadas en la página que hay cargada y reescribe con ellas
+los enlaces de paginación y el formulario de filtros antes de que naveguen— para que
+marcar cursos y pulsar «Siguiente» los lleve consigo sin un paso de más. Sigue sin
+haber estado: lo único que hace el script es mantener al día la URL a la que se va a
+navegar; nada se guarda en el navegador, y quien copie esa URL y la abra en otro sitio
+obtiene exactamente la misma selección. Ver «Diseño elegido» para el porqué y el trato
+de quien no tiene JavaScript.
 
 ## Como visitante que busca cursos quiero poder añadir a la comparación cursos que aparecen en páginas distintas de los mismos resultados para no tener que encontrarlos todos en una sola pantalla
 
 ## Criterios de aceptación
 
-- **Given** que he marcado un curso en la página 1 de resultados
-  **When** voy a la página 2 y marco otro
+- **Given** que he marcado un curso en la página 1 de resultados, con JavaScript
+  **When** voy a la página 2 (pulsando «Siguiente», sin ningún paso de más) y marco
+  otro
   **Then** al pulsar «Comparar seleccionados» llego a una comparación con los dos, no
   solo con el de la página 2
+
+- **Given** el mismo caso, pero sin JavaScript
+  **When** voy a la página 2 y marco otro
+  **Then** el comportamiento no empeora respecto a hoy (la selección de la página 1 no
+  sobrevive), y no aparece ningún error ni un formulario roto
 
 - **Given** que tengo cursos marcados de páginas distintas
   **When** miro la página que estoy viendo ahora
@@ -81,55 +93,107 @@ de la página actual.
 
 ## Diseño elegido, y el que se descartó
 
-**Se acumula en la URL con un botón explícito, no marcando la casilla.** Al pulsar
-«Guardar selección y seguir buscando» (nuevo, junto al ya existente «Comparar
-seleccionados»), el formulario manda lo marcado en esta página a un parámetro
-acumulado (`comparando`, mismo nombre que ya usa la ficha de curso desde HU-031) y
-vuelve a la misma búsqueda con ese parámetro añadido a la URL. Desde ahí, los enlaces
-de paginación y el propio formulario de la página siguiente llevan ese parámetro, con
-sus ids como casillas ya marcadas (deshabilitadas, para no confundir con «marcado en
-esta página») más las nuevas que se marquen. «Comparar seleccionados» siempre manda la
-unión de lo acumulado y lo recién marcado.
+**Decisión (revisada tras la primera versión de esta historia):** JavaScript de
+cliente captura las casillas marcadas y las lleva consigo al navegar, sin un botón
+nuevo que pulsar. Se evaluó primero un botón explícito («Guardar selección y seguir
+buscando») precisamente por no depender de JavaScript, pero se descartó porque la
+interacción quedaba peor —un paso de más solo para conseguir lo que debería ser
+automático— y aquí ya se pidió expresamente la versión con JavaScript, asumiendo su
+única contrapartida real: quien navega sin JavaScript vuelve a tener el fallo original
+(la selección no sobrevive a cambiar de página). Se acepta ese trato porque:
 
-**Se descartó JavaScript de cliente que capture el estado de las casillas al navegar
-de página** (interceptar el clic en «Siguiente» y añadir a la URL lo marcado sin
-pulsar ningún botón nuevo). Sería una interacción más fluida, pero **sin JavaScript no
-funcionaría en absoluto** —dejaría de nuevo sin poder comparar cursos de páginas
-distintas, que es justo el fallo de esta historia—, mientras que el botón explícito
-degrada con normalidad: sin JavaScript, sigue siendo un `<button type="submit">` de
-toda la vida. Es la misma razón por la que HU-031 ya rechazó guardar la selección en
-el navegador.
+- **Quien no tenga JavaScript no queda peor que hoy**: hoy la selección ya no
+  sobrevive a cambiar de página para nadie. Esta historia mejora la situación para la
+  inmensa mayoría sin empeorarla para nadie.
+- Todo lo demás del sitio (los propios filtros de esta página, el resto del
+  comparador, el acceso, los favoritos…) sigue funcionando sin JavaScript; esta
+  historia no cambia eso en ningún otro sitio, solo en el paso concreto de «llevar la
+  selección de una página de resultados a la siguiente».
+- La URL sigue siendo la única fuente de verdad: el script no guarda nada por su
+  cuenta (ni `localStorage`, ni cookies propias): su trabajo es, antes de que el
+  navegador siga un enlace o envíe un formulario, actualizar el parámetro `comparando`
+  de ese enlace o formulario con lo que hay marcado ahora mismo. Copiar la URL
+  resultante y abrirla en otra pestaña, sin JavaScript de por medio, reproduce la
+  misma selección — sigue siendo compartible, cacheable y sin estado del lado del
+  servidor.
+
+### Cómo funciona
+
+1. `/buscar` acepta un parámetro `comparando` (mismo nombre y mismo saneado con
+   `parseCompareIds` que ya usa la ficha de curso desde HU-031): la lista de cursos
+   acumulados de páginas anteriores de esta misma búsqueda.
+2. Con `comparando` no vacío, la página muestra un aviso con cuántos hay y su título
+   (una consulta más, solo cuando hace falta), cada uno con un enlace «Quitar» que
+   vuelve a `/buscar` con ese id fuera de `comparando` — un enlace normal, funciona
+   sin JavaScript.
+3. Los cursos acumulados que además aparecen en la página actual se pintan con su
+   casilla ya marcada (son un curso más de la lista, no hace falta tratarlos aparte).
+   Los que no aparecen viajan como campos ocultos dentro del mismo formulario, para
+   que «Comparar seleccionados» siempre mande la unión completa.
+4. El formulario de filtros lleva `comparando` como campo oculto, y `enlacePagina` lo
+   añade a «Siguiente»/«Anterior» igual que ya hace con `orden` o `keyword`: sin
+   JavaScript, la selección acumulada **hasta la última vez que se pulsó «Buscar» o se
+   cambió de página** sigue viajando. Esto no depende de JavaScript y ya arregla parte
+   del problema por sí solo.
+5. El JavaScript de mejora entra encima de eso: al marcar o desmarcar una casilla de
+   esta página, recalcula el total (acumulado + marcado aquí) y reescribe con él el
+   campo oculto del formulario de filtros y el `href` de los enlaces de paginación —
+   así, cambiar de filtro o de página **sin pulsar nada más que lo de siempre**
+   arrastra también lo marcado en la página que se abandona. Si el máximo
+   (`MAX_COMPARADOS`) ya está cubierto, deshabilita las casillas restantes de esta
+   página en vez de dejar marcar una de más.
 
 ## Cuidados
 
 - **`parseCompareIds` ya hace el trabajo de fusionar y acotar** (admite repetidos,
   descarta inválidos, corta en `MAX_COMPARADOS`): la fusión de «acumulado + recién
-  marcado» pasa por ahí, no por una función nueva que reimplemente el mismo cuidado.
-- **El parámetro acumulado es entrada externa** igual que `ids` en `/comparar` y
-  `comparando` en la ficha (HU-031): se sanea con `parseCompareIds` antes de usarlo
-  para nada, nunca se confía en que venga bien formado.
-- **No se vuelve a consultar la base de datos por los cursos acumulados solo para
-  pintar su casilla como marcada.** Una casilla deshabilitada con el id ya conocido
-  (`<input type="hidden">` o `disabled checked`) no necesita el título ni el precio del
-  curso — esos ya se mostraron cuando se marcó, en su propia página. Pedirlos de nuevo
-  aquí sería una consulta extra en cada página de resultados por algo que no hace
-  falta ver dos veces.
+  marcado» pasa por ahí en el servidor, no por una función nueva que reimplemente el
+  mismo cuidado. En el cliente, el script hace la unión con lo mínimo (un `Set`) y dejar
+  que el servidor, al recibir la petición, vuelva a sanear con `parseCompareIds` como
+  entrada externa que es — el script de cliente no es de fiar por sí solo, es una
+  mejora de interacción, no una validación.
+- **El parámetro acumulado sigue siendo entrada externa**, igual que `ids` en
+  `/comparar` y `comparando` en la ficha (HU-031): se sanea con `parseCompareIds` antes
+  de usarlo para nada, nunca se confía en que venga bien formado ni en que lo haya
+  escrito el propio script.
+- **El JavaScript no sustituye el saneado del servidor, solo mejora la interacción.**
+  Si alguien manipula el `comparando` de la URL a mano (con basura, con más de
+  `MAX_COMPARADOS`, con ids inventados), el resultado tiene que ser el mismo que si
+  ese parámetro no existiera del todo salvo por lo válido que contenga — igual que hoy
+  con `ids` en `/comparar`.
+- **El título de los cursos acumulados que no están en la página actual sí hace falta
+  pedirlo** (para el aviso «llevas N marcados» y el enlace «Quitar» de cada uno): es
+  una consulta más por página de resultados, solo cuando `comparando` no está vacío, y
+  solo pidiendo lo que se pinta (reutilizar `getCoursesByIds`, no una consulta nueva).
 - **El aviso de «cuántos llevas» no debe ser el único sitio donde se pueda quitar
   uno.** El criterio de aceptación lo pide explícitamente: tiene que poder quitarse
   sin volver a la página donde apareció, así que el aviso lleva su propio control por
-  curso (aunque sea solo el título y un enlace «Quitar»), no una lista muda.
+  curso (el título y un enlace «Quitar» que funciona sin JavaScript), no una lista
+  muda.
 - **Cambiar de página de resultados no debe perder la selección aunque también cambie
-  el filtro.** `enlacePagina` reconstruye la URL entera a partir de `filters`; el
-  parámetro `comparando` tiene que añadirse ahí igual que los demás, no solo en el
-  enlace de paginación.
+  el filtro, y esto no depende de JavaScript.** `enlacePagina` reconstruye la URL
+  entera a partir de `filters`; el parámetro `comparando` se añade ahí igual que los
+  demás, y el formulario de filtros lo lleva como campo oculto — esta parte es SSR
+  pura y es lo que hace que, incluso sin JavaScript, lo ya acumulado (hasta la última
+  vez que se pulsó «Buscar» o «Siguiente») no se pierda.
+- **El script no debe poder mandar un formulario con más de `MAX_COMPARADOS`
+  casillas activas.** Deshabilitar en el cliente es solo comodidad de interfaz: el
+  límite de verdad lo sigue poniendo `parseCompareIds` en el servidor al construir la
+  comparación, por si el script fallara o alguien lo sorteara.
 
 ## Checklist de tests (obligatorio antes de cerrar)
 
 - [ ] Unitarios: fusión de ids acumulados + recién marcados vía `parseCompareIds` —
       duplicados, inválidos, y recorte al llegar a `MAX_COMPARADOS`
-- [ ] Unitarios: `enlacePagina` (o su reemplazo) conserva el parámetro `comparando`
-      junto con los filtros existentes
-- [ ] E2E: un test por cada criterio de aceptación de arriba
+- [ ] Unitarios: `enlacePagina` conserva el parámetro `comparando` junto con los
+      filtros existentes
+- [ ] Unitarios: un `comparando` manipulado a mano (basura, ids inventados, de más)
+      se sanea igual que `ids` en `/comparar` — el servidor nunca se fía del cliente
+- [ ] E2E: un test por cada criterio de aceptación de arriba, con JavaScript activo
+      (el comportamiento por defecto de Playwright)
+- [ ] E2E: el caso sin JavaScript (`test.use({ javaScriptEnabled: false })`), para
+      demostrar que no empeora respecto a hoy y que el formulario y los enlaces de
+      paginación no se rompen
 - [ ] E2E: con el máximo ya alcanzado, las casillas de una página nueva no permiten
       marcar una quinta sin avisar
 - [ ] `/security-review` ejecutado, sin hallazgos críticos/altos abiertos
