@@ -154,21 +154,17 @@ registros, y que la lógica se pruebe sin depender del correo real.
 
 ## Estado
 
-**Bloqueada** — probada y fusionable, pero **no cerrada**: la plantilla de correo
-sigue sin subirse a ningún sitio, así que hoy quien pide el cambio recibe el
-«Confirm Email Change» de fábrica, en inglés, en el NAS y en Cloud. No es una
-cuestión de desplegar (eso sí se agrupa con el siguiente lote, como manda la regla
-del proyecto): es que la plantilla en español **todavía no existe en ningún
-Supabase**, así que el criterio de rectificación en español no se cumple de
-verdad todavía. Motivo del bloqueo: el NAS no responde por SSH (puerto 22
-rechazado desde esta máquina; el resto del NAS —Supabase, Mailpit— sí funciona) y
-no hay `SUPABASE_ACCESS_TOKEN`/`SUPABASE_PROJECT_REF` en este entorno para
-subirla a Cloud por la Management API.
+**Cerrada** (probada y fusionada; pendiente de desplegar con el siguiente lote).
 
-Queda por hacer, en cuanto haya acceso a uno u otro:
-
-    npm run correo:plantillas-nas   # NAS, cuando vuelva el SSH
-    npm run correo:plantillas       # Cloud, con las credenciales de quien la gestione
+El SSH al NAS, rechazado al escribir esto, volvió a responder poco después.
+Subida la plantilla (`npm run correo:plantillas-nas`) y añadidas las variables
+`GOTRUE_MAILER_SUBJECTS_EMAIL_CHANGE` / `GOTRUE_MAILER_TEMPLATES_EMAIL_CHANGE` al
+`docker-compose.override.yml` del NAS —el script solo copia el fichero al
+volumen compartido, no da de alta la variable que hace que GoTrue vaya a
+buscarlo—. Comprobado con un envío real: asunto «Confirma el cambio de correo en
+Gourses», cuerpo en español, sin `{{ }}` sin rellenar. Sigue pendiente Cloud, sin
+`SUPABASE_ACCESS_TOKEN`/`SUPABASE_PROJECT_REF` en este entorno; anotado como
+deuda más abajo.
 
 - Unitarios: 456 pasan (20 nuevos: `resultadoCambioCorreo`, `avisoCambioCorreo`, y
   la plantilla `cambio-de-correo` sumada a la suite de las tres).
@@ -208,3 +204,13 @@ de forma obvia, y una implementación ingenua se equivoca:
   rectificación se una a las otras tres que ya se ejercían desde la cuenta
   (acceso, portabilidad, supresión), y el párrafo del buzón se queda solo con
   oposición y limitación.
+
+## Deuda que sigue abierta
+
+- **La plantilla en Supabase Cloud (producción) sigue sin subirse.** Solo se subió
+  al NAS. `npm run correo:plantillas` la sube en cuanto alguien con
+  `SUPABASE_ACCESS_TOKEN`/`SUPABASE_PROJECT_REF` lo ejecute; hasta entonces, un
+  cambio de correo en producción llegaría en inglés.
+- Recuperar el acceso a la cuenta cambiando el correo **sin sesión iniciada**
+  sigue fuera de alcance, como ya decía la historia (requiere probar la
+  titularidad por otra vía, y merece su propio análisis de riesgo).

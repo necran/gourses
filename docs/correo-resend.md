@@ -288,6 +288,24 @@ el correo en inglés sin decir nada. `httpd` no baja privilegios.
 
 GoTrue cachea las plantillas, así que el script reinicia `auth` al terminar.
 
+### Una plantilla nueva no basta con copiarla (2026-09-11)
+
+`npm run correo:plantillas-nas` copia el fichero al volumen y reinicia `auth`,
+pero **eso no basta para una plantilla nueva** (no para actualizar una que ya
+existía): hace falta además dar de alta su `GOTRUE_MAILER_SUBJECTS_*` y
+`GOTRUE_MAILER_TEMPLATES_*` en `auth.environment`, dentro de
+`docker-compose.override.yml` del NAS. El script no toca ese fichero —no sabe
+qué claves de GoTrue corresponden a qué plantilla—, así que al añadir
+`cambio-de-correo.html` (HU-037) el fichero se copió bien pero GoTrue lo
+ignoró en silencio hasta añadir a mano:
+
+    GOTRUE_MAILER_SUBJECTS_EMAIL_CHANGE: "Confirma el cambio de correo en Gourses"
+    GOTRUE_MAILER_TEMPLATES_EMAIL_CHANGE: http://supabase-plantillas/cambio-de-correo.html
+
+Mismo síntoma de siempre —cae en la plantilla de fábrica sin avisar—, así que se
+comprueba igual: pedir el cambio y mirar qué llega a Mailpit, no solo confiar en
+que el script terminó sin error.
+
 ### «No hemos podido enviar el enlace» cuando sí se ha enviado
 
 Supabase solo admite **un correo por minuto y dirección**. Pulsar dos veces
