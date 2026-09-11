@@ -1,0 +1,75 @@
+/* Mismo aspecto que tenía «Comparar este curso» en la ficha (rediseño de
+   botones del 2026-09-10): chip elevado con su icono. */
+.boton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.72rem 1.35rem;
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-display), -apple-system, "Segoe UI", sans-serif;
+  font-weight: 700;
+  font-size: 0.88rem;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition:
+    transform 0.12s ease,
+    border-color 0.12s ease,
+    background 0.12s ease;
+}
+
+.boton svg {
+  color: var(--accent);
+}
+
+.boton:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  transform: translateY(-1px);
+}
+
+.boton:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.boton:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Ya está en la cesta: se lee como un estado activo, no como otra invitación. */
+.enCesta {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-soft-ink);
+}
+
+.boton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.compacto {
+  padding: 0.5rem 0.95rem;
+  font-size: 0.8rem;
+  box-shadow: none;
+}
+
+.contenedor {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.4rem;
+}
+
+.aviso {
+  margin: 0;
+  max-width: 16rem;
+  color: var(--ink-muted);
+  font-size: 0.8rem;
+  text-align: right;
+}

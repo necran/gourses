@@ -54,9 +54,10 @@ function enlacePagina(filters: CourseSearchFilters, pagina: number): string {
   return query ? `/buscar?${query}` : "/buscar";
 }
 
-// HU-031: se llega aquí desde el botón "Comparar este curso" de una ficha,
-// con su id ya listo para marcar. Si no es un id válido se ignora sin más —
-// es un parámetro decorativo, no filtra ni cambia los resultados.
+// HU-031: se llega aquí desde el botón de comparar de una ficha o de
+// favoritos cuando no hay JavaScript (con JavaScript, ese botón añade a la
+// cesta sin salir de la página, HU-041), y desde enlaces antiguos. Si no es un
+// id válido se ignora sin más — no filtra ni cambia los resultados.
 function preseleccionadoDesde(raw: string | string[] | undefined): string | null {
   const valor = Array.isArray(raw) ? raw[0] : raw;
   return valor && isValidCourseId(valor) ? valor : null;

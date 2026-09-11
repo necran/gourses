@@ -79,14 +79,72 @@ mirar la cesta.
 
 ## Checklist de tests (obligatorio antes de cerrar)
 
-- [ ] Unitarios: estado del botón (en cesta / fuera / cesta llena) y construcción del
-      enlace «Comparar mis favoritos» (0, 1, 2–4 y más de 4 favoritos)
-- [ ] Integración: no hace falta si «Comparar mis favoritos» reutiliza
-      `listarFavoritos` sin consulta nueva
-- [ ] E2E: un test por criterio de aceptación, incluido sin JavaScript
-- [ ] E2E: los de HU-031 sustituidos por su equivalente con cesta
-- [ ] `/security-review` ejecutado, sin hallazgos críticos/altos abiertos
+- [x] Unitarios: construcción del enlace «Comparar mis favoritos» (0, 1, 2–4 y más de
+      4 favoritos) en `compare.test.ts`. El estado del botón (en cesta / fuera / llena)
+      es `estaEnCesta`/`estaLlena`/`anadir`/`quitar`, ya cubiertos en
+      `cesta-comparar.test.ts` (HU-040); el componente solo los combina
+- [x] Integración: no hace falta: «Comparar mis favoritos» reutiliza `listarFavoritos`
+      sin consulta nueva
+- [x] E2E: un test por criterio de aceptación, incluido sin JavaScript —
+      `e2e/cesta-ficha-y-favoritos.spec.ts` (9 tests)
+- [x] E2E: los de HU-031 sustituidos por su equivalente con cesta (ver abajo)
+- [x] `/security-review` ejecutado, sin hallazgos críticos/altos abiertos
 
 ## Estado
 
-`Abierta`
+`Cerrada`
+
+### Resultado de los tests
+
+- Unitarios (`npx vitest run`): 455 pasan, 107 omitidos. Uno menos que en HU-040:
+  salen los 5 de `puedeAnadirseAComparacion`/`hrefAnadirAComparacion` (funciones
+  retiradas) y entran 4 de `hrefCompararFavoritos`.
+- Integración (`npm run test:integration`): 107 pasan (22 ficheros).
+- E2E (`npx playwright test`): 131 de 131.
+
+### Tests de HU-031 sustituidos, no borrados sin más
+
+De `comparar-desde-cualquier-sitio.spec.ts` salen tres tests cuyo comportamiento ya
+no existe (el botón de la ficha llevaba la comparación en la URL). Cada uno tiene su
+equivalente en `cesta-ficha-y-favoritos.spec.ts`:
+
+| HU-031 | HU-041 |
+|---|---|
+| «Comparar este curso» lleva a `/buscar` con el curso marcado | Sin JavaScript, el botón de la ficha lleva a `/buscar?preseleccionado=` marcado; con JavaScript, lo añade sin salir |
+| Desde `/comparar`, «Añadir a la comparación» sin perder los demás | Lo marcado en el buscador y lo añadido desde otra ficha se suman |
+| Comparación al máximo: no se ofrece añadir y se explica | Con la cesta llena, el botón no está activo y se explica |
+
+Se queda el de enlaces autocontenidos (`/buscar?preseleccionado=`), que sigue siendo
+cierto.
+
+### Revisión de seguridad
+
+Sin hallazgos:
+
+- **Menos superficie que antes**: la ficha deja de leer `?comparando=` de la URL
+  (entrada externa que había que sanear) y `/comparar` deja de fabricarlo.
+- **El botón no toca el servidor**: solo escribe en la cesta, que ya se valida al
+  leerla (HU-040). Quitar de favoritos sigue siendo su Server Action, sin cambios.
+- **«Comparar mis favoritos»** se construye con los ids que devuelve
+  `listarFavoritos` (RLS de la sesión: solo los de la propia persona), codificados con
+  `encodeURIComponent`, y `/comparar` los vuelve a sanear. En la URL solo van ids de
+  cursos públicos; `/comparar` sigue con `noindex`.
+- **El enlace sin JavaScript** a `/buscar?preseleccionado=` usa un id que ya ha pasado
+  por `getCourseById` y va codificado; `/buscar` lo valida con `isValidCourseId`.
+
+### Qué cambió respecto al diseño previsto
+
+- **Sin `aria-pressed`**: el texto del botón ya cambia («Añadir» / «Quitar de la
+  comparación»), y combinar las dos cosas hace que un lector de pantalla anuncie un
+  estado contradictorio («Quitar…, pulsado»). Basta el texto, más el anuncio de la
+  barra (HU-040).
+- **Enlace antes de hidratar, botón después** (`useHidratado`): así no hay desajuste de
+  hidratación y, sin JavaScript, el enlace funciona.
+- **`alternar`** no hizo falta finalmente: el botón ya sabe si el curso está en la
+  cesta y llama a `anadir` o a `quitar`.
+
+### Visto de paso, fuera de esta historia
+
+En la ficha, a 400 px de ancho, el título se sale por la derecha (imagen y título van
+en fila y no se apilan). Mismo tipo de fallo que el de `/buscar` en móvil anotado en
+HU-040: anterior a esta historia, queda para una incidencia aparte.

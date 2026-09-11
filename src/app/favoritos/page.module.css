@@ -77,6 +77,34 @@
   filter: brightness(1.04);
 }
 
+/* Comparar y quitar, juntos al extremo de la tarjeta (HU-041). */
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.compararTodos {
+  margin: -0.4rem 0 1.2rem;
+}
+
+.botonCompararTodos {
+  display: inline-flex;
+  padding: 0.6rem 1.2rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-family: var(--font-display), -apple-system, "Segoe UI", sans-serif;
+  font-weight: 700;
+  font-size: 0.88rem;
+}
+
+.botonCompararTodos:hover {
+  filter: brightness(1.05);
+}
+
 .enlaces {
   margin-top: 2rem;
   font-size: 0.9rem;
@@ -95,5 +123,9 @@
   }
   .imagen {
     width: 5rem;
+  }
+  .acciones {
+    width: 100%;
+    justify-content: flex-start;
   }
 }

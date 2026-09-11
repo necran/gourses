@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { createSupabaseSessionClient } from "../../lib/supabase/session-client";
 import { listarFavoritos } from "../../lib/favorites/favorites";
 import { formatDuration } from "../../lib/courses/duration";
+import { hrefCompararFavoritos } from "../../lib/courses/compare";
+import { BotonCesta } from "../../components/boton-cesta";
 import { quitarDeFavoritos } from "./actions";
 import styles from "./page.module.css";
 
@@ -22,10 +24,21 @@ export default async function FavoritosPage() {
   if (!user) redirect("/acceder");
 
   const favoritos = await listarFavoritos(client);
+  // HU-041: un enlace normal, sin tocar la cesta, para que funcione igual sin
+  // JavaScript. Solo existe si caben todos (ver hrefCompararFavoritos).
+  const enlaceComparar = hrefCompararFavoritos(favoritos.map((curso) => curso.id));
 
   return (
     <main className={styles.main}>
       <h1>Mis favoritos</h1>
+
+      {enlaceComparar && (
+        <p className={styles.compararTodos}>
+          <Link href={enlaceComparar} className={styles.botonCompararTodos}>
+            Comparar mis favoritos
+          </Link>
+        </p>
+      )}
 
       {favoritos.length === 0 ? (
         // Una lista vacía no es un error, es un punto de partida: se dice qué
@@ -61,12 +74,15 @@ export default async function FavoritosPage() {
                 </p>
               </div>
 
-              <form action={quitarDeFavoritos}>
-                <input type="hidden" name="courseId" value={curso.id} />
-                <button type="submit" className={styles.quitar}>
-                  Quitar
-                </button>
-              </form>
+              <div className={styles.acciones}>
+                <BotonCesta courseId={curso.id} title={curso.title} compacto />
+                <form action={quitarDeFavoritos}>
+                  <input type="hidden" name="courseId" value={curso.id} />
+                  <button type="submit" className={styles.quitar}>
+                    Quitar
+                  </button>
+                </form>
+              </div>
             </li>
           ))}
         </ul>

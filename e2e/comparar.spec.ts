@@ -95,10 +95,6 @@ test.describe("HU-017 — comparador", () => {
     await expect(page.getByText(/enlaces de salida pueden ser de afiliado/i)).toBeVisible();
 
     await page.locator("thead th a").first().click();
-    // Desde HU-031 el enlace lleva el resto de la comparación en la URL
-    // (`?comparando=`), para poder añadir este curso de vuelta sin perder los
-    // demás: el criterio de aquí es solo que se llega a la ficha, no la forma
-    // exacta de la URL.
-    await expect(page).toHaveURL(/\/curso\/[0-9a-f-]{36}/);
+    await expect(page).toHaveURL(/\/curso\/[0-9a-f-]{36}$/);
   });
 });

@@ -2,9 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   MAX_COMPARADOS,
   buildCompareRows,
-  hrefAnadirAComparacion,
+  hrefCompararFavoritos,
   parseCompareIds,
-  puedeAnadirseAComparacion,
 } from "./compare";
 import type { CourseDetail } from "./get-course";
 
@@ -79,27 +78,27 @@ describe("parseCompareIds", () => {
   });
 });
 
-describe("puedeAnadirseAComparacion (HU-031)", () => {
-  it("permite añadir cuando queda hueco", () => {
-    expect(puedeAnadirseAComparacion(E, [A, B])).toBe(true);
+// Añadir desde la ficha, con el tope de MAX_COMPARADOS, lo cubren ahora
+// `anadir`/`estaLlena` de la cesta (cesta-comparar.test.ts, HU-040/HU-041).
+describe("hrefCompararFavoritos (HU-041)", () => {
+  it("con menos de dos favoritos no hay nada que comparar", () => {
+    expect(hrefCompararFavoritos([])).toBeNull();
+    expect(hrefCompararFavoritos([A])).toBeNull();
   });
 
-  it("no permite añadir cuando ya está al máximo", () => {
-    expect(puedeAnadirseAComparacion(E, [A, B, C, D])).toBe(false);
+  it("de dos al máximo lleva a su comparación, en el mismo orden", () => {
+    expect(hrefCompararFavoritos([B, A])).toBe(`/comparar?ids=${B},${A}`);
+    expect(hrefCompararFavoritos([A, B, C, D])).toBe(`/comparar?ids=${A},${B},${C},${D}`);
   });
 
-  it("permite \"añadir\" un curso que ya está en la comparación, aunque esté al máximo", () => {
-    expect(puedeAnadirseAComparacion(A, [A, B, C, D])).toBe(true);
-  });
-});
-
-describe("hrefAnadirAComparacion (HU-031)", () => {
-  it("combina el curso actual con los que ya estaban", () => {
-    expect(hrefAnadirAComparacion(C, [A, B])).toBe(`/comparar?ids=${A},${B},${C}`);
+  it("con más del máximo no se ofrece, en vez de recortar en silencio", () => {
+    expect(hrefCompararFavoritos([A, B, C, D, E])).toBeNull();
   });
 
-  it("no duplica el curso actual si ya estaba incluido", () => {
-    expect(hrefAnadirAComparacion(A, [A, B])).toBe(`/comparar?ids=${A},${B}`);
+  it("/comparar lee esos ids tal cual", () => {
+    const href = hrefCompararFavoritos([A, B, C])!;
+    const ids = new URL(href, "https://gourses.com").searchParams.get("ids") ?? undefined;
+    expect(parseCompareIds(ids)).toEqual([A, B, C]);
   });
 });
 

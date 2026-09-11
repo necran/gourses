@@ -15,18 +15,12 @@ import {
 } from "../../../lib/courses/course-seo";
 import { TITULAR } from "../../../lib/legal/titular";
 import { BotonFavorito } from "../../../components/boton-favorito";
+import { BotonCesta } from "../../../components/boton-cesta";
 import { conSeparadorDeMiles } from "../../../lib/formato-numero";
-import {
-  MAX_COMPARADOS,
-  hrefAnadirAComparacion,
-  parseCompareIds,
-  puedeAnadirseAComparacion,
-} from "../../../lib/courses/compare";
 import styles from "./page.module.css";
 
 interface CoursePageProps {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ comparando?: string | string[] }>;
 }
 
 // Cada ficha lleva su propio título y descripción: son la puerta de entrada
@@ -56,27 +50,7 @@ function formatPrice(amount: number, currency: string | null): string {
   return currency ? `${amount} ${currency}` : String(amount);
 }
 
-// Dos fichas una al lado de otra: es lo que hace "comparar" en este sitio.
-function IconoComparar() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <rect x="3" y="4" width="7" height="16" rx="1.5" />
-      <rect x="14" y="4" width="7" height="16" rx="1.5" />
-    </svg>
-  );
-}
-
-export default async function CoursePage({ params, searchParams }: CoursePageProps) {
+export default async function CoursePage({ params }: CoursePageProps) {
   const { id } = await params;
   const client = createSupabaseServerClient();
   const course = await getCourseById(client, id);
@@ -84,13 +58,6 @@ export default async function CoursePage({ params, searchParams }: CoursePagePro
   // Un id inválido o inexistente lleva a la página de "no encontrado" de Next,
   // nunca a un error sin manejar.
   if (!course) notFound();
-
-  // HU-031: si se llega desde una comparación (el enlace de /comparar lleva
-  // el resto de ids), se ofrece añadir este curso a ella; si no, se ofrece
-  // empezar una nueva desde /buscar. `comparando` es entrada externa —mismo
-  // trato que `ids` en /comparar— así que se sanea con la misma función.
-  const { comparando } = await searchParams;
-  const otrosIds = parseCompareIds(comparando);
 
   const price = resolvePriceDisplay(
     course.priceAmount,
@@ -169,26 +136,9 @@ export default async function CoursePage({ params, searchParams }: CoursePagePro
               que va fuera del bloque de abajo. */}
           <BotonFavorito courseId={course.id} />
 
-          {/* HU-031: si se llega desde /comparar, se ofrece añadir este curso
-              a esa comparación; si no, se ofrece empezar una nueva. Ninguna
-              de las dos depende de si el curso tiene enlace de salida. */}
-          {otrosIds.length > 0 ? (
-            puedeAnadirseAComparacion(course.id, otrosIds) ? (
-              <Link href={hrefAnadirAComparacion(course.id, otrosIds)} className={styles.botonComparar}>
-                <IconoComparar />
-                Añadir a la comparación
-              </Link>
-            ) : (
-              <p className={styles.avisoComparar}>
-                Esa comparación ya tiene {MAX_COMPARADOS} cursos. Quita uno antes de añadir este.
-              </p>
-            )
-          ) : (
-            <Link href={`/buscar?preseleccionado=${course.id}`} className={styles.botonComparar}>
-              <IconoComparar />
-              Comparar este curso
-            </Link>
-          )}
+          {/* HU-041: añadir o quitar de la cesta de comparación, sin salir de la
+              ficha. Tampoco depende de si el curso tiene enlace de salida. */}
+          <BotonCesta courseId={course.id} title={course.title} />
 
           {enlace && (
             <div className={styles.acciones}>
