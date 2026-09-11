@@ -133,14 +133,16 @@ export default function Privacidad() {
 
       <h2>Tus derechos</h2>
       <p>
-        Si tienes cuenta, tres de estos derechos los ejerces tú directamente y al momento,
+        Si tienes cuenta, cuatro de estos derechos los ejerces tú directamente y al momento,
         sin pedirle permiso a nadie, desde <Link href="/mi-cuenta">tu cuenta</Link>:{" "}
         <strong>ver qué datos tenemos sobre ti</strong>, con para qué y durante cuánto tiempo
-        (acceso); <strong>descargarte todos tus datos</strong> en un fichero (portabilidad); y{" "}
-        <strong>borrar la cuenta entera</strong> con todo lo que cuelga de ella (supresión).
+        (acceso); <strong>corregir tu correo</strong> si cambia o te equivocaste al darlo
+        (rectificación); <strong>descargarte todos tus datos</strong> en un fichero
+        (portabilidad); y <strong>borrar la cuenta entera</strong> con todo lo que cuelga de
+        ella (supresión).
       </p>
       <p>
-        Los demás derechos —rectificación, oposición y limitación— puedes ejercerlos
+        Los demás derechos —oposición y limitación— puedes ejercerlos
         escribiendo a <strong>{TITULAR.email}</strong>. Si no tienes cuenta, en la práctica no
         conservamos información que permita identificarte más allá de los registros técnicos
         mencionados. También puedes reclamar ante la Agencia Española de Protección de Datos.

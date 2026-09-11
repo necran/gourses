@@ -138,20 +138,73 @@ registros, y que la lógica se pruebe sin depender del correo real.
 
 ## Checklist de tests (obligatorio antes de cerrar)
 
-- [ ] Unitarios: validación de formato del correo nuevo antes de llamar a Supabase
-- [ ] Unitarios: la traducción del resultado — formato inválido, envío correcto,
-      «demasiado reciente» (→ tratado como enviado), error genérico sin filtrar el
-      mensaje de Supabase
-- [ ] Unitarios: la plantilla de «cambio de correo» está en español, sin `{{ }}` sin
+- [x] Unitarios: validación de formato del correo nuevo antes de llamar a Supabase
+- [x] Unitarios: la traducción del resultado — formato inválido, envío correcto,
+      «demasiado reciente» y correo ya existente (→ tratados como enviado, e
+      indistinguibles entre sí), error genérico sin filtrar el mensaje de Supabase
+- [x] Unitarios: la plantilla de «cambio de correo» está en español, sin `{{ }}` sin
       rellenar y sin enlaces a dominios que no sean `gourses.com`
-- [ ] Integración: un cambio de correo confirmado contra Supabase real conserva
+- [x] Integración: un cambio de correo confirmado contra Supabase real conserva
       `user.id`, la sesión y los favoritos
-- [ ] Integración: pedir el cambio a un correo que ya tiene cuenta no completa el
+- [x] Integración: pedir el cambio a un correo que ya tiene cuenta no completa el
       cambio y no distingue su respuesta de la del caso libre
-- [ ] E2E: un test por cada criterio de aceptación de arriba
-- [ ] E2E: la política de privacidad, para el correo, ya no remite solo al buzón
-- [ ] `/security-review` ejecutado, sin hallazgos críticos/altos abiertos
+- [x] E2E: un test por cada criterio de aceptación de arriba
+- [x] E2E: la política de privacidad, para el correo, ya no remite solo al buzón
+- [x] `/security-review` ejecutado, sin hallazgos críticos/altos abiertos
 
 ## Estado
 
-`Abierta`
+**Bloqueada** — probada y fusionable, pero **no cerrada**: la plantilla de correo
+sigue sin subirse a ningún sitio, así que hoy quien pide el cambio recibe el
+«Confirm Email Change» de fábrica, en inglés, en el NAS y en Cloud. No es una
+cuestión de desplegar (eso sí se agrupa con el siguiente lote, como manda la regla
+del proyecto): es que la plantilla en español **todavía no existe en ningún
+Supabase**, así que el criterio de rectificación en español no se cumple de
+verdad todavía. Motivo del bloqueo: el NAS no responde por SSH (puerto 22
+rechazado desde esta máquina; el resto del NAS —Supabase, Mailpit— sí funciona) y
+no hay `SUPABASE_ACCESS_TOKEN`/`SUPABASE_PROJECT_REF` en este entorno para
+subirla a Cloud por la Management API.
+
+Queda por hacer, en cuanto haya acceso a uno u otro:
+
+    npm run correo:plantillas-nas   # NAS, cuando vuelva el SSH
+    npm run correo:plantillas       # Cloud, con las credenciales de quien la gestione
+
+- Unitarios: 456 pasan (20 nuevos: `resultadoCambioCorreo`, `avisoCambioCorreo`, y
+  la plantilla `cambio-de-correo` sumada a la suite de las tres).
+- Integración: 115 pasan (4 nuevos, contra el Supabase real del NAS, con Mailpit
+  para leer los dos enlaces de confirmación — ver `MAILPIT_URL` en `.env.example`).
+- E2E: 8 propios (`cambiar-correo.spec.ts`) + 1 test de HU-036 reescrito porque su
+  texto exacto cambió al mover la rectificación a su propio párrafo.
+- Revisión de seguridad: sin hallazgos.
+
+## Lo que se descubrió a mano que ningún test habría avisado
+
+El flujo real (con `@supabase/ssr`, que usa PKCE) se comprobó a mano en el
+navegador porque el comportamiento de las dos confirmaciones no está documentado
+de forma obvia, y una implementación ingenua se equivoca:
+
+- **La primera confirmación de las dos no trae `code`.** Redirige con
+  `?message=Confirmation+link+accepted...` — sin `code` y sin `error`. La primera
+  versión del callback trataba «sin `code`» como enlace inválido, así que
+  confirmar el primero de los dos enlaces (que había funcionado) enseñaba «Ese
+  enlace ya no vale». Se corrigió distinguiendo `error` (fallo de verdad) de «ni
+  `code` ni `error`» (primera confirmación, éxito parcial).
+- **Solo la segunda trae `code`**, y solo al canjearlo se completa el cambio y se
+  limpia `new_email`.
+- Los dos hallazgos se confirmaron reproduciendo el ciclo completo dos veces
+  contra la cuenta real de desarrollo (cambiándola y devolviéndola a su correo
+  original), y quedaron fijados en los comentarios de
+  `mi-cuenta/correo/callback/route.ts` y en el test de integración.
+
+## Ajustes respecto al plan
+
+- **`resultadoCambioCorreo`, no reutilizar `resultadoEnvio`.** Además de
+  «demasiado reciente» hay que tapar `email_exists` (comprobado: Supabase sí lo
+  revela para este endpoint, a diferencia del acceso), y forzar ese caso en el
+  módulo de `enviarEnlace` habría acoplado dos historias por un parecido de
+  superficie. Mismo patrón, módulo propio.
+- **De paso**, la política de privacidad reordena «Tus derechos» para que la
+  rectificación se una a las otras tres que ya se ejercían desde la cuenta
+  (acceso, portabilidad, supresión), y el párrafo del buzón se queda solo con
+  oposición y limitación.

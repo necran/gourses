@@ -10,7 +10,13 @@ import {
 const URL_DE_PRUEBA = "https://gourses.com/acceder/callback?code=abc123";
 
 function renderizada(id: string): string {
-  return renderizar(leerPlantilla(id), { ConfirmationURL: URL_DE_PRUEBA });
+  // `Email`/`NewEmail` solo los usa `cambio-de-correo`; pasarlos siempre no
+  // afecta a las otras dos, que no los mencionan.
+  return renderizar(leerPlantilla(id), {
+    ConfirmationURL: URL_DE_PRUEBA,
+    Email: "actual@example.com",
+    NewEmail: "nuevo@example.com",
+  });
 }
 
 // Palabras de la plantilla de fábrica de Supabase. Si alguna sobrevive, es que
@@ -30,10 +36,15 @@ describe("plantillas de correo de Supabase Auth", () => {
   // Las dos, no una: `signInWithOtp` manda «Confirm signup» a quien entra por
   // primera vez y «Magic Link» a quien ya tiene cuenta.
   it("cubre los dos correos que puede mandar el formulario de acceso", () => {
-    expect(PLANTILLAS_AUTH.map((p) => p.claveSupabase).sort()).toEqual([
-      "confirmation",
-      "magic_link",
-    ]);
+    const claves = PLANTILLAS_AUTH.map((p) => p.claveSupabase);
+    expect(claves).toContain("confirmation");
+    expect(claves).toContain("magic_link");
+  });
+
+  // HU-037: el cambio de correo es otro correo más que Supabase puede mandar,
+  // y con el mismo riesgo que los otros dos de quedarse en inglés de fábrica.
+  it("cubre el correo de cambio de dirección", () => {
+    expect(PLANTILLAS_AUTH.map((p) => p.claveSupabase)).toContain("email_change");
   });
 
   for (const plantilla of PLANTILLAS_AUTH) {

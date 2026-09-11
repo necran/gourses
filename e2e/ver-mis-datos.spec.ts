@@ -129,9 +129,11 @@ test.describe("HU-036 — ver mis datos en la cuenta", () => {
     await page.goto("/privacidad");
     const derechos = page.locator("main");
 
-    // El acceso ya no está en la lista de «escribiendo a un buzón».
+    // El acceso ya no está en la lista de «escribiendo a un buzón». (La
+    // rectificación tampoco, desde HU-037: esa frase se comprueba en su
+    // propio spec, cambiar-correo.spec.ts, para no acoplar dos historias a la
+    // misma cadena exacta.)
     await expect(derechos).toContainText(/ver qué datos tenemos sobre ti/i);
-    await expect(derechos).toContainText(/rectificación, oposición y limitación/i);
     await expect(derechos).not.toContainText(/acceso, rectificación, oposición y limitación/i);
   });
 });

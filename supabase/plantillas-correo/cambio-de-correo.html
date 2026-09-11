@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <meta name="supported-color-schemes" content="light dark">
+    <title>Confirma el cambio de correo en Gourses</title>
+    <style>
+      /* Mismo criterio que en `enlace-de-acceso.html`: lo que importa va en
+         línea, aquí solo las consultas de medios que no admiten atributo. */
+      @media (prefers-color-scheme: dark) {
+        .fondo { background: #11101a !important; }
+        .tarjeta { background: #1b1a26 !important; border-color: #2c2a3d !important; }
+        .texto { color: #eceaf5 !important; }
+        .apagado { color: #a09eb4 !important; }
+        .caja-enlace { background: #11101a !important; border-color: #2c2a3d !important; }
+        .boton { background: #9d7ffc !important; }
+        .boton a { color: #11101a !important; }
+        .marca { color: #eceaf5 !important; }
+      }
+      @media (max-width: 620px) {
+        .relleno { padding: 28px 22px !important; }
+        .titulo { font-size: 22px !important; }
+      }
+    </style>
+  </head>
+  <body class="fondo" style="margin:0; padding:0; background:#f4f2fb; -webkit-text-size-adjust:100%;">
+    <div style="display:none; max-height:0; overflow:hidden; opacity:0; color:transparent; height:0; width:0;">
+      Confirma el cambio de correo de tu cuenta. Hace falta confirmarlo también desde la otra dirección.
+    </div>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="fondo" style="background:#f4f2fb;">
+      <tr>
+        <td align="center" style="padding:32px 16px;">
+          <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%; max-width:600px;">
+
+            <tr>
+              <td align="center" style="padding-bottom:20px;">
+                <span class="marca" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:20px; font-weight:800; letter-spacing:-0.02em; color:#11101a;">gourses</span>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="tarjeta" style="background:#ffffff; border:1px solid #e4e0f2; border-radius:14px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td class="relleno" style="padding:36px 40px;">
+
+                      <h1 class="titulo texto" style="margin:0 0 14px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:25px; line-height:1.25; font-weight:700; color:#11101a;">Confirma el cambio de correo</h1>
+
+                      <!-- Este correo llega igual a las dos direcciones —la
+                           actual y la nueva—, así que el texto vale para
+                           cualquiera de las dos sin decir «tu correo antiguo»
+                           ni «tu correo nuevo»: {{ .Email }} y {{ .NewEmail }}
+                           ya lo dejan claro por sí solos. -->
+                      <p class="texto" style="margin:0 0 26px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:16px; line-height:1.6; color:#33323f;">
+                        Se ha pedido cambiar el correo de tu cuenta en <strong>gourses.com</strong>, de
+                        <strong>{{ .Email }}</strong> a <strong>{{ .NewEmail }}</strong>. Para que el
+                        cambio se aplique hace falta confirmarlo desde las dos direcciones; pulsa el
+                        botón para confirmarlo desde esta.
+                      </p>
+
+                      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 26px;">
+                        <tr>
+                          <td class="boton" align="center" bgcolor="#7853d5" style="background:#7853d5; border-radius:999px;">
+                            <a href="{{ .ConfirmationURL }}" style="display:inline-block; padding:15px 34px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:16px; font-weight:700; line-height:1; color:#fcfbff; text-decoration:none;">Confirmar cambio de correo</a>
+                          </td>
+                        </tr>
+                      </table>
+
+                      <p class="apagado" style="margin:0 0 22px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:14px; line-height:1.6; color:#575665;">
+                        El enlace caduca en poco tiempo y solo sirve una vez.
+                      </p>
+
+                      <p class="apagado" style="margin:0 0 8px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:13px; line-height:1.5; color:#575665;">
+                        ¿No funciona el botón? Copia esta dirección en tu navegador:
+                      </p>
+                      <p class="caja-enlace apagado" style="margin:0; padding:12px 14px; background:#f7f6fd; border:1px solid #e4e0f2; border-radius:8px; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12px; line-height:1.5; color:#575665; word-break:break-all;">{{ .ConfirmationURL }}</p>
+
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="relleno" style="padding:24px 40px 0;">
+                <p class="apagado" style="margin:0 0 12px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:13px; line-height:1.6; color:#575665;">
+                  <strong>Si no has sido tú</strong>, no pulses el enlace: mientras no se confirme desde
+                  las dos direcciones, el correo de la cuenta no cambia. Si te preocupa que alguien
+                  tenga acceso a tu cuenta, entra y revisa <a href="https://gourses.com/mi-cuenta" style="color:#7853d5; text-decoration:underline;">Mi cuenta</a>.
+                </p>
+                <p class="apagado" style="margin:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:13px; line-height:1.6; color:#575665;">
+                  Este correo solo se envía cuando alguien pide este cambio desde <a href="https://gourses.com" style="color:#7853d5; text-decoration:underline;">gourses.com</a>. Nunca te escribimos publicidad.
+                </p>
+              </td>
+            </tr>
+
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

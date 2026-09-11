@@ -35,6 +35,78 @@
   color: var(--ink);
 }
 
+/* Formulario de cambio de correo (HU-037). Neutro a propósito: `.campo` y
+   `.etiqueta` ya existían pero teñidos de rojo para la zona de peligro, y este
+   formulario no lo es. */
+.formularioCorreo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 24rem;
+}
+
+.etiquetaCorreo {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+
+.campoCorreo {
+  padding: 0.65rem 0.9rem;
+  border: 1.5px solid var(--line);
+  border-radius: 0.75rem;
+  background: var(--bg);
+  color: inherit;
+  font-family: inherit;
+  font-size: 0.92rem;
+  outline: none;
+}
+
+.campoCorreo:focus {
+  border-color: var(--accent);
+}
+
+.errorCorreo {
+  color: var(--danger);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+/* Tres estados posibles al volver del enlace de confirmación: uno de éxito,
+   uno pendiente (falta la otra confirmación) y uno de fallo. Cada uno con el
+   tono que le toca — un cambio a medias no es un error, y no debe pintarse
+   como tal. */
+.avisoCorreoListo {
+  background: var(--accent-soft);
+  color: var(--accent-soft-ink);
+  border-radius: 0.9rem;
+  padding: 0.9rem 1.1rem;
+  margin: 0 0 1.1rem;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.avisoCorreoPendiente {
+  background: var(--warm-soft);
+  color: var(--warm-soft-ink);
+  border-radius: 0.9rem;
+  padding: 0.9rem 1.1rem;
+  margin: 0 0 1.1rem;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.avisoCorreoFallo {
+  background: var(--danger-soft);
+  color: var(--danger-soft-ink);
+  border: 1px solid var(--danger);
+  border-radius: 0.9rem;
+  padding: 0.9rem 1.1rem;
+  margin: 0 0 1.1rem;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
 .boton {
   display: inline-flex;
   align-items: center;

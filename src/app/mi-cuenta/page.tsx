@@ -5,18 +5,30 @@ import { createSupabaseSessionClient, getUsuarioActual } from "../../lib/supabas
 import { contarFavoritos } from "../../lib/favorites/favorites";
 import { avisosActivados } from "../../lib/alertas/preferencias";
 import { resumenDeCuenta } from "../../lib/cuenta/resumen";
+import { avisoCambioCorreo } from "../../lib/auth/aviso-cambio-correo";
 import { cerrarSesion } from "../acceder/actions";
 import { BorrarCuentaForm } from "./borrar-form";
 import { AvisosForm } from "./avisos-form";
 import { CerrarSesionGlobalForm } from "./cerrar-sesion-global-form";
+import { CambiarCorreoForm } from "./cambiar-correo-form";
 import styles from "./page.module.css";
+
+const CLASE_POR_TONO = {
+  listo: "avisoCorreoListo",
+  pendiente: "avisoCorreoPendiente",
+  fallo: "avisoCorreoFallo",
+} as const;
 
 export const metadata: Metadata = {
   title: "Mi cuenta",
   robots: { index: false, follow: false },
 };
 
-export default async function MiCuentaPage() {
+interface MiCuentaPageProps {
+  searchParams: Promise<{ [clave: string]: string | string[] | undefined }>;
+}
+
+export default async function MiCuentaPage({ searchParams }: MiCuentaPageProps) {
   const usuario = await getUsuarioActual();
 
   // Sin sesión no se muestra un error, se lleva a acceder: es lo que la
@@ -50,6 +62,9 @@ export default async function MiCuentaPage() {
     avisosDeBajadaDePrecio: avisos,
   });
 
+  // Lo manda `mi-cuenta/correo/callback` al volver del enlace de confirmación.
+  const avisoCorreo = avisoCambioCorreo((await searchParams).correo);
+
   return (
     <main className={styles.main}>
       <h1>Mi cuenta</h1>
@@ -74,6 +89,36 @@ export default async function MiCuentaPage() {
           Puedes <a href="#mis-datos">descargarlo todo</a> o{" "}
           <a href="#borrar-cuenta">borrar la cuenta</a> cuando quieras.
         </p>
+      </section>
+
+      {/* Rectificación (RGPD art. 16): el correo es el único dato que se
+          guarda y el único corregible, y hasta ahora no había forma de
+          cambiarlo sin escribir a un buzón que no existe (HU-037). También es
+          la única vía de recuperar la cuenta si se pierde el acceso al correo
+          con el que se creó. */}
+      <section id="cambiar-correo" className={styles.seccion}>
+        <h2>Cambiar tu correo</h2>
+        {avisoCorreo && (
+          <p
+            className={styles[CLASE_POR_TONO[avisoCorreo.tono]]}
+            // Un enlace que ya no vale es un fallo y se anuncia como tal; los
+            // otros dos son informativos, igual que el resto de confirmaciones
+            // de esta página.
+            role={avisoCorreo.tono === "fallo" ? "alert" : "status"}
+          >
+            {avisoCorreo.texto}
+          </p>
+        )}
+        {usuario.new_email && (
+          <p className={styles.nota} role="status">
+            Tienes un cambio pendiente a <strong>{usuario.new_email}</strong>. Confirma los dos
+            enlaces que te hemos mandado —al correo actual y al nuevo— para completarlo.
+          </p>
+        )}
+        <p className={styles.nota}>
+          Por seguridad, pedimos confirmarlo desde las dos direcciones: la actual y la nueva.
+        </p>
+        <CambiarCorreoForm />
       </section>
 
       <section className={styles.seccion}>
