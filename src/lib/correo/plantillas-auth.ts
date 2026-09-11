@@ -21,7 +21,7 @@ export interface PlantillaAuth {
   /** Nombre del fichero, sin extensión. */
   id: string;
   /** Cómo se llama en la configuración de Supabase Auth. */
-  claveSupabase: "confirmation" | "magic_link";
+  claveSupabase: "confirmation" | "magic_link" | "email_change";
   asunto: string;
 }
 
@@ -35,6 +35,15 @@ export const PLANTILLAS_AUTH: readonly PlantillaAuth[] = [
     id: "confirmar-registro",
     claveSupabase: "confirmation",
     asunto: "Confirma tu correo y entra en Gourses",
+  },
+  {
+    // HU-037. Con el cambio seguro activado, Supabase manda esta misma
+    // plantilla a las dos direcciones —la actual y la nueva—, así que el
+    // texto tiene que valer para cualquiera de las dos sin decir «antigua» ni
+    // «nueva»: para eso están {{ .Email }} y {{ .NewEmail }}.
+    id: "cambio-de-correo",
+    claveSupabase: "email_change",
+    asunto: "Confirma el cambio de correo en Gourses",
   },
 ] as const;
 
@@ -54,6 +63,9 @@ export const VARIABLES_SUPABASE = [
   "SiteURL",
   "RedirectTo",
   "Email",
+  // Solo la rellena la plantilla de cambio de correo (HU-037): la dirección a
+  // la que se está cambiando.
+  "NewEmail",
   "Data",
 ] as const;
 

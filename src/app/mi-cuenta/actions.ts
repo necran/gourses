@@ -4,6 +4,10 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createSupabaseSessionClient } from "../../lib/supabase/session-client";
 import { confirmacionCoincide } from "../../lib/auth/borrado";
+import { cerrarSesionGlobalConCliente } from "../../lib/auth/cerrar-sesion-global";
+import { isValidEmail, normalizeEmail } from "../../lib/auth/email";
+import { resultadoCambioCorreo, type ResultadoCambioCorreo } from "../../lib/auth/resultado-cambio-correo";
+import { urlSitio } from "../../lib/auth/sitio";
 import { guardarPreferenciaAvisos } from "../../lib/alertas/preferencias";
 
 export interface AvisosEstado {
@@ -87,4 +91,74 @@ export async function borrarCuenta(
   await client.auth.signOut();
 
   redirect("/cuenta-borrada");
+}
+
+export interface CierreGlobalEstado {
+  error?: string;
+}
+
+// Cierra la sesión en todos los dispositivos (HU-038), no solo en este
+// navegador. La decisión de qué hacer con el error de Supabase vive en
+// `cerrarSesionGlobalConCliente`, que se prueba aparte con un cliente falso;
+// aquí solo se resuelve la sesión y se redirige.
+// El botón no lleva ningún campo: los dos parámetros están aquí porque
+// `useActionState` los exige, no porque haya nada que leer de ninguno.
+/* eslint-disable @typescript-eslint/no-unused-vars */
+export async function cerrarSesionGlobal(
+  _previo: CierreGlobalEstado,
+  _formData: FormData
+): Promise<CierreGlobalEstado> {
+  /* eslint-enable @typescript-eslint/no-unused-vars */
+  const client = await createSupabaseSessionClient();
+  const {
+    data: { user },
+  } = await client.auth.getUser();
+
+  if (!user) redirect("/acceder");
+
+  const resultado = await cerrarSesionGlobalConCliente(client);
+  if (resultado.error) return resultado;
+
+  redirect("/");
+}
+
+// Pide el cambio de correo de la cuenta (HU-037).
+//
+// No completa nada por sí solo: Supabase manda un enlace de confirmación a la
+// dirección nueva y, con el cambio seguro activado (que es lo que hay
+// configurado), otro a la antigua — el cambio no se aplica hasta que se
+// confirman las dos (comprobado contra el Supabase real del proyecto). Esta
+// acción solo dispara ese envío.
+export async function cambiarCorreo(
+  _previo: ResultadoCambioCorreo,
+  formData: FormData
+): Promise<ResultadoCambioCorreo> {
+  const client = await createSupabaseSessionClient();
+  const {
+    data: { user },
+  } = await client.auth.getUser();
+
+  if (!user) redirect("/acceder");
+
+  const nuevo = normalizeEmail(String(formData.get("correo") ?? ""));
+
+  if (!isValidEmail(nuevo)) {
+    return { error: "Escribe una dirección de correo válida." };
+  }
+
+  // No es una medida de seguridad —Supabase lo comprobaría igual—, es evitar
+  // un viaje de ida y vuelta por correo para no cambiar nada.
+  if (user.email && normalizeEmail(user.email) === nuevo) {
+    return { error: "Esa ya es la dirección de tu cuenta." };
+  }
+
+  const { error } = await client.auth.updateUser(
+    { email: nuevo },
+    // Nunca `TITULAR.url` fijo ni la cabecera `Host`: este enlace viaja por
+    // correo, y un destino tomado de lo que mande quien llama lo convertiría
+    // en un redirector a un sitio ajeno (mismo motivo que en el acceso).
+    { emailRedirectTo: `${urlSitio()}/mi-cuenta/correo/callback` }
+  );
+
+  return resultadoCambioCorreo(error);
 }

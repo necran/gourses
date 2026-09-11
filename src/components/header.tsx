@@ -27,9 +27,16 @@ export async function Header() {
       <nav className={styles.nav} aria-label="Principal">
         <Link href="/buscar">Buscar cursos</Link>
         {usuario ? (
-          <Link href="/mi-cuenta" className={styles.here}>
-            Mi cuenta
-          </Link>
+          <>
+            {/* Con sesión, la lista de guardados es un destino habitual y hasta
+                ahora solo se llegaba desde un enlace escondido en la cuenta
+                (HU-035). Sin sesión no se muestra: llevaría a la página de
+                acceso sin explicar por qué. */}
+            <Link href="/favoritos">Favoritos</Link>
+            <Link href="/mi-cuenta" className={styles.here}>
+              Mi cuenta
+            </Link>
+          </>
         ) : (
           <Link href="/acceder" className={styles.primary}>
             Acceder

@@ -65,6 +65,7 @@ describeIfConfigured("HU-024 — exportación de los datos propios", () => {
     return componerExportacion({
       correo,
       altaEn: "2026-01-01T00:00:00.000Z",
+      ultimoAccesoEn: "2026-01-02T00:00:00.000Z",
       avisosDeBajadaDePrecio: avisos,
       favoritos,
     });

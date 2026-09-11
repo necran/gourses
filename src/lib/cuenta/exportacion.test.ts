@@ -36,6 +36,7 @@ function entrada(overrides: Partial<EntradaExportacion> = {}): EntradaExportacio
   return {
     correo: "alguien@example.com",
     altaEn: "2026-08-01T10:00:00.000Z",
+    ultimoAccesoEn: "2026-09-01T12:00:00.000Z",
     avisosDeBajadaDePrecio: true,
     favoritos: [curso()],
     ...overrides,
@@ -53,6 +54,7 @@ describe("componerExportacion", () => {
     expect(datos.cuenta).toEqual({
       correo: "alguien@example.com",
       altaEn: "2026-08-01T10:00:00.000Z",
+      ultimoAccesoEn: "2026-09-01T12:00:00.000Z",
     });
     expect(datos.preferencias).toEqual({ avisosDeBajadaDePrecio: true });
     expect(datos.favoritos).toHaveLength(1);

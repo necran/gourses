@@ -94,14 +94,51 @@ renovarse. La historia es exponerlo con una explicación honesta de qué hace y 
 
 ## Checklist de tests (obligatorio antes de cerrar)
 
-- [ ] Unitarios: la acción llama a `signOut` con `scope: "global"` y limpia cookies;
-      si `signOut` lanza, no redirige como si hubiera funcionado
-- [ ] Integración: tras el cierre global, un segundo cliente con un token de refresco
+- [x] Unitarios: la acción llama a `signOut` con `scope: "global"` (no el local por
+      defecto); si `signOut` devuelve error, no dice que ha funcionado ni filtra el
+      mensaje de Supabase
+- [x] Integración: tras el cierre global, un segundo cliente con un token de refresco
       previo del mismo usuario no consigue renovar sesión, contra Supabase real
-- [ ] Integración: el cierre global de A no afecta a la sesión de B
-- [ ] E2E: un test por cada criterio de aceptación de arriba
-- [ ] `/security-review` ejecutado, sin hallazgos críticos/altos abiertos
+- [x] Integración: el cierre global de A no afecta a la sesión de B
+- [x] E2E: un test por cada criterio de aceptación de arriba, salvo uno (ver abajo)
+- [x] `/security-review` ejecutado, sin hallazgos críticos/altos abiertos
 
 ## Estado
 
-`Abierta`
+**Cerrada** (probada y fusionada; pendiente de desplegar con el siguiente lote).
+
+- Unitarios: 436 pasan (3 nuevos de `cerrarSesionGlobalConCliente`).
+- Integración: 111 pasan (2 nuevos, contra el Supabase real del NAS).
+- E2E: los 4 de `cerrar-sesion-global.spec.ts`. En la suite completa hay dos fallos
+  intermitentes ajenos —`favoritos.spec.ts:116` (HU-019) y
+  `paginacion.spec.ts:27` (HU-025)—, ambos pasan 3/3 en aislamiento.
+- Revisión de seguridad: sin hallazgos. La acción no acepta ningún identificador de
+  usuario ni de sesión desde el formulario —opera solo sobre la sesión con la que
+  Supabase identifica la petición—, así que no hay manera de que cierre la de otra
+  persona; comprobado también con el test de integración de aislamiento.
+
+## Un criterio que no se prueba en e2e, y por qué
+
+«Otro navegador con la sesión abierta deja de estar identificado» no tiene test de
+navegador: el token de acceso ya emitido sigue siendo válido hasta que expira
+(minutos), y lo que revoca el cierre global es la capacidad de **renovarlo** — no hay
+forma de observar la diferencia en un navegador automatizado sin esperar esa
+expiración de verdad. Se prueba donde sí es determinista y rápido: el test de
+integración llama a `refreshSession()` con el token de refresco del «segundo
+dispositivo» después del cierre global y comprueba que Supabase lo rechaza, que es
+exactamente lo que ese navegador haría al necesitar un token nuevo.
+
+## Ajustes respecto al plan
+
+- **La lógica vive en `src/lib/auth/cerrar-sesion-global.ts`**, no directamente en el
+  server action: un fichero `"use server"` solo puede exportar funciones asíncronas,
+  así que `cerrarSesionGlobalConCliente(client)` es lo que se prueba con un cliente
+  falso, y la acción en `mi-cuenta/actions.ts` solo resuelve la sesión y redirige.
+- **No hace falta limpiar cookies a mano.** `scope: "global"` también cierra la
+  sesión de quien lo pide, y las cookies se limpian por el mismo mecanismo que ya
+  usa `cerrarSesion` (el cliente de `createSupabaseSessionClient` las escribe via
+  `setAll` en la misma respuesta). Comprobado en el navegador: tras pulsar el botón,
+  `/mi-cuenta` vuelve a pedir acceso.
+- **Botón de texto, no un segundo `.boton`**, para que no compita en peso visual con
+  «Cerrar sesión» — es la opción que se usa casi nunca, y la mayoría de las veces se
+  quiere la normal.

@@ -41,6 +41,17 @@ export async function listarFavoritos(client: SupabaseClient): Promise<FavoriteC
   return getCoursesByIds(client, ids);
 }
 
+// Cuántos favoritos tiene la persona, para la sección «Mis favoritos» de
+// `/mi-cuenta` (HU-035).
+//
+// Cuenta sobre `listarFavoritos`, no con un `count(*)` de la tabla: así el
+// número coincide con lo que se ve al abrir `/favoritos` —lo pintable, sin los
+// cursos que ya no están en el catálogo—. Un `count` de `favorites` diría un
+// número más alto que la lista y confundiría.
+export async function contarFavoritos(client: SupabaseClient): Promise<number> {
+  return (await listarFavoritos(client)).length;
+}
+
 export async function esFavorito(client: SupabaseClient, courseId: string): Promise<boolean> {
   if (!isValidCourseId(courseId)) return false;
 

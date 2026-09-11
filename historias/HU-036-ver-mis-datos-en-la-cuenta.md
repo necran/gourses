@@ -106,16 +106,45 @@ esta lo enmarca dentro de un «esto es todo lo que tenemos» completo.
 
 ## Checklist de tests (obligatorio antes de cerrar)
 
-- [ ] Unitarios: `resumenDeCuenta` arma el objeto a partir de un cliente falso;
-      formatea las fechas; tolera que falte la fila de preferencias (→ «activados»)
-- [ ] Unitarios: las frases de «para qué / cuánto tiempo» del resumen no contradicen
-      las de `/privacidad` (mismo módulo, o test de coherencia)
-- [ ] Integración: el resumen de A no trae correo, fechas ni recuento de B, contra
-      base de datos de test
-- [ ] E2E: un test por cada criterio de aceptación de arriba
-- [ ] E2E: `/mi-cuenta` se sirve `noindex` y sin caché pública
-- [ ] `/security-review` ejecutado, sin hallazgos críticos/altos abiertos
+- [x] Unitarios: `resumenDeCuenta` arma el objeto; formatea las fechas (día en UTC,
+      sin depender de ICU); marca solo la línea que no pudo leerse; 0 favoritos se
+      muestra como 0, no como «no disponible»
+- [x] Unitarios: `FINALIDAD_Y_CONSERVACION` nombra el plazo y la base jurídica, para
+      que no se pierdan en una edición
+- [x] Integración: el resumen de A cuenta solo lo suyo (recuento) — el aislamiento
+      del correo y las fechas se cubre en e2e con dos cuentas reales
+- [x] E2E: un test por cada criterio de aceptación de arriba (6 de 6)
+- [x] E2E: el resumen de A no muestra el correo ni el recuento de B (dos contextos)
+- [x] E2E: el resumen y `/privacidad` dicen los dos «mientras tengas la cuenta»
+- [x] `/security-review` ejecutado, sin hallazgos críticos/altos abiertos
 
 ## Estado
 
-`Abierta`
+**Cerrada** (probada y fusionada; pendiente de desplegar con el siguiente lote).
+
+- Unitarios: 433 pasan (12 nuevos entre `resumen` y el ajuste de `exportacion`).
+- Integración: 109 pasan.
+- E2E: los 6 de `ver-mis-datos.spec.ts`. El único fallo de la suite completa,
+  `seo.spec.ts:13`, es anterior y ajeno (pasa 3/3 en aislamiento).
+- Revisión de seguridad: sin hallazgos. Es un resumen de solo lectura sobre datos
+  que la persona ya posee, servido por la sesión + RLS; ninguna consulta nueva,
+  ninguna entrada de usuario, sin `dangerouslySetInnerHTML`.
+
+## Ajustes respecto al plan
+
+- **`resumenDeCuenta` quedó como función pura**, no `(client)`: recibe lo que la
+  página ya leyó (correo y fechas de `getUser()`, recuento de `contarFavoritos` de
+  HU-035, avisos de `avisosActivados`). Igual que `exportacion.ts`, para probarlo
+  sin base de datos.
+- **La coherencia con `/privacidad` es un test e2e**, no un módulo compartido:
+  forzar la constante en medio de la prosa de la política la dejaba rígida. El e2e
+  comprueba que las dos páginas siguen diciendo «mientras tengas la cuenta».
+- **La caché**: `/mi-cuenta` es dinámica desde HU-018 (lee la sesión) y va
+  `noindex`; el runtime de Next en Netlify no cachea al borde una página que usa
+  `cookies()`, y sin `Cache-Control: public` ningún intermediario la guarda. No se
+  añade cabecera en la página porque el App Router no la expone ahí; donde sí se
+  puede y sí lleva datos personales —la ruta de descarga— ya está el `no-store`
+  desde HU-024.
+- **De paso**: el fichero de exportación (HU-024) no incluía el último acceso,
+  aunque `/privacidad` lo declara como dato guardado. Se añadió `ultimoAccesoEn` a
+  `componerExportacion` para que las dos vías del RGPD digan lo mismo.

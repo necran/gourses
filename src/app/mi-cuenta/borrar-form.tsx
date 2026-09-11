@@ -10,7 +10,7 @@ export function BorrarCuentaForm({ correo }: { correo: string }) {
   const [estado, accion, enviando] = useActionState(borrarCuenta, INICIAL);
 
   return (
-    <section className={styles.zonaPeligro}>
+    <section id="borrar-cuenta" className={styles.zonaPeligro}>
       <h2>Borrar mi cuenta</h2>
       <p className={styles.aviso}>
         Se elimina tu correo y tus favoritos. <strong>No tiene vuelta atrás</strong> y no
