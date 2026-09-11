@@ -16,7 +16,7 @@ export default function Privacidad() {
       </p>
 
       <h1>Política de privacidad</h1>
-      <p className={styles.actualizado}>Última actualización: 11 de agosto de 2026</p>
+      <p className={styles.actualizado}>Última actualización: 11 de septiembre de 2026</p>
 
       <p>
         Esta política describe lo que este sitio hace <strong>hoy</strong>, no lo que suele
@@ -121,6 +121,16 @@ export default function Privacidad() {
         Lo que escribes en el buscador viaja en la dirección de la página para poder mostrar
         los resultados y compartir el enlace. No lo asociamos a ninguna persona ni lo
         guardamos en nuestra base de datos.
+      </p>
+
+      <h3>Cursos marcados para comparar</h3>
+      <p>
+        Cuando marcas cursos para compararlos, tu navegador guarda la lista —qué cursos son y su
+        título— en su almacenamiento local, para que no la pierdas al cambiar de página, volver
+        atrás o recargar. No son datos personales, no es una cookie y no se envía a nuestro
+        servidor: solo sale de tu dispositivo, dentro de la dirección de la página, cuando pulsas
+        «Comparar». Puedes borrarla cuando quieras con «Vaciar» en la barra de comparación, o
+        borrando los datos de este sitio en tu navegador.
       </p>
 
       <h3>Al salir hacia una plataforma</h3>

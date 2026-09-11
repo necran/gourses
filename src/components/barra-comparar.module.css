@@ -54,3 +54,10 @@
   border-width: 0 2px 2px 0;
   transform: rotate(45deg) translate(-1px, -1px);
 }
+
+/* La cesta ya tiene el máximo (HU-040): apagada, para que no responder al
+   pulsarla no parezca un fallo. */
+.casilla:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}

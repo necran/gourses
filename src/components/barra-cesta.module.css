@@ -1,0 +1,136 @@
+.barra {
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  box-shadow: 0 -12px 30px -22px oklch(30% 0.03 290 / 0.35);
+  padding: 0.75rem clamp(1rem, 4vw, 56px);
+}
+
+.contenido {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 1rem;
+}
+
+.recuento {
+  font-size: 0.88rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.recuento strong {
+  font-family: var(--font-display), -apple-system, "Segoe UI", sans-serif;
+  color: var(--accent);
+}
+
+/* Con cuatro títulos largos no caben en una fila: se desplazan en horizontal
+   en vez de hacer crecer la barra hasta tapar media pantalla. */
+.cursos {
+  list-style: none;
+  display: flex;
+  gap: 0.4rem;
+  flex: 1 1 18rem;
+  min-width: 0;
+  overflow-x: auto;
+  padding-block: 0.1rem;
+}
+
+.curso {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  flex-shrink: 0;
+  max-width: 15rem;
+  background: var(--accent-soft);
+  color: var(--accent-soft-ink);
+  border-radius: 999px;
+  padding: 0.2rem 0.2rem 0.2rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.titulo {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.quitar {
+  flex-shrink: 0;
+  display: grid;
+  place-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font-size: 1.05rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.quitar:hover {
+  background: var(--surface);
+}
+
+.acciones {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.vaciar,
+.comparar {
+  border-radius: 999px;
+  font-family: var(--font-display), -apple-system, "Segoe UI", sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.55rem 1.15rem;
+  cursor: pointer;
+}
+
+.vaciar {
+  border: 1.5px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+}
+
+.comparar {
+  border: none;
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.comparar:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.quitar:focus-visible,
+.vaciar:focus-visible,
+.comparar:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.ayuda {
+  max-width: 1280px;
+  margin: 0.4rem auto 0;
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+}
+
+.oculto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

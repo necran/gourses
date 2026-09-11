@@ -126,17 +126,69 @@ favoritos son HU-041; `/comparar` es HU-042.
 
 ## Checklist de tests (obligatorio antes de cerrar)
 
-- [ ] Unitarios: `leerCesta` con JSON inválido, ids inválidos, repetidos, más de 4,
-      títulos no textuales; `anadir`/`quitar`/`alternar`/`vaciar`; tope de
-      `MAX_COMPARADOS`; almacenamiento que lanza al leer o escribir
-- [ ] Integración: no hace falta fichero nuevo si no se añade ninguna consulta (la
+- [x] Unitarios: `leerCesta` con JSON inválido, ids inválidos, repetidos, más de 4,
+      títulos no textuales; `anadir`/`quitar`/`vaciar`; tope de
+      `MAX_COMPARADOS`; almacenamiento que lanza al leer o escribir —
+      `cesta-comparar.test.ts` y `almacen-cesta.test.ts` (34 tests)
+- [x] Integración: no hace falta fichero nuevo: no se añade ninguna consulta (la
       comparación reutiliza `getCoursesByIds`, ya cubierta)
-- [ ] E2E: un test por criterio de aceptación, incluidos «atrás» desde la ficha, otra
-      pestaña, recarga, almacenamiento bloqueado y sin JavaScript
-- [ ] E2E: los de HU-017 y HU-039 que sigan aplicando, adaptados sin relajar lo que
-      comprueban
-- [ ] `/security-review` ejecutado, sin hallazgos críticos/altos abiertos
+- [x] E2E: un test por criterio de aceptación, incluidos «atrás» desde la ficha, otra
+      pestaña, recarga, almacenamiento bloqueado y sin JavaScript —
+      `e2e/cesta-comparar.spec.ts` (14 tests)
+- [x] E2E: los de HU-017 (`comparar.spec.ts`) y HU-031
+      (`comparar-desde-cualquier-sitio.spec.ts`) pasan sin tocarlos. Los de HU-039 no
+      se trasladan tal cual: sus criterios (páginas distintas, quitar sin volver, tope,
+      sin JavaScript) están cubiertos por los de esta historia
+- [x] `/security-review` ejecutado, sin hallazgos críticos/altos abiertos
 
 ## Estado
 
-`Abierta`
+`Cerrada`
+
+### Resultado de los tests
+
+- Unitarios (`npx vitest run`): 456 pasan, 107 omitidos, sin regresiones.
+- Integración (`npm run test:integration`): 107 pasan (22 ficheros).
+- E2E (`npx playwright test`): 124 de 125. El que falla es
+  `seo.spec.ts › cada ficha tiene su propio título`, intermitente y ajeno a esta
+  historia (ya falló igual al cerrar HU-039): abre la ficha del primer resultado de
+  `/buscar` y a veces es un curso que otro test en paralelo acaba de sembrar y borrar,
+  así que ve «Curso no encontrado». Pasa en un segundo pase, igual que los 14 de esta
+  historia.
+
+### Revisión de seguridad
+
+Sin hallazgos. La cesta no añade ninguna vía nueva hacia el servidor ni ninguna
+consulta:
+
+- **Lo leído de `localStorage` es entrada externa** y se trata así: `leerCesta` descarta
+  JSON inválido, ids que no pasan `isValidCourseId`, repetidos, títulos que no son texto
+  (y recorta los largos a 300) y todo lo que pase de `MAX_COMPARADOS`.
+- **El servidor no se fía de la cesta**: solo le llega en `/comparar?ids=`, que sigue
+  saneando `parseCompareIds`. Los ids van codificados con `encodeURIComponent` y el
+  destino lo construye el propio código (`hrefComparar`), nunca una cadena guardada.
+- **Títulos pintados como texto** (JSX y atributos de React, que escapan), nunca como
+  HTML.
+- **Sin datos personales** en el almacén (ids y títulos de cursos públicos),
+  documentado en `/privacidad`.
+
+### Qué cambió respecto al diseño previsto
+
+- **La barra no se quedaba fija abajo.** `body` tenía `overflow-x: hidden`, que lo
+  convierte en un contenedor con scroll propio que nunca se desplaza, y eso anula
+  cualquier `position: sticky` de dentro. Los e2e pasaban igual porque «visible» en
+  Playwright no exige estar en pantalla. Se cambió a `overflow-x: clip` en `body` (mismo
+  efecto de no dejar scroll horizontal, sin ese problema) y se añadió
+  `toBeInViewport()` al test de la barra, que ahora falla si vuelve a pasar.
+- **`alternar` no se ha escrito**: aquí no lo usa nadie. Llega con el botón de la ficha
+  (HU-041).
+- **`?preseleccionado=` no se borra de la URL** tras sumarlo a la cesta: el test de
+  HU-031 comprueba esa URL, y HU-041 sustituye esa vía para quien tiene JavaScript.
+  Efecto menor aceptado: si alguien quita ese curso y recarga esa misma URL, vuelve a
+  entrar.
+
+### Visto de paso, fuera de esta historia
+
+En móvil (400 px), `/buscar` ya se cortaba por la derecha antes de esta historia: las
+tarjetas y el campo de palabra clave se salen de la pantalla. Queda como incidencia
+aparte.

@@ -3,6 +3,7 @@ import { Sora, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { Header } from "../components/header";
 import { Footer } from "../components/footer";
+import { BarraCesta } from "../components/barra-cesta";
 
 // Tipografía del rediseño (2026-08-24): Sora para titulares, Plus Jakarta Sans
 // para el cuerpo. Sustituyen a las Geist por defecto de la plantilla de
@@ -62,6 +63,7 @@ export default function RootLayout({
         <Header />
         {children}
         <Footer />
+        <BarraCesta />
       </body>
     </html>
   );

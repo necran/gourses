@@ -81,6 +81,13 @@ body {
   overflow-x: hidden;
 }
 
+/* `clip` y no `hidden` en el body: `hidden` lo convierte en un contenedor con
+   scroll propio (que nunca se desplaza), y eso deja sin efecto cualquier
+   `position: sticky` de dentro, como la barra de la cesta (HU-040). */
+body {
+  overflow-x: clip;
+}
+
 body {
   min-height: 100%;
   display: flex;
