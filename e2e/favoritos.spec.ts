@@ -123,7 +123,9 @@ test.describe("HU-019 — favoritos", () => {
 
       // Cerrar sesión de verdad, por donde lo haría cualquiera.
       await page.goto("/mi-cuenta");
-      await page.getByRole("button", { name: /cerrar sesión/i }).click();
+      // Exacto: desde HU-038 también está «Cerrar sesión en todos los
+      // dispositivos», y aquí se quiere el cierre normal.
+      await page.getByRole("button", { name: "Cerrar sesión", exact: true }).click();
       await expect(page).toHaveURL(/\/$/);
 
       // Y comprobar que de verdad se salió, no que lo parezca.
