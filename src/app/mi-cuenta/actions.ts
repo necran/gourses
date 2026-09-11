@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createSupabaseSessionClient } from "../../lib/supabase/session-client";
 import { confirmacionCoincide } from "../../lib/auth/borrado";
+import { cerrarSesionGlobalConCliente } from "../../lib/auth/cerrar-sesion-global";
 import { guardarPreferenciaAvisos } from "../../lib/alertas/preferencias";
 
 export interface AvisosEstado {
@@ -87,4 +88,33 @@ export async function borrarCuenta(
   await client.auth.signOut();
 
   redirect("/cuenta-borrada");
+}
+
+export interface CierreGlobalEstado {
+  error?: string;
+}
+
+// Cierra la sesión en todos los dispositivos (HU-038), no solo en este
+// navegador. La decisión de qué hacer con el error de Supabase vive en
+// `cerrarSesionGlobalConCliente`, que se prueba aparte con un cliente falso;
+// aquí solo se resuelve la sesión y se redirige.
+// El botón no lleva ningún campo: los dos parámetros están aquí porque
+// `useActionState` los exige, no porque haya nada que leer de ninguno.
+/* eslint-disable @typescript-eslint/no-unused-vars */
+export async function cerrarSesionGlobal(
+  _previo: CierreGlobalEstado,
+  _formData: FormData
+): Promise<CierreGlobalEstado> {
+  /* eslint-enable @typescript-eslint/no-unused-vars */
+  const client = await createSupabaseSessionClient();
+  const {
+    data: { user },
+  } = await client.auth.getUser();
+
+  if (!user) redirect("/acceder");
+
+  const resultado = await cerrarSesionGlobalConCliente(client);
+  if (resultado.error) return resultado;
+
+  redirect("/");
 }

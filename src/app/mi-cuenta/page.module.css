@@ -55,6 +55,40 @@
   filter: brightness(1.04);
 }
 
+/* Cierre normal y cierre global uno junto al otro (HU-038), pero sin igualar su
+   peso: la persona quiere la normal casi siempre, así que la global no lleva
+   el estilo de .boton — ver .botonTexto. */
+.cierreSesion {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem 1.4rem;
+}
+
+/* A propósito con menos presencia que .boton: un enlace de texto, no un botón
+   del mismo tamaño. Si pesara igual que «Cerrar sesión», alguien podría
+   pulsarla sin querer pensando que es la de siempre. */
+.botonTexto {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--ink-muted);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.botonTexto:hover {
+  color: var(--ink);
+}
+
+.botonTexto:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
 a.boton {
   display: inline-flex;
   text-decoration: none;

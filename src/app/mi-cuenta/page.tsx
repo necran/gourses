@@ -8,6 +8,7 @@ import { resumenDeCuenta } from "../../lib/cuenta/resumen";
 import { cerrarSesion } from "../acceder/actions";
 import { BorrarCuentaForm } from "./borrar-form";
 import { AvisosForm } from "./avisos-form";
+import { CerrarSesionGlobalForm } from "./cerrar-sesion-global-form";
 import styles from "./page.module.css";
 
 export const metadata: Metadata = {
@@ -123,11 +124,24 @@ export default async function MiCuentaPage() {
         </a>
       </section>
 
-      <form action={cerrarSesion}>
-        <button type="submit" className={styles.boton}>
-          Cerrar sesión
-        </button>
-      </form>
+      <div className={styles.cierreSesion}>
+        <form action={cerrarSesion}>
+          <button type="submit" className={styles.boton}>
+            Cerrar sesión
+          </button>
+        </form>
+        <CerrarSesionGlobalForm />
+      </div>
+      {/* La diferencia entre las dos, para que nadie pulse la global pensando
+          que es la de siempre, ni al revés cuando de verdad hace falta
+          (HU-038). */}
+      <p className={styles.nota}>
+        «Cerrar sesión» solo afecta a este navegador. Si entraste desde otro
+        dispositivo, o crees que alguien ha podido acceder a tu correo, usa «Cerrar
+        sesión en todos los dispositivos»: cierra todas tus sesiones abiertas, estén
+        donde estén. Los demás dispositivos dejan de estar identificados en cuanto
+        vuelven a necesitar renovarla, no al instante.
+      </p>
 
       <BorrarCuentaForm correo={usuario.email ?? ""} />
 
