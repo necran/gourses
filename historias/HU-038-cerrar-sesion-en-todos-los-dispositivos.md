@@ -112,6 +112,13 @@ renovarse. La historia es exponerlo con una explicación honesta de qué hace y 
 - E2E: los 4 de `cerrar-sesion-global.spec.ts`. En la suite completa hay dos fallos
   intermitentes ajenos —`favoritos.spec.ts:116` (HU-019) y
   `paginacion.spec.ts:27` (HU-025)—, ambos pasan 3/3 en aislamiento.
+
+  **Corrección (2026-09-11):** `favoritos.spec.ts:116` no era intermitente ni ajeno:
+  lo rompió esta historia. El test pulsaba el botón que contuviera «cerrar sesión», y
+  el nuevo «Cerrar sesión en todos los dispositivos» también lo contiene, así que
+  Playwright encuentra dos y falla siempre. Se detectó al unir esta rama con la de
+  comparación (HU-040 a HU-042) y se corrigió pidiendo el botón exacto «Cerrar
+  sesión», que es el que el test quiere pulsar. No se relajó nada de lo que comprueba.
 - Revisión de seguridad: sin hallazgos. La acción no acepta ningún identificador de
   usuario ni de sesión desde el formulario —opera solo sobre la sesión con la que
   Supabase identifica la petición—, así que no hay manera de que cierre la de otra
