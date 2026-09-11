@@ -9,6 +9,7 @@ import {
   leerCesta,
   nombreEnCesta,
   quitar,
+  reemplazar,
   serializarCesta,
   vaciar,
   type Cesta,
@@ -101,6 +102,30 @@ describe("anadir / quitar / vaciar", () => {
     expect(estaEnCesta([curso(A)], B)).toBe(false);
     expect(estaLlena(llena)).toBe(true);
     expect(estaLlena([curso(A)])).toBe(false);
+  });
+});
+
+describe("reemplazar (HU-042) — abrir una comparación la adopta", () => {
+  it("la cesta pasa a ser exactamente esos cursos, en su orden", () => {
+    expect(reemplazar([curso(A)], [curso(C), curso(B)])).toEqual([curso(C), curso(B)]);
+  });
+
+  it("devuelve la misma cesta si no cambia nada", () => {
+    const cesta: Cesta = [curso(A), curso(B)];
+    expect(reemplazar(cesta, [curso(A), curso(B)])).toBe(cesta);
+  });
+
+  it("pone al día un título viejo aunque los ids sean los mismos", () => {
+    expect(reemplazar([curso(A, "Viejo")], [curso(A, "Nuevo")])).toEqual([curso(A, "Nuevo")]);
+  });
+
+  it("aplica las reglas de siempre: ids válidos, sin repetidos, tope", () => {
+    const cursos = [curso("no-soy-un-uuid"), curso(A), curso(A), curso(B), curso(C), curso(D), curso(E)];
+    expect(reemplazar(CESTA_VACIA, cursos).map((c) => c.id)).toEqual([A, B, C, D]);
+  });
+
+  it("sin cursos, la cesta queda vacía", () => {
+    expect(reemplazar([curso(A)], [])).toBe(CESTA_VACIA);
   });
 });
 

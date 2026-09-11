@@ -3,12 +3,16 @@ import Link from "next/link";
 import { createSupabaseServerClient } from "../../lib/supabase/server-client";
 import { getCoursesByIds } from "../../lib/courses/get-course";
 import {
+  MAX_COMPARADOS,
   MIN_COMPARADOS,
   buildCompareRows,
+  hrefQuitarDeComparacion,
   parseCompareIds,
 } from "../../lib/courses/compare";
 import { safeExternalUrl } from "../../lib/courses/safe-external-url";
 import { sourceLabel } from "../../lib/courses/course-seo";
+import { EnlaceUltimaBusqueda } from "../../components/enlace-ultima-busqueda";
+import { AdoptarComparacion } from "./adoptar-comparacion";
 import styles from "./page.module.css";
 
 export const metadata: Metadata = {
@@ -30,13 +34,26 @@ export default async function CompararPage({ searchParams }: CompararPageProps) 
 
   const cursos = ids.length > 0 ? await getCoursesByIds(createSupabaseServerClient(), ids) : [];
   const filas = buildCompareRows(cursos);
+  const idsComparados = cursos.map((c) => c.id);
+
+  // HU-042: solo si la dirección trae algún id. /comparar a secas (escrito a
+  // mano, o desde un botón sin nada marcado) no vacía la cesta de nadie.
+  const adoptar = ids.length > 0 && (
+    <AdoptarComparacion cursos={cursos.map((c) => ({ id: c.id, titulo: c.title }))} />
+  );
+
+  // A la última búsqueda de esta pestaña, con sus filtros (HU-042).
+  const volver = (
+    <p className={styles.volver}>
+      <EnlaceUltimaBusqueda>← Volver a la búsqueda</EnlaceUltimaBusqueda>
+    </p>
+  );
 
   if (cursos.length < MIN_COMPARADOS) {
     return (
       <main className={styles.main}>
-        <p className={styles.volver}>
-          <Link href="/buscar">← Volver a la búsqueda</Link>
-        </p>
+        {adoptar}
+        {volver}
         <h1>Comparar cursos</h1>
         <p className={styles.aviso} role="status">
           {cursos.length === 0
@@ -49,15 +66,24 @@ export default async function CompararPage({ searchParams }: CompararPageProps) 
 
   return (
     <main className={styles.main}>
-      <p className={styles.volver}>
-        <Link href="/buscar">← Volver a la búsqueda</Link>
-      </p>
+      {adoptar}
+      {volver}
 
       <h1>Comparar cursos</h1>
       <p className={styles.intro}>
         Los mismos datos para todos, vengan de la plataforma que vengan. Un hueco significa que
         esa plataforma no publica ese dato, no que el curso valga cero.
       </p>
+
+      {/* Vuelve a la búsqueda con estos cursos ya marcados en la cesta, que es
+          esta comparación (HU-042). */}
+      {cursos.length < MAX_COMPARADOS && (
+        <p className={styles.anadirOtro}>
+          <EnlaceUltimaBusqueda className={styles.botonAnadirOtro}>
+            + Añadir otro curso
+          </EnlaceUltimaBusqueda>
+        </p>
+      )}
 
       <div className={styles.tablaContenedor}>
         <table className={styles.tabla}>
@@ -114,6 +140,24 @@ export default async function CompararPage({ searchParams }: CompararPageProps) 
                   </td>
                 );
               })}
+            </tr>
+            {/* HU-042: un enlace a la misma comparación sin ese curso. Funciona
+                sin JavaScript; con él, la cesta se pone al día al abrirse. */}
+            <tr>
+              <th scope="row" className={styles.etiqueta}>
+                Quitar
+              </th>
+              {cursos.map((c) => (
+                <td key={c.id}>
+                  <Link
+                    href={hrefQuitarDeComparacion(idsComparados, c.id)}
+                    className={styles.quitar}
+                    aria-label={`Quitar ${c.title} de la comparación`}
+                  >
+                    Quitar
+                  </Link>
+                </td>
+              ))}
             </tr>
           </tbody>
         </table>

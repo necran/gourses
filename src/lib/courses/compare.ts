@@ -48,6 +48,14 @@ export function hrefCompararFavoritos(ids: readonly string[]): string | null {
   return `/comparar?ids=${ids.map(encodeURIComponent).join(",")}`;
 }
 
+// HU-042: «Quitar» de una columna de /comparar. Un enlace normal (funciona sin
+// JavaScript) a la misma comparación sin ese curso, en el mismo orden.
+export function hrefQuitarDeComparacion(ids: readonly string[], idAQuitar: string): string {
+  const clave = idAQuitar.toLowerCase();
+  const resto = ids.filter((id) => id.toLowerCase() !== clave);
+  return resto.length > 0 ? `/comparar?ids=${resto.map(encodeURIComponent).join(",")}` : "/comparar";
+}
+
 export interface CompareCell {
   /** Texto a mostrar, o null si ese curso no tiene ese dato. */
   valor: string | null;

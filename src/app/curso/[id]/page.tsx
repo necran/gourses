@@ -16,6 +16,7 @@ import {
 import { TITULAR } from "../../../lib/legal/titular";
 import { BotonFavorito } from "../../../components/boton-favorito";
 import { BotonCesta } from "../../../components/boton-cesta";
+import { EnlaceUltimaBusqueda } from "../../../components/enlace-ultima-busqueda";
 import { conSeparadorDeMiles } from "../../../lib/formato-numero";
 import styles from "./page.module.css";
 
@@ -77,7 +78,7 @@ export default async function CoursePage({ params }: CoursePageProps) {
         dangerouslySetInnerHTML={{ __html: serializeStructuredData(datosEstructurados) }}
       />
       <p className={styles.volver}>
-        <Link href="/buscar">← Volver a la búsqueda</Link>
+        <EnlaceUltimaBusqueda>← Volver a la búsqueda</EnlaceUltimaBusqueda>
       </p>
 
       <article>

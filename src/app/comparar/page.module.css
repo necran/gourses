@@ -138,3 +138,37 @@
   white-space: nowrap;
   border: 0;
 }
+
+/* HU-042: seguir afinando la comparación sin empezar de cero. */
+.anadirOtro {
+  margin: -0.6rem 0 1.2rem;
+}
+
+.botonAnadirOtro {
+  display: inline-flex;
+  padding: 0.5rem 1.05rem;
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-display), -apple-system, "Segoe UI", sans-serif;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.botonAnadirOtro:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.quitar {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--danger);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.quitar:hover {
+  color: var(--danger-soft-ink);
+}

@@ -185,8 +185,8 @@ test.describe("HU-041 — comparar desde favoritos", () => {
       expect((await page.locator("thead th a").allTextContents()).map((t) => t.trim())).toEqual(
         expect.arrayContaining(cursos.map((c) => c.titulo))
       );
-      // Es un enlace, no pasa por la cesta.
-      await expect(barra(page)).toHaveCount(0);
+      // Desde HU-042, abrir una comparación la adopta como cesta.
+      await expect(barra(page)).toContainText(`${cursos.length} de 4`);
     } finally {
       await borrarUsuario(userId);
     }

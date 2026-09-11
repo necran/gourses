@@ -55,6 +55,22 @@ export function vaciar(cesta: Cesta): Cesta {
   return cesta.length === 0 ? cesta : CESTA_VACIA;
 }
 
+// HU-042: abrir una comparación la convierte en la comparación en curso. Pasa
+// por `anadir`, así que se aplican las mismas reglas (ids válidos, sin
+// repetidos, tope). Si queda igual —mismos ids y títulos, en el mismo orden—
+// devuelve la misma cesta, para no anunciar un cambio que no ha habido.
+export function reemplazar(cesta: Cesta, cursos: readonly CursoEnCesta[]): Cesta {
+  let nueva = CESTA_VACIA;
+  for (const curso of cursos) nueva = anadir(nueva, curso);
+
+  const igual =
+    nueva.length === cesta.length &&
+    nueva.every(
+      (c, i) => c.id.toLowerCase() === cesta[i].id.toLowerCase() && c.titulo === cesta[i].titulo
+    );
+  return igual ? cesta : nueva;
+}
+
 // Lo guardado en el navegador es entrada externa: lo puede editar la propia
 // persona o una extensión. Mismo criterio que parseCompareIds: se descarta lo
 // inválido, repetido o de más, en vez de tirar la cesta entera.

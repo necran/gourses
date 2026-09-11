@@ -71,14 +71,70 @@ seguir trabajando, venga de su propia cesta o de un enlace que le han pasado.
 
 ## Checklist de tests (obligatorio antes de cerrar)
 
-- [ ] Unitarios: construcción del enlace «Quitar» (orden conservado, último curso);
-      validación de la última búsqueda guardada (rutas ajenas, `//evil`, `javascript:`,
-      parámetros basura, vacío)
-- [ ] Integración: no hace falta si no hay consulta nueva
-- [ ] E2E: un test por criterio de aceptación, incluido sin JavaScript
-- [ ] `/security-review` ejecutado, sin hallazgos críticos/altos abiertos (atención
-      especial a la redirección desde `sessionStorage`)
+- [x] Unitarios: construcción del enlace «Quitar» (orden conservado, último curso) en
+      `compare.test.ts`; validación de la última búsqueda guardada (rutas ajenas,
+      `//evil`, `javascript:`, `data:`, barras invertidas, `..`, parámetros basura,
+      vacío) en `ultima-busqueda.test.ts`; `reemplazar` en `cesta-comparar.test.ts`
+- [x] Integración: no hace falta: no hay consulta nueva (`/comparar` sigue usando
+      `getCoursesByIds`)
+- [x] E2E: un test por criterio de aceptación, incluido sin JavaScript —
+      `e2e/gestionar-comparacion.spec.ts` (8 tests)
+- [x] `/security-review` ejecutado, sin hallazgos críticos/altos abiertos
 
 ## Estado
 
-`Abierta`
+`Cerrada`
+
+### Resultado de los tests
+
+- Unitarios (`npx vitest run`): 477 pasan, 107 omitidos (22 nuevos).
+- Integración (`npm run test:integration`): 107 pasan (22 ficheros).
+- E2E (`npx playwright test`): 139 de 139.
+
+En la primera pasada completa fallaron 2 tests de HU-040 (`cesta-comparar.spec.ts`:
+«atrás» desde la ficha y páginas distintas), los dos en el mismo instante y por lo
+mismo: tras pulsar un enlace, la navegación no llegó en los 5 s de espera. Esa misma
+pasada, la integración tardó 290 s frente a unos 200 s habituales (la base del NAS iba
+lenta). Repetidos 12 veces con 5 procesos en paralelo pasaron todos, y la suite
+completa volvió a pasar entera. No se tocó ningún tiempo de espera: no había nada que
+arreglar en el código ni en los tests.
+
+### Revisión de seguridad
+
+Sin hallazgos. El punto delicado era la última búsqueda, que acaba en un `href`:
+
+- **Sin redirección abierta**: lo leído de `sessionStorage` solo se acepta si, resuelto
+  contra un origen ficticio, sigue en ese mismo origen y en la ruta exacta `/buscar`.
+  Aun así la cadena guardada nunca se usa: se reconstruye con
+  `parseCourseSearchFilters` + `enlacePagina`, igual que la paginación. Probado con
+  `//evil.com`, `https://evil.com/buscar`, `javascript:`, `data:`, `/\evil.com`,
+  `\\evil.com`, `/buscar/../mi-cuenta` y URLs mal formadas: todas dan `/buscar`.
+- **Adoptar no confía en la URL**: `AdoptarComparacion` recibe los cursos que el
+  servidor encontró en el catálogo, no los ids crudos, y pasa por `anadir` (ids
+  válidos, sin repetidos, tope). Un id inventado o retirado nunca llega a la cesta.
+- **«Quitar»** se construye con ids ya resueltos contra el catálogo y codificados; el
+  destino vuelve a pasar por `parseCompareIds`.
+- **Nada personal**: `sessionStorage` guarda solo la dirección de búsqueda de esta
+  pestaña, y se borra al cerrarla.
+
+### Qué cambió respecto al diseño previsto
+
+- **«Quitar» no necesita JavaScript propio**: es un enlace a la comparación sin ese
+  curso, y es la adopción al abrirla la que pone la cesta al día. Un solo camino para
+  «quitar» y para «abrir un enlace».
+- **Va en una fila «Quitar» al final de la tabla**, junto a «Ir al curso», no en la
+  cabecera: así la cabecera de cada columna sigue siendo solo el título.
+- **Solo se adopta si la dirección trae algún id válido**: `/comparar` a secas no vacía
+  la cesta.
+- **La dirección de la búsqueda se guarda ya saneada** desde el servidor
+  (`enlacePagina`, extraída a `buscar-enlaces.ts` para reutilizarla), y además se vuelve
+  a sanear al leerla.
+- **Cambia un criterio de HU-041**: «Comparar mis favoritos» ya no deja la cesta
+  intacta, porque abrir la comparación la adopta. Su test se actualizó a lo nuevo (la
+  barra muestra esos favoritos), de acuerdo con la decisión de esta historia.
+
+### Visto de paso, fuera de esta historia
+
+En `/comparar` a 400 px, el texto de introducción se sale por la derecha. Es el mismo
+fallo de móvil que ya se anotó en `/buscar` (HU-040) y en la ficha (HU-041): anterior a
+estas historias, queda para una incidencia aparte.

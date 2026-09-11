@@ -14,8 +14,10 @@ import { searchCourses } from "../../lib/courses/search-courses";
 import { preferredLanguageFrom } from "../../lib/courses/preferred-language";
 import { formatDuration } from "../../lib/courses/duration";
 import { isValidCourseId } from "../../lib/courses/get-course";
+import { enlacePagina } from "../../lib/courses/buscar-enlaces";
 import { CATEGORY_LABELS, COURSE_CATEGORIES } from "../../lib/courses/categories";
 import { BarraComparar, CasillaComparar } from "../../components/barra-comparar";
+import { RecordarBusqueda } from "./recordar-busqueda";
 import styles from "./page.module.css";
 
 // Nombra en el aviso solo lo que se está filtrando, para que no hable de
@@ -29,29 +31,10 @@ interface BuscarPageProps {
   searchParams: Promise<RawSearchParams>;
 }
 
-// Construye la dirección de otra página conservando la búsqueda (HU-025).
-//
-// Se arma con los filtros **ya saneados**, no con lo que venía en la dirección:
-// así un parámetro basura que alguien haya colado no se reenvía tal cual en los
-// enlaces de la página.
 function enlaceIncluyendoSinDato(filters: CourseSearchFilters): string {
   // Vuelve a la primera página: la búsqueda pasa a tener otros resultados, así
   // que seguir en la página 7 de la anterior no significa nada.
   return enlacePagina({ ...filters, incluirSinDato: true }, 1);
-}
-
-function enlacePagina(filters: CourseSearchFilters, pagina: number): string {
-  const params = new URLSearchParams();
-  if (filters.keyword) params.set("keyword", filters.keyword);
-  if (filters.maxPrice !== null) params.set("maxPrice", String(filters.maxPrice));
-  if (filters.minRating !== null) params.set("minRating", String(filters.minRating));
-  if (filters.language) params.set("language", filters.language);
-  if (filters.category) params.set("category", filters.category);
-  if (filters.incluirSinDato) params.set("sinDato", "1");
-  if (filters.orden) params.set("orden", filters.orden);
-  if (pagina > 1) params.set("pagina", String(pagina));
-  const query = params.toString();
-  return query ? `/buscar?${query}` : "/buscar";
 }
 
 // HU-031: se llega aquí desde el botón de comparar de una ficha o de
@@ -88,6 +71,7 @@ export default async function BuscarPage({ searchParams }: BuscarPageProps) {
 
   return (
     <main className={styles.main}>
+      <RecordarBusqueda href={enlacePagina(filters, pagina)} />
       <h1>Buscar cursos</h1>
 
       <form method="get" className={styles.form}>

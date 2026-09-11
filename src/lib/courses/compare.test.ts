@@ -3,6 +3,7 @@ import {
   MAX_COMPARADOS,
   buildCompareRows,
   hrefCompararFavoritos,
+  hrefQuitarDeComparacion,
   parseCompareIds,
 } from "./compare";
 import type { CourseDetail } from "./get-course";
@@ -99,6 +100,20 @@ describe("hrefCompararFavoritos (HU-041)", () => {
     const href = hrefCompararFavoritos([A, B, C])!;
     const ids = new URL(href, "https://gourses.com").searchParams.get("ids") ?? undefined;
     expect(parseCompareIds(ids)).toEqual([A, B, C]);
+  });
+});
+
+describe("hrefQuitarDeComparacion (HU-042)", () => {
+  it("deja los demás cursos, en el mismo orden", () => {
+    expect(hrefQuitarDeComparacion([A, B, C], B)).toBe(`/comparar?ids=${A},${C}`);
+  });
+
+  it("no distingue mayúsculas", () => {
+    expect(hrefQuitarDeComparacion([A, B], A.toUpperCase())).toBe(`/comparar?ids=${B}`);
+  });
+
+  it("quitar el último lleva a /comparar, que ya explica qué hacer", () => {
+    expect(hrefQuitarDeComparacion([A], A)).toBe("/comparar");
   });
 });
 
