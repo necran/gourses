@@ -1,0 +1,62 @@
+# Verificación automática de cada cambio (HU-044).
+#
+# Hasta ahora la única red de seguridad era acordarse de lanzar las suites en
+# local, y eso ya falló: HU-038 dejó un test roto que no se detectó hasta días
+# después, al unir las ramas. Netlify compila al desplegar, pero eso llega tarde,
+# no ejecuta tests y además gasta créditos.
+name: Verificación
+
+on:
+  push:
+  pull_request:
+
+# Solo lee el código: no publica nada ni escribe en el repositorio.
+permissions:
+  contents: read
+
+concurrency:
+  # Al contrario que la ingesta, aquí sí interesa cancelar: si se empuja dos
+  # veces seguidas, lo que importa es el último cambio.
+  group: verificacion-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    # Sin `env` y sin secretos a propósito. Comprobado el 2026-09-13: la
+    # compilación no necesita ninguna credencial porque todas las rutas se
+    # renderizan bajo petición y la única prerenderizada (robots.txt) no
+    # consulta la base de datos. Si alguien añade una página estática que sí la
+    # lea, este workflow fallará — que es lo que se quiere, en vez de
+    # descubrirlo en el despliegue.
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # El mismo runtime que fija netlify.toml para el build de producción.
+          node-version: "24"
+          cache: npm
+
+      - run: npm ci
+
+      # Cada comprobación en su paso, para que la pestaña de Actions diga cuál
+      # ha caído sin tener que abrir el registro entero.
+      - name: Estilo
+        run: npm run lint
+
+      - name: Tipos
+        run: npx tsc --noEmit
+
+      # Los ficheros de tests/integration se saltan solos sin DATABASE_URL ni
+      # TEST_DATABASE_URL, así que aquí corre solo lo unitario. Los de
+      # integración y los e2e necesitan base de datos: la del NAS no se expone a
+      # internet (regla del proyecto) y en la de producción no se siembran filas,
+      # así que siguen ejecutándose en local antes de cerrar cada historia.
+      - name: Tests unitarios
+        run: npm test
+
+      - name: Compilación
+        run: npm run build
