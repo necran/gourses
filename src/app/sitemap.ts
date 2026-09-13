@@ -1,5 +1,7 @@
 import type { MetadataRoute } from "next";
 import { createSupabaseServerClient } from "../lib/supabase/server-client";
+import { COURSE_CATEGORIES } from "../lib/courses/categories";
+import { enlaceCategoria } from "../lib/courses/categoria-seo";
 import { TITULAR } from "../lib/legal/titular";
 
 // Se genera desde la base de datos en cada petición, no se fija a mano: la
@@ -16,6 +18,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${TITULAR.url}/aviso-legal`, changeFrequency: "yearly", priority: 0.3 },
   ];
 
+  // Las once páginas de categoría (HU-046). Van con las fijas y no con las
+  // fichas a propósito: no dependen de leer el catálogo, así que si esa lectura
+  // falla siguen anunciándose. Prioridad por encima de una ficha suelta y por
+  // debajo del buscador: son las puertas de entrada desde una búsqueda como
+  // "cursos de diseño".
+  const categorias: MetadataRoute.Sitemap = COURSE_CATEGORIES.map((categoria) => ({
+    url: `${TITULAR.url}${enlaceCategoria(categoria)}`,
+    changeFrequency: "daily" as const,
+    priority: 0.7,
+  }));
+
   try {
     const client = createSupabaseServerClient();
     const cursos = await leerTodosLosCursos(client);
@@ -27,11 +40,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.6,
     }));
 
-    return [...fijas, ...fichas];
+    return [...fijas, ...categorias, ...fichas];
   } catch {
     // Un fallo leyendo el catálogo no debe dejar al buscador sin sitemap:
     // mejor servir las páginas fijas que devolver un error.
-    return fijas;
+    return [...fijas, ...categorias];
   }
 }
 

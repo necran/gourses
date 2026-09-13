@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { createSupabaseServerClient } from "../lib/supabase/server-client";
 import { getCatalogSummary } from "../lib/courses/catalog-summary";
 import { CATEGORY_LABELS, COURSE_CATEGORIES } from "../lib/courses/categories";
+import { enlaceCategoria } from "../lib/courses/categoria-seo";
 import { searchCourses, type CourseSearchResult } from "../lib/courses/search-courses";
 import { parseCourseSearchFilters } from "../lib/courses/search-filters";
 import { preferredLanguageFrom } from "../lib/courses/preferred-language";
@@ -97,12 +98,12 @@ export default async function Home() {
         <ul className={styles.listaCategorias}>
           {CATEGORIAS_DESTACADAS.map((categoria) => (
             <li key={categoria}>
-              {/* Se enlaza por el identificador de categoría, no por la etiqueta: buscar
-                  "Desarrollo" como texto no encuentra nada, porque los títulos del
-                  catálogo están casi todos en inglés (HU-022). */}
-              <Link href={`/buscar?category=${categoria}`}>
-                {CATEGORY_LABELS[categoria]}
-              </Link>
+              {/* A la página de la categoría, no al buscador con un filtro puesto
+                  (HU-046): es una dirección con su propio título y descripción, que
+                  es justo para lo que existe. Se enlaza por el identificador y no por
+                  la etiqueta: buscar "Desarrollo" como texto no encuentra nada, porque
+                  los títulos del catálogo están casi todos en inglés (HU-022). */}
+              <Link href={enlaceCategoria(categoria)}>{CATEGORY_LABELS[categoria]}</Link>
             </li>
           ))}
         </ul>

@@ -12,10 +12,15 @@ test.describe("HU-022 — filtrar por categoría", () => {
   test("cada categoría de la portada lleva a cursos, no a una página vacía", async ({ page }) => {
     await page.goto("/");
 
+    // Desde HU-046 las categorías de la portada llevan a su propia página
+    // (`/categoria/<identificador>`) y ya no al buscador con el filtro puesto.
+    // El criterio de esta historia no cambia —pinchar una categoría tiene que
+    // enseñar cursos, no una página vacía—, solo el destino.
+    //
     // Hay que quedarse con las direcciones ANTES de navegar: al salir de la
     // portada el localizador deja de resolver y el bucle se cuelga.
     const enlaces = await page
-      .locator("main a[href^='/buscar?category=']")
+      .locator("main a[href^='/categoria/']")
       .evaluateAll((as) => as.map((a) => (a as HTMLAnchorElement).getAttribute("href")!));
 
     expect(enlaces.length).toBeGreaterThan(0);
@@ -24,7 +29,7 @@ test.describe("HU-022 — filtrar por categoría", () => {
     for (const href of enlaces) {
       await page.goto(href);
 
-      await expect(page.getByRole("heading", { level: 1 })).toHaveText("Buscar cursos");
+      await expect(page.getByRole("heading", { level: 1 })).toHaveText(/^Cursos de /);
       await expect(cursos(page).first()).toBeVisible();
     }
   });
