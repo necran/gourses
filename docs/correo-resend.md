@@ -12,7 +12,8 @@ y equivocarlas rompe el correo del dominio.
 | Registros DNS en IONOS | **añadidos y verificados** (dominio *Verified* el 2026-08-20) |
 | `RESEND_API_KEY` en GitHub | pendiente de rehacer si se creó una clave nueva (ver más abajo) |
 | SMTP propio en Supabase | **configurado y funcionando** (2026-08-20) |
-| Plantillas de los correos de acceso | **en español**, en Cloud (2026-08-24) y en el NAS (2026-09-10) |
+| Plantillas de los correos de acceso | **en español**, en Cloud (2026-08-24; contenido puesto al día el 2026-09-13) y en el NAS (2026-09-10) |
+| Plantilla de cambio de correo (HU-037) | **en español**, en el NAS (2026-09-10) y en Cloud (2026-09-13) |
 | Correo en desarrollo (NAS) | **Mailpit**, buzón en http://192.168.1.139:8025 (2026-09-10) |
 
 El acceso a la web ya sale por Resend, con el límite de Auth en **30 correos por

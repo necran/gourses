@@ -207,10 +207,22 @@ de forma obvia, y una implementación ingenua se equivoca:
 
 ## Deuda que sigue abierta
 
-- **La plantilla en Supabase Cloud (producción) sigue sin subirse.** Solo se subió
-  al NAS. `npm run correo:plantillas` la sube en cuanto alguien con
-  `SUPABASE_ACCESS_TOKEN`/`SUPABASE_PROJECT_REF` lo ejecute; hasta entonces, un
-  cambio de correo en producción llegaría en inglés.
+- ~~**La plantilla en Supabase Cloud (producción) sigue sin subirse.**~~
+  **Saldada el 2026-09-13.** Se subió con el script de siempre y se verificó
+  después: «las plantillas del proyecto ya coinciden con las del repositorio».
+  Fueron cuatro campos, no dos: el asunto y el contenido del cambio de correo
+  (que estaban en el inglés por defecto de Supabase) y, de paso, el contenido de
+  los dos correos de acceso, que en Cloud seguían en la versión antigua y sencilla
+  anterior al rediseño de las plantillas. El script sube todo lo que difiere o
+  nada, y la fuente de verdad es el repositorio.
+
+  Detalle útil para la próxima vez: `.env.local` **no** tiene
+  `SUPABASE_ACCESS_TOKEN` ni `SUPABASE_PROJECT_REF`, así que el script no se puede
+  lanzar con `npm run correo:plantillas` tal cual. Lo que sí hay en el equipo es la
+  sesión de la CLI de Supabase, con su token en el llavero de macOS, y el
+  identificador del proyecto (`xfaweqbrxdnhjldmbjnf`, que no es secreto) se saca de
+  `supabase projects list`. Con eso, el script se ejecuta pasándole las dos
+  variables en la propia línea, sin escribir el token en ningún fichero.
 - Recuperar el acceso a la cuenta cambiando el correo **sin sesión iniciada**
   sigue fuera de alcance, como ya decía la historia (requiere probar la
   titularidad por otra vía, y merece su propio análisis de riesgo).
