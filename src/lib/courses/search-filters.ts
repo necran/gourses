@@ -30,13 +30,19 @@ export interface CourseSearchFilters {
   orden: OrdenResultados | null;
 }
 
-/** Órdenes que se admiten. Cualquier otro valor no existe (HU-027). */
-export const ORDENES = ["precio-asc", "valoracion-desc"] as const;
+/** Órdenes que se admiten. Cualquier otro valor no existe (HU-027, HU-047). */
+export const ORDENES = ["precio-asc", "valoracion-desc", "duracion-asc"] as const;
 export type OrdenResultados = (typeof ORDENES)[number];
 
+// El tipo `Record` obliga a que cada orden tenga su etiqueta: añadir uno a
+// ORDENES sin nombrarlo aquí no compila, y así ninguna opción del desplegable
+// puede salir sin nombre.
 export const ETIQUETAS_ORDEN: Record<OrdenResultados, string> = {
   "precio-asc": "Precio: de menor a mayor",
   "valoracion-desc": "Mejor valorados",
+  // Solo de menor a mayor (HU-047): quien ordena por duración busca lo que
+  // puede terminar, no lo más largo.
+  "duracion-asc": "Duración: de menor a mayor",
 };
 
 /**

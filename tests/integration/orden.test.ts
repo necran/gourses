@@ -102,6 +102,42 @@ describeIfConfigured("HU-027 — ordenar los resultados", () => {
     expect(vaOrdenada(resultados.map((c) => c.priceAmount), (a, b) => a <= b)).toBe(true);
   }, 30_000);
 
+  // HU-047. La duración la publican las dos plataformas —7.197 de 9.380 cursos
+  // el 2026-09-13—, así que este orden, a diferencia del de precio, no acaba
+  // siendo en la práctica un orden de Udemy.
+  it("por duración, de menor a mayor", async () => {
+    const resultados = await buscar({ orden: "duracion-asc" });
+
+    expect(resultados).toHaveLength(POR_PAGINA);
+    expect(
+      vaOrdenada(
+        resultados.map((c) => c.duration?.minMinutes ?? null),
+        (a, b) => a <= b
+      )
+    ).toBe(true);
+  }, 30_000);
+
+  // Aquí sí se puede comprobar lo que por el navegador no: un curso que no
+  // publica duración no es el más corto. Por pantalla los huecos no aparecen
+  // hasta pasada la página 140, así que este es su sitio.
+  it("los cursos sin duración no salen los primeros al ordenar por duración", async () => {
+    const resultados = await buscar({ orden: "duracion-asc" });
+
+    expect(resultados[0].duration).not.toBeNull();
+  }, 30_000);
+
+  it("el orden por duración también aguanta la costura entre páginas", async () => {
+    const primera = await buscar({ orden: "duracion-asc" });
+    const segunda = await buscar({ orden: "duracion-asc", pagina: "2" });
+
+    const minutos = [...primera, ...segunda].map((c) => c.duration?.minMinutes ?? null);
+    expect(vaOrdenada(minutos, (a, b) => a <= b)).toBe(true);
+
+    // Y de paso: dos páginas seguidas no comparten cursos.
+    const ids = new Set(primera.map((c) => c.id));
+    expect(segunda.filter((c) => ids.has(c.id))).toEqual([]);
+  }, 30_000);
+
   // Lo que no puede romper esta historia: sin orden pedido, el reparto
   // equilibrado de HU-007 sigue funcionando igual.
   it("sin orden pedido siguen apareciendo las dos plataformas", async () => {

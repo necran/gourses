@@ -203,13 +203,25 @@ async function searchCoursesOrdenado(
 
   let query = aplicarFiltros(seleccionBase(client), filters);
 
-  // `nullsFirst: false` en los dos: un curso sin precio no es el más barato, y
-  // uno sin valoración no es el mejor. Un hueco no es un cero — la misma regla
-  // que ya rige el filtro de HU-026 y el comparador.
-  query =
-    orden === "precio-asc"
-      ? query.order("price_amount", { ascending: true, nullsFirst: false })
-      : query.order("rating", { ascending: false, nullsFirst: false });
+  // Un reparto por clave y no un ternario: con el tercer orden (duración,
+  // HU-047) el ternario dejaba de leerse, y el cuarto lo empeoraría más.
+  //
+  // `nullsFirst: false` en todos: un curso sin precio no es el más barato, uno
+  // sin valoración no es el mejor, y uno que no publica duración no es el más
+  // corto. Un hueco no es un cero — la misma regla que ya rige el filtro de
+  // HU-026 y el comparador.
+  //
+  // La duración ordena por el **mínimo** del rango: Coursera publica cosas como
+  // «12 h–20 h», y quien busca lo más corto compara por lo mínimo que le va a
+  // costar.
+  const COLUMNA: Record<OrdenResultados, { columna: string; ascendente: boolean }> = {
+    "precio-asc": { columna: "price_amount", ascendente: true },
+    "valoracion-desc": { columna: "rating", ascendente: false },
+    "duracion-asc": { columna: "duration_min_minutes", ascendente: true },
+  };
+
+  const { columna, ascendente } = COLUMNA[orden];
+  query = query.order(columna, { ascending: ascendente, nullsFirst: false });
 
   // Se pide uno de más para saber si hay página siguiente, igual que en el
   // camino intercalado.

@@ -100,7 +100,12 @@ pasaría siempre y no probaría nada.
 
 ## Deuda que sigue abierta
 
-- El buscador no dice cuántos resultados hay en total, solo si hay más.
-- No se puede ordenar por duración ni por novedad.
+- ~~El buscador no dice cuántos resultados hay en total, solo si hay más.~~ Resuelto en
+  HU-028: el recuento sale encima de la lista.
+- ~~No se puede ordenar por duración ni por novedad.~~ La duración, resuelta en HU-047.
+  **Novedad sigue abierta**, y ahora se sabe por qué no era trivial: la tabla no guarda
+  cuándo se dio de alta un curso, solo `updated_at`, que la ingesta reescribe cada
+  pasada. Necesita columna nueva y migración; ver la deuda de HU-047.
 - Ordenar por precio deja los 4.000 cursos de Coursera al final, siempre. Es correcto
   —no tienen precio— pero significa que ese orden es, en la práctica, un orden de Udemy.
+  No le pasa al de duración: esa la publican las dos plataformas (HU-047).

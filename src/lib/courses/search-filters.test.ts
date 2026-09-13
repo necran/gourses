@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   MAX_PAGINA,
+  ETIQUETAS_ORDEN,
   ORDENES,
   excluyePorFaltaDeDato,
   parseCourseSearchFilters,
@@ -230,6 +231,17 @@ describe("orden (HU-027)", () => {
     expect(parseCourseSearchFilters({ orden: ["precio-asc", "valoracion-desc"] }).orden).toBe(
       "precio-asc"
     );
+  });
+
+  // HU-047. El tipo `Record<OrdenResultados, string>` ya obliga a que no falte
+  // ninguna etiqueta —añadir un orden a ORDENES sin nombrarlo no compila—, pero
+  // no impide que una quede vacía o repetida, y una opción sin texto (o con el
+  // mismo texto que otra) es una opción inservible en el desplegable.
+  it("cada orden tiene una etiqueta propia, ni vacía ni repetida", () => {
+    for (const orden of ORDENES) {
+      expect(ETIQUETAS_ORDEN[orden].trim()).not.toBe("");
+    }
+    expect(new Set(Object.values(ETIQUETAS_ORDEN)).size).toBe(ORDENES.length);
   });
 });
 
