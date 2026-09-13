@@ -1,5 +1,5 @@
 import type { NormalizedCourse } from "../../courses/schema";
-import { mapUdemyCategory } from "../../courses/categories.ts";
+import { mapUdemyCategory, mapUdemyCategoryId } from "../../courses/categories.ts";
 import { parseDuration } from "../../courses/duration.ts";
 
 // Cambio de forma en la respuesta de la API (contrato roto): detiene el job,
@@ -160,7 +160,14 @@ export function normalizeUdemyCourse(
   baseUrl: string,
   // Título de la categoría del ámbito que se está recorriendo: la ingesta ya
   // va categoría a categoría (HU-005), así que la conoce sin pedir nada extra.
-  categoryTitle: string | null = null
+  //
+  // Desde HU-049 es solo el respaldo: el título llega traducido cuando la
+  // pasada pide el catálogo en otro idioma («Desarrollo», «Diseño»…) y
+  // entonces no casa con el mapeo, que está en inglés.
+  categoryTitle: string | null = null,
+  // Identificador de esa misma categoría, que **no** cambia con el idioma
+  // (HU-049). Es lo que se mapea primero.
+  categoryId: number | null = null
 ): NormalizedCourse {
   if (typeof raw.id !== "number" || !Number.isFinite(raw.id)) {
     throw new UdemyCourseValidationError("falta 'id' o no es un número");
@@ -198,7 +205,9 @@ export function normalizeUdemyCourse(
     instructor: parseInstructor(raw),
     affiliateUrl: new URL(raw.url, baseUrl).toString(),
     imageUrl: firstString(raw.image_480x270, raw.image_240x135),
-    category: mapUdemyCategory(categoryTitle),
+    // El identificador primero: no cambia con el idioma. El título es el
+    // respaldo, y solo acierta si la pasada vino en inglés (HU-049).
+    category: mapUdemyCategoryId(categoryId) ?? mapUdemyCategory(categoryTitle),
     numReviews: parseEntero(detail?.num_reviews),
     numSubscribers: parseEntero(detail?.num_subscribers),
     whatYouWillLearn: parseListaDeItems(detail?.what_you_will_learn_data),

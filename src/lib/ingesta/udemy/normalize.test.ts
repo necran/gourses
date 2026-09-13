@@ -238,3 +238,37 @@ describe("normalizeUdemyCourse — precio desconocido frente a precio ausente", 
     expect(curso.priceUnknown).toBe(false);
   });
 });
+
+// HU-049. El fallo: la pasada en español (HU-033) recibe los títulos de
+// categoría traducidos, que no casan con el mapeo en inglés, y dejó 316 cursos
+// sin categoría. El identificador es el mismo en cualquier idioma.
+describe("normalizeUdemyCourse — categoría por identificador (HU-049)", () => {
+  const curso: UdemyRawCourse = { id: 2, title: "Curso de prueba", url: "/course/prueba/" };
+
+  it("resuelve la categoría por identificador aunque el título venga traducido", () => {
+    expect(
+      normalizeUdemyCourse(curso, null, BASE, "Informática y software", 294).category
+    ).toBe("it-y-software");
+  });
+
+  it("sigue resolviéndola por título cuando no hay identificador (pasada en inglés)", () => {
+    expect(normalizeUdemyCourse(curso, null, BASE, "IT & Software").category).toBe(
+      "it-y-software"
+    );
+  });
+
+  it("con un identificador que no conoce, recurre al título", () => {
+    expect(normalizeUdemyCourse(curso, null, BASE, "IT & Software", 999_999).category).toBe(
+      "it-y-software"
+    );
+  });
+
+  // Que Udemy añada una categoría no puede romper la ingesta: el curso se
+  // guarda sin categoría y se sigue.
+  it("sin identificador ni título reconocibles, el curso se guarda sin categoría", () => {
+    expect(normalizeUdemyCourse(curso, null, BASE).category).toBeNull();
+    expect(
+      normalizeUdemyCourse(curso, null, BASE, "Categoría Nueva", 999_999).category
+    ).toBeNull();
+  });
+});

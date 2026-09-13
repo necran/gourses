@@ -73,6 +73,41 @@ function normalizeKey(value: string): string {
   return value.trim().toLowerCase();
 }
 
+// Identificadores de /api-2.0/course-categories/ (comprobados contra la API el
+// 2026-09-13). Son **los mismos en cualquier idioma**: lo que cambia con
+// `Accept-Language` es el título, no el id.
+//
+// Por eso la ingesta mapea por aquí (HU-049) y no por el título: la pasada en
+// español de HU-033 recibía «Desarrollo» o «Informática y software», que no
+// casaban con el mapeo en inglés, y dejó 316 cursos sin categoría.
+const UDEMY_CATEGORY_IDS: Record<number, CourseCategory> = {
+  288: "desarrollo",
+  268: "negocios",
+  328: "negocios", // Finance & Accounting
+  290: "negocios", // Marketing
+  294: "it-y-software",
+  292: "productividad", // Office Productivity
+  296: "desarrollo-personal",
+  274: "desarrollo-personal", // Lifestyle
+  269: "diseno-y-creatividad",
+  273: "diseno-y-creatividad", // Photography & Video
+  278: "diseno-y-creatividad", // Music
+  276: "salud-y-bienestar",
+  300: "humanidades-y-sociales", // Teaching & Academics
+};
+
+// Igual que con el título: un identificador desconocido devuelve null en vez de
+// lanzar. Si Udemy añade una categoría, esos cursos se guardan sin categoría y
+// la ingesta sigue.
+export function mapUdemyCategoryId(id: number | null | undefined): CourseCategory | null {
+  if (typeof id !== "number" || !Number.isFinite(id)) return null;
+  return UDEMY_CATEGORY_IDS[id] ?? null;
+}
+
+// Respaldo por título, que es como se mapeaba antes de HU-049. Se conserva
+// porque sigue siendo correcto para el catálogo en inglés y porque no depende
+// de que la API devuelva el id por todos los caminos.
+//
 // Devuelve null ante una etiqueta desconocida en vez de lanzar o de inventar
 // una categoría: si una plataforma añade una categoría nueva, esos cursos se
 // guardan sin categoría y el resto de la ingesta sigue.

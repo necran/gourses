@@ -59,16 +59,25 @@ export async function runUdemyIngestJob({
   // Cada ámbito arrastra el título de su categoría raíz: es lo que después se
   // mapea al vocabulario común (HU-010). Una subcategoría hereda el de su
   // categoría padre, porque el vocabulario común es de primer nivel.
-  const scopes: Array<{ scope: UdemyScope; categoryTitle: string }> = [];
+  // Se arrastra también el **identificador** de la categoría raíz, no solo su
+  // título: el título llega traducido cuando la pasada pide el catálogo en
+  // español (HU-033) y entonces no se puede mapear; el identificador es el
+  // mismo en cualquier idioma (HU-049).
+  const scopes: Array<{ scope: UdemyScope; categoryTitle: string; categoryId: number }> = [];
 
   for (const category of categories) {
-    scopes.push({ scope: { kind: "category", id: category.id }, categoryTitle: category.title });
+    scopes.push({
+      scope: { kind: "category", id: category.id },
+      categoryTitle: category.title,
+      categoryId: category.id,
+    });
     if (includeSubcategories) {
       const subcategories = await api.fetchSubcategories(creds, category.id);
       for (const sub of subcategories) {
         scopes.push({
           scope: { kind: "subcategory", id: sub.id },
           categoryTitle: category.title,
+          categoryId: category.id,
         });
       }
     }
@@ -76,7 +85,7 @@ export async function runUdemyIngestJob({
 
   const seen = new Set<string>();
 
-  for (const { scope, categoryTitle } of scopes.slice(0, maxScopes)) {
+  for (const { scope, categoryTitle, categoryId } of scopes.slice(0, maxScopes)) {
     const unitUrl = await api.fetchCourseUnitUrl(creds, scope);
     // Un ámbito sin unidad de cursos no es un error: simplemente no aporta nada.
     if (!unitUrl) continue;
@@ -110,7 +119,13 @@ export async function runUdemyIngestJob({
         const rawId = (raw as { id?: unknown }).id;
         try {
           const detail = await fetchDetailTolerantly(creds, rawId, result, opcionesReintento);
-          const normalized = normalizeUdemyCourse(raw, detail, creds.baseUrl, categoryTitle);
+          const normalized = normalizeUdemyCourse(
+            raw,
+            detail,
+            creds.baseUrl,
+            categoryTitle,
+            categoryId
+          );
           await upsertCourse(store, normalized);
           return null;
         } catch (error) {
