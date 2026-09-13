@@ -7,6 +7,7 @@ import {
   ORDENES,
   excluyePorFaltaDeDato,
   parseCourseSearchFilters,
+  textoDatoQueFalta,
   textoRecuento,
   type CourseSearchFilters,
   type RawSearchParams,
@@ -22,13 +23,6 @@ import { BarraComparar, CasillaComparar } from "../../components/barra-comparar"
 import { alternarFavorito } from "../favoritos/actions";
 import { RecordarBusqueda } from "./recordar-busqueda";
 import styles from "./page.module.css";
-
-// Nombra en el aviso solo lo que se está filtrando, para que no hable de
-// valoraciones cuando solo se ha puesto un precio.
-function textoDatoQueFalta(filters: CourseSearchFilters): string {
-  if (filters.maxPrice !== null && filters.minRating !== null) return "precio o valoración";
-  return filters.maxPrice !== null ? "precio" : "valoración";
-}
 
 interface BuscarPageProps {
   searchParams: Promise<RawSearchParams>;
@@ -140,6 +134,21 @@ export default async function BuscarPage({ searchParams }: BuscarPageProps) {
             defaultValue={filters.minRating ?? ""}
           />
         </div>
+        {/* En horas, que es como se piensa el tiempo disponible; por dentro
+            son minutos (HU-048). Medio en medio: «hora y media» es una
+            petición normal, «1,37 h» no. */}
+        <div className={`${styles.campo} ${styles.campoEstrecho}`}>
+          <label htmlFor="f-maxDuration">Duración máxima</label>
+          <input
+            id="f-maxDuration"
+            type="number"
+            name="maxDuration"
+            min={0}
+            step="0.5"
+            placeholder="horas"
+            defaultValue={filters.maxDuration !== null ? filters.maxDuration / 60 : ""}
+          />
+        </div>
         <div className={`${styles.campo} ${styles.campoEstrecho}`}>
           <label htmlFor="f-language">Idioma</label>
           <input
@@ -208,8 +217,18 @@ export default async function BuscarPage({ searchParams }: BuscarPageProps) {
       {excluyePorFaltaDeDato(filters) && (
         <p className={styles.avisoSinDato} role="status">
           Los cursos que no publican {textoDatoQueFalta(filters)} quedan fuera de esta
-          búsqueda. Coursera no publica ni precios ni valoraciones, así que se queda
-          fuera su catálogo entero.{" "}
+          búsqueda.{" "}
+          {/* Esta segunda frase solo es cierta del precio y la valoración: eso
+              Coursera no lo publica nunca, y por eso su catálogo entero se cae
+              de esas búsquedas (HU-026). Con el filtro de duración sería
+              mentira — la publica en 1.819 de sus 4.000 cursos—, así que se
+              dice solo cuando toca (HU-048). */}
+          {(filters.maxPrice !== null || filters.minRating !== null) && (
+            <>
+              Coursera no publica ni precios ni valoraciones, así que se queda fuera su
+              catálogo entero.{" "}
+            </>
+          )}
           <Link href={enlaceIncluyendoSinDato(filters)}>Incluirlos de todos modos</Link>
         </p>
       )}

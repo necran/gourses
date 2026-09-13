@@ -351,6 +351,16 @@ function aplicarFiltros(base: ConsultaCursos, filters: CourseSearchFilters): Con
       ? query.or(`rating.gte.${filters.minRating},rating.is.null`)
       : query.gte("rating", filters.minRating);
   }
+  // Por el **máximo** del rango y no por el mínimo (HU-048). Es lo contrario
+  // que el orden por duración (HU-047), y a propósito: para ordenar interesa lo
+  // menos que puede costarte, pero un techo hay que medirlo por lo más que
+  // puede costarte. Un curso de «1 h–20 h» no cumple «como mucho 2 horas».
+  // Mismo trato de los huecos que precio y valoración: fuera salvo que se pidan.
+  if (filters.maxDuration !== null) {
+    query = filters.incluirSinDato
+      ? query.or(`duration_max_minutes.lte.${filters.maxDuration},duration_max_minutes.is.null`)
+      : query.lte("duration_max_minutes", filters.maxDuration);
+  }
   if (filters.language !== null) {
     query = query.ilike("language", filters.language);
   }

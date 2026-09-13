@@ -5,15 +5,17 @@ import {
   ORDENES,
   excluyePorFaltaDeDato,
   parseCourseSearchFilters,
+  textoDatoQueFalta,
   textoRecuento,
 } from "./search-filters";
 
 describe("parseCourseSearchFilters", () => {
-  it("combina palabra clave, precio, valoración e idioma cuando todos son válidos", () => {
+  it("combina palabra clave, precio, valoración, duración e idioma cuando todos son válidos", () => {
     const filters = parseCourseSearchFilters({
       keyword: "  python  ",
       maxPrice: "49.99",
       minRating: "4",
+      maxDuration: "1.5",
       language: " es ",
     });
 
@@ -22,6 +24,8 @@ describe("parseCourseSearchFilters", () => {
       category: null,
       maxPrice: 49.99,
       minRating: 4,
+      // Se pide en horas y se guarda en minutos (HU-048).
+      maxDuration: 90,
       language: "es",
       pagina: 1,
       incluirSinDato: false,
@@ -35,6 +39,7 @@ describe("parseCourseSearchFilters", () => {
       category: null,
       maxPrice: null,
       minRating: null,
+      maxDuration: null,
       language: null,
       // La página es el único filtro que no puede ser nulo: siempre se está
       // mirando alguna, y sin parámetro se mira la primera.
@@ -242,6 +247,77 @@ describe("orden (HU-027)", () => {
       expect(ETIQUETAS_ORDEN[orden].trim()).not.toBe("");
     }
     expect(new Set(Object.values(ETIQUETAS_ORDEN)).size).toBe(ORDENES.length);
+  });
+});
+
+describe("duración máxima (HU-048)", () => {
+  // Se pide en horas y se guarda en minutos, que es como está en la base.
+  it.each([
+    ["2", 120],
+    ["1.5", 90],
+    ["0.5", 30],
+    ["10", 600],
+  ])("%j horas son %i minutos", (raw, minutos) => {
+    expect(parseCourseSearchFilters({ maxDuration: raw }).maxDuration).toBe(minutos);
+  });
+
+  // Redondea a propósito: sin ello, 2,05 h daría 123.00000000000001 dentro de
+  // un filtro que viaja como texto hasta PostgREST.
+  it("no deja decimales sueltos al convertir", () => {
+    expect(Number.isInteger(parseCourseSearchFilters({ maxDuration: "2.05" }).maxDuration)).toBe(
+      true
+    );
+  });
+
+  // Un filtro mal escrito no se aplica, no rompe la búsqueda: mismo criterio
+  // que el resto (HU-026, HU-027).
+  it.each(["", "   ", "abc", "-3", "NaN", "Infinity"])("descarta %j", (raw) => {
+    expect(parseCourseSearchFilters({ maxDuration: raw }).maxDuration).toBeNull();
+  });
+
+  it("recorta un valor desmedido en vez de aceptarlo", () => {
+    // 1.000 horas es el tope; el curso más largo del catálogo son 382.
+    expect(parseCourseSearchFilters({ maxDuration: "999999" }).maxDuration).toBe(60_000);
+  });
+
+  it("cero es una petición válida, aunque no encuentre nada", () => {
+    expect(parseCourseSearchFilters({ maxDuration: "0" }).maxDuration).toBe(0);
+  });
+
+  it("también hace que se avise de los cursos sin ese dato", () => {
+    expect(excluyePorFaltaDeDato(parseCourseSearchFilters({ maxDuration: "2" }))).toBe(true);
+    expect(
+      excluyePorFaltaDeDato(parseCourseSearchFilters({ maxDuration: "2", sinDato: "1" }))
+    ).toBe(false);
+  });
+});
+
+describe("textoDatoQueFalta (HU-048)", () => {
+  const texto = (params: Record<string, string>) =>
+    textoDatoQueFalta(parseCourseSearchFilters(params));
+
+  it("sin filtros de los que excluyen, no hay nada que nombrar", () => {
+    expect(texto({})).toBe("");
+    expect(texto({ keyword: "python", language: "es" })).toBe("");
+  });
+
+  it.each([
+    [{ maxPrice: "20" }, "precio"],
+    [{ minRating: "4" }, "valoración"],
+    [{ maxDuration: "2" }, "duración"],
+  ])("nombra solo el que se está usando: %j", (params, esperado) => {
+    expect(texto(params)).toBe(esperado);
+  });
+
+  it("con dos, los une con «o»", () => {
+    expect(texto({ maxPrice: "20", minRating: "4" })).toBe("precio o valoración");
+    expect(texto({ minRating: "4", maxDuration: "2" })).toBe("valoración o duración");
+  });
+
+  it("con tres, coma en medio y «o» al final", () => {
+    expect(texto({ maxPrice: "20", minRating: "4", maxDuration: "2" })).toBe(
+      "precio, valoración o duración"
+    );
   });
 });
 

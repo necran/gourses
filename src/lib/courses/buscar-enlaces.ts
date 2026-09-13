@@ -11,6 +11,10 @@ export function enlacePagina(filters: CourseSearchFilters, pagina: number): stri
   if (filters.keyword) params.set("keyword", filters.keyword);
   if (filters.maxPrice !== null) params.set("maxPrice", String(filters.maxPrice));
   if (filters.minRating !== null) params.set("minRating", String(filters.minRating));
+  // En horas, como se pide y como se enseña; por dentro son minutos (HU-048).
+  if (filters.maxDuration !== null) {
+    params.set("maxDuration", String(filters.maxDuration / 60));
+  }
   if (filters.language) params.set("language", filters.language);
   if (filters.category) params.set("category", filters.category);
   if (filters.incluirSinDato) params.set("sinDato", "1");

@@ -10,21 +10,29 @@ export interface CourseSearchFilters {
   category: CourseCategory | null;
   maxPrice: number | null;
   minRating: number | null;
+  /**
+   * Techo de duración **en minutos** (HU-048), aunque se pida y se enseñe en
+   * horas: en minutos está la columna, y así no hay que convertir en cada
+   * consulta. La conversión vive en un solo sitio, al parsear y al volver a
+   * construir el enlace.
+   */
+  maxDuration: number | null;
   language: string | null;
   /** Página de resultados, empezando en 1 (HU-025). */
   pagina: number;
   /**
-   * Si los filtros de precio y valoración deben admitir también los cursos que
-   * **no publican** ese dato (HU-026). Por defecto no: quien pide «menos de
-   * 20 €» no quiere ruido de precio desconocido. Pero se puede pedir, porque
-   * lo contrario esconde los 4.000 cursos de Coursera sin decir nada.
+   * Si los filtros de precio, valoración y duración deben admitir también los
+   * cursos que **no publican** ese dato (HU-026, HU-048). Por defecto no: quien
+   * pide «menos de 20 €» no quiere ruido de precio desconocido. Pero se puede
+   * pedir, porque lo contrario esconde los 4.000 cursos de Coursera sin decir
+   * nada.
    */
   incluirSinDato: boolean;
   /**
    * Orden pedido, o `null` para el de por defecto (HU-027).
    *
    * `null` **no** significa «sin orden»: significa el reparto equilibrado entre
-   * plataformas de HU-007, que es lo que se ve al entrar. Los otros dos ordenan
+   * plataformas de HU-007, que es lo que se ve al entrar. Los otros ordenan
    * de verdad, de arriba abajo, y entonces el reparto se pierde a propósito.
    */
   orden: OrdenResultados | null;
@@ -61,7 +69,30 @@ export function textoRecuento(total: number): string {
  * siempre es ruido y se deja de leer (HU-026).
  */
 export function excluyePorFaltaDeDato(filters: CourseSearchFilters): boolean {
-  return !filters.incluirSinDato && (filters.maxPrice !== null || filters.minRating !== null);
+  return (
+    !filters.incluirSinDato &&
+    (filters.maxPrice !== null || filters.minRating !== null || filters.maxDuration !== null)
+  );
+}
+
+/**
+ * Qué dato se está exigiendo, para nombrarlo en el aviso: «precio»,
+ * «valoración o duración», «precio, valoración o duración»… Solo lo que de
+ * verdad se está filtrando, para que el aviso no hable de valoraciones cuando
+ * únicamente se ha puesto un precio.
+ *
+ * Vive aquí y no en la página (HU-048) porque con tres filtros ya hay seis
+ * combinaciones y merece test propio.
+ */
+export function textoDatoQueFalta(filters: CourseSearchFilters): string {
+  const datos = [
+    filters.maxPrice !== null ? "precio" : null,
+    filters.minRating !== null ? "valoración" : null,
+    filters.maxDuration !== null ? "duración" : null,
+  ].filter((dato): dato is string => dato !== null);
+
+  if (datos.length <= 1) return datos[0] ?? "";
+  return `${datos.slice(0, -1).join(", ")} o ${datos[datos.length - 1]}`;
 }
 
 const MAX_KEYWORD_LENGTH = 200;
@@ -88,6 +119,14 @@ const MAX_RATING = 5;
  * PostgREST, y `String(1e21)` da `"1e+21"`, que ahí no significa nada.
  */
 const MAX_PRICE = 100_000;
+
+/**
+ * Tope de la duración pedida, en horas. Mismo motivo que el del precio: el
+ * valor acaba interpolado en un filtro `.or()` de PostgREST (HU-048), así que
+ * tiene que ser siempre un número corto y normal. El curso más largo del
+ * catálogo son 382 horas, así que 1.000 no recorta ninguna búsqueda real.
+ */
+const MAX_DURATION_HORAS = 1_000;
 
 function firstValue(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
@@ -119,6 +158,14 @@ function parseNonNegativeNumber(raw: string | undefined, max?: number): number |
   if (!Number.isFinite(value) || value < 0) return null;
   if (max !== undefined && value > max) return max;
   return value;
+}
+
+// Se pide en horas porque es como se piensa («hora y media»), y se guarda en
+// minutos porque es como está en la base. Se redondea: sin ello, 2,5 h daría
+// 150.00000000000003 dentro de un filtro que viaja como texto (HU-048).
+function parseDuracionEnHoras(raw: string | undefined): number | null {
+  const horas = parseNonNegativeNumber(raw, MAX_DURATION_HORAS);
+  return horas === null ? null : Math.round(horas * 60);
 }
 
 // Una página inválida no es motivo para no enseñar nada: se vuelve a la
@@ -161,6 +208,7 @@ export function parseCourseSearchFilters(params: RawSearchParams): CourseSearchF
     category: parseCategory(firstValue(params.category)),
     maxPrice: parseNonNegativeNumber(firstValue(params.maxPrice), MAX_PRICE),
     minRating: parseNonNegativeNumber(firstValue(params.minRating), MAX_RATING),
+    maxDuration: parseDuracionEnHoras(firstValue(params.maxDuration)),
     language: parseLanguage(firstValue(params.language)),
     pagina: parsePagina(firstValue(params.pagina)),
     incluirSinDato: parseIncluirSinDato(firstValue(params.sinDato)),

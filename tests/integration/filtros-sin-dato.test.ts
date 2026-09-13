@@ -80,6 +80,30 @@ describeIfConfigured("HU-026 — filtros que excluyen por falta de dato", () => 
     }
   }, 30_000);
 
+  // HU-048. La duración se comporta igual que el precio, con una diferencia:
+  // filtra por el **máximo** del rango, así que un curso de «1 h–20 h» no
+  // cumple un techo de 2 horas aunque su extremo bajo sí.
+  it("con duración máxima quedan fuera los que no la publican", async () => {
+    const resultados = await buscar({ maxDuration: "2" });
+
+    expect(resultados.length).toBeGreaterThan(0);
+    expect(resultados.every((c) => c.duration !== null)).toBe(true);
+  }, 30_000);
+
+  it("pidiendo incluirlos, vuelven los cursos sin duración publicada", async () => {
+    const resultados = await buscar({ maxDuration: "2", sinDato: "1" });
+
+    expect(resultados.filter((c) => c.duration === null).length).toBeGreaterThan(0);
+  }, 30_000);
+
+  it("los que sí publican duración respetan el techo, por su extremo alto", async () => {
+    const resultados = await buscar({ maxDuration: "2", sinDato: "1" });
+    const conDuracion = resultados.filter((c) => c.duration !== null);
+
+    expect(conDuracion.length).toBeGreaterThan(0);
+    expect(conDuracion.every((c) => c.duration!.maxMinutes <= 120)).toBe(true);
+  }, 30_000);
+
   // La palabra clave usa su propio .or(); añadir el de precio no puede
   // convertir el filtro de texto en opcional.
   it("la palabra clave se sigue exigiendo junto al precio", async () => {
