@@ -138,6 +138,13 @@
   margin: 0 0 0.35rem;
 }
 
+/* El bloque de texto de la tarjeta es un elemento flexible, así que por defecto
+   no baja de la anchura de su contenido y empujaba la tarjeta entera fuera de
+   la pantalla en el móvil (HU-043). */
+.card > div {
+  min-width: 0;
+}
+
 .meta {
   color: var(--ink-muted);
   font-size: 0.85rem;

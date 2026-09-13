@@ -22,6 +22,12 @@
   margin-bottom: 1.9rem;
 }
 
+/* Sin esto, el bloque del título no baja de la anchura de su contenido y se
+   sale de la pantalla en el móvil (HU-043). */
+.cabecera > div {
+  min-width: 0;
+}
+
 .cabecera h1 {
   font-family: var(--font-display), -apple-system, "Segoe UI", sans-serif;
   font-weight: 700;
@@ -37,6 +43,21 @@
   border-radius: 1.25rem;
   flex-shrink: 0;
   box-shadow: var(--shadow-md);
+}
+
+/* En pantallas estrechas la imagen y el título no caben uno al lado del otro:
+   se apilan, igual que ya hace la tarjeta de favoritos (HU-043). */
+@media (max-width: 30rem) {
+  .cabecera {
+    flex-direction: column;
+    gap: 1.2rem;
+  }
+
+  .imagen {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 21 / 13;
+  }
 }
 
 .fuente {

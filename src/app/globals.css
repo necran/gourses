@@ -88,6 +88,17 @@ body {
   overflow-x: clip;
 }
 
+/* El body es un contenedor flexible en columna (para el pie), y en uno así la
+   línea toma la anchura del contenido más ancho y estira a los hijos hasta
+   ella: aunque el body midiera 400 px, `main` acababa midiendo 980 y su
+   contenido quedaba cortado por el recorte de arriba (HU-043).
+   Darles una anchura definida lo impide sin renunciar al flex. `max-width` no
+   valdría: la clase `.main` de cada página ya fija la suya (1280px, 980px…) y,
+   por tener más peso, ganaría a una regla de elemento como esta. */
+body > * {
+  width: 100%;
+}
+
 body {
   min-height: 100%;
   display: flex;
