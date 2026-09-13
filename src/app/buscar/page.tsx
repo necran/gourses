@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { headers } from "next/headers";
 import { createSupabaseServerClient } from "../../lib/supabase/server-client";
+import { createSupabaseSessionClient } from "../../lib/supabase/session-client";
 import {
   ETIQUETAS_ORDEN,
   ORDENES,
@@ -14,9 +15,11 @@ import { searchCourses } from "../../lib/courses/search-courses";
 import { preferredLanguageFrom } from "../../lib/courses/preferred-language";
 import { formatDuration } from "../../lib/courses/duration";
 import { isValidCourseId } from "../../lib/courses/get-course";
+import { idsFavoritos } from "../../lib/favorites/favorites";
 import { enlacePagina } from "../../lib/courses/buscar-enlaces";
 import { CATEGORY_LABELS, COURSE_CATEGORIES } from "../../lib/courses/categories";
 import { BarraComparar, CasillaComparar } from "../../components/barra-comparar";
+import { alternarFavorito } from "../favoritos/actions";
 import { RecordarBusqueda } from "./recordar-busqueda";
 import styles from "./page.module.css";
 
@@ -46,6 +49,25 @@ function preseleccionadoDesde(raw: string | string[] | undefined): string | null
   return valor && isValidCourseId(valor) ? valor : null;
 }
 
+// El corazón de HU-019, en pequeño: lleno cuando el curso está guardado.
+function IconoCorazon({ guardado }: { guardado: boolean }) {
+  return (
+    <svg
+      width="17"
+      height="17"
+      viewBox="0 0 24 24"
+      fill={guardado ? "currentColor" : "none"}
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+    </svg>
+  );
+}
+
 export default async function BuscarPage({ searchParams }: BuscarPageProps) {
   const rawParams = await searchParams;
   const filters = parseCourseSearchFilters(rawParams);
@@ -68,6 +90,15 @@ export default async function BuscarPage({ searchParams }: BuscarPageProps) {
     undefined,
     idiomaPreferido
   );
+
+  // HU-045: qué cursos de esta página están ya guardados. Solo con sesión: sin
+  // ella no se pinta el botón (la ficha ya explica que hace falta entrar) y no
+  // se paga la consulta.
+  const sesion = await createSupabaseSessionClient();
+  const {
+    data: { user },
+  } = await sesion.auth.getUser();
+  const favoritos = user ? new Set(await idsFavoritos(sesion)) : null;
 
   return (
     <main className={styles.main}>
@@ -205,10 +236,18 @@ export default async function BuscarPage({ searchParams }: BuscarPageProps) {
         // a /comparar, así que la comparación queda en la dirección y se puede
         // compartir, y funciona sin JavaScript de cliente (HU-017).
         <>
+        {/* HU-045: el formulario de guardar vive **fuera** del de comparar,
+            porque HTML no admite formularios anidados. Los botones de cada
+            tarjeta lo referencian con `form=` y llevan el id del curso en su
+            propio `value`, así que no hace falta ni un campo oculto ni
+            JavaScript. Está vacío a propósito. */}
+        {favoritos && <form id="guardar-favorito" action={alternarFavorito} />}
         <form method="get" action="/comparar">
         <BarraComparar />
         <ul className={styles.results}>
-          {resultados.map((course) => (
+          {resultados.map((course) => {
+            const guardado = favoritos?.has(course.id) ?? false;
+            return (
             <li key={course.id} className={styles.card}>
               <CasillaComparar
                 courseId={course.id}
@@ -241,8 +280,25 @@ export default async function BuscarPage({ searchParams }: BuscarPageProps) {
                   <p className={styles.description}>{course.description}</p>
                 )}
               </div>
+              {favoritos && (
+                <button
+                  type="submit"
+                  form="guardar-favorito"
+                  name="courseId"
+                  value={course.id}
+                  className={`${styles.favorito} ${guardado ? styles.favoritoGuardado : ""}`}
+                  aria-label={
+                    guardado
+                      ? `Quitar ${course.title} de favoritos`
+                      : `Guardar ${course.title} en favoritos`
+                  }
+                >
+                  <IconoCorazon guardado={guardado} />
+                </button>
+              )}
             </li>
-          ))}
+            );
+          })}
         </ul>
         </form>
 

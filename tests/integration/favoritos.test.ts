@@ -11,7 +11,11 @@
 // sesión de cada usuario, como en el navegador.
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { contarFavoritos, guardarFavorito } from "../../src/lib/favorites/favorites.ts";
+import {
+  contarFavoritos,
+  guardarFavorito,
+  idsFavoritos,
+} from "../../src/lib/favorites/favorites.ts";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -136,6 +140,19 @@ describeIfConfigured("HU-019 — aislamiento de los favoritos", () => {
 
     const { data } = await sesionB.from("favorites").select("course_id");
     expect(data?.map((f) => f.course_id)).toEqual([cursoB]);
+  }, 30_000);
+
+  // HU-045: la lista de resultados no necesita la ficha de cada favorito, solo
+  // sus ids, así que pregunta por otra vía. Tiene que aislar igual que la
+  // lista completa: es una consulta nueva, y una consulta nueva es una
+  // oportunidad nueva de filtrar lo ajeno.
+  //
+  // No guarda ni borra nada a propósito: los tests de más abajo cuentan
+  // favoritos y darían otro número. El camino de escritura desde los
+  // resultados es `guardarFavorito`/`quitarFavorito`, ya cubiertos aquí.
+  it("los ids de favoritos son solo los propios", async () => {
+    await expect(idsFavoritos(sesionA)).resolves.toEqual([cursoA]);
+    await expect(idsFavoritos(sesionB)).resolves.toEqual([cursoB]);
   }, 30_000);
 
   // Este test comprobaba solo que no hubiera dos filas, y pasaba aunque el

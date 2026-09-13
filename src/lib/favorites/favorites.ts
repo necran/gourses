@@ -15,7 +15,11 @@ export type FavoriteCourse = Omit<CourseDetail, "priceHistory">;
 // olvido no cambia nada (ver 0004_favorites.sql).
 
 // Ids de los cursos guardados, del más reciente al más antiguo.
-async function idsFavoritos(client: SupabaseClient): Promise<string[]> {
+//
+// Exportada desde HU-045: la lista de resultados necesita saber cuáles de los
+// cursos que va a pintar están ya guardados, y para eso no hace falta traerse
+// la ficha entera de cada favorito como hace `listarFavoritos`.
+export async function idsFavoritos(client: SupabaseClient): Promise<string[]> {
   const { data, error } = await client
     .from("favorites")
     .select("course_id")

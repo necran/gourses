@@ -152,6 +152,55 @@
   margin: 0 0 0.3rem;
 }
 
+/* Guardar en favoritos desde la propia lista (HU-045). Mismo corazón y mismos
+   colores que el botón de la ficha, pero reducido a un icono: en una lista de
+   50 resultados, un botón con texto por tarjeta sería más ruido que ayuda. */
+.favorito {
+  flex-shrink: 0;
+  margin-left: auto;
+  display: grid;
+  place-content: center;
+  width: 2.3rem;
+  height: 2.3rem;
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--fav);
+  cursor: pointer;
+}
+
+.favorito:hover {
+  border-color: var(--fav);
+  background: var(--fav-soft);
+}
+
+.favorito:focus-visible {
+  outline: 2px solid var(--fav);
+  outline-offset: 2px;
+}
+
+/* Guardado: relleno rosa y corazón lleno, igual que en la ficha. El estado no
+   depende solo del color — el corazón pasa de contorno a macizo. */
+.favoritoGuardado {
+  background: var(--fav-soft);
+  border-color: var(--fav);
+}
+
+/* Con el corazón, la tarjeta pasa a tener cuatro cosas en fila, y en una
+   pantalla estrecha el título se estrujaba hasta partirse en cinco líneas. La
+   miniatura cede sitio, como ya hace la tarjeta de favoritos (HU-045). */
+@media (max-width: 30rem) {
+  .card {
+    gap: 0.7rem;
+    padding: 0.8rem 0.9rem;
+  }
+
+  .image {
+    width: 4.5rem;
+    height: 3rem;
+  }
+}
+
 /* Las descripciones de Coursera son el texto completo del curso: sin recortar,
    una sola ficha ocupaba varias pantallas. */
 .description {
