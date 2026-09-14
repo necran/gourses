@@ -7,6 +7,7 @@ import { searchCourses } from "../../../lib/courses/search-courses";
 import { parseCourseSearchFilters, textoRecuento } from "../../../lib/courses/search-filters";
 import { preferredLanguageFrom } from "../../../lib/courses/preferred-language";
 import { formatDuration } from "../../../lib/courses/duration";
+import { DIMENSIONES_MINIATURA, cargaDeMiniatura } from "../../../lib/imagenes";
 import { CATEGORY_LABELS } from "../../../lib/courses/categories";
 import {
   descripcionCategoria,
@@ -117,11 +118,18 @@ export default async function CategoriaPage({ params, searchParams }: CategoriaP
       ) : (
         <>
           <ul className={styles.results}>
-            {resultados.map((course) => (
+            {resultados.map((course, posicion) => (
               <li key={course.id} className={styles.card}>
                 {course.imageUrl && (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={course.imageUrl} alt="" className={styles.image} />
+                  <img
+                    src={course.imageUrl}
+                    alt=""
+                    className={styles.image}
+                    {...DIMENSIONES_MINIATURA}
+                    loading={cargaDeMiniatura(posicion)}
+                    decoding="async"
+                  />
                 )}
                 <div>
                   <h2>

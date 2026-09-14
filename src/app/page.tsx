@@ -8,6 +8,7 @@ import { searchCourses, type CourseSearchResult } from "../lib/courses/search-co
 import { parseCourseSearchFilters } from "../lib/courses/search-filters";
 import { preferredLanguageFrom } from "../lib/courses/preferred-language";
 import { formatDuration } from "../lib/courses/duration";
+import { DIMENSIONES_MINIATURA, cargaDeMiniatura } from "../lib/imagenes";
 import styles from "./page.module.css";
 
 // Las cifras vienen de la base de datos en cada carga, así que la portada no
@@ -118,11 +119,18 @@ export default async function Home() {
             </Link>
           </div>
           <ul className={styles.rejillaDestacados}>
-            {destacados.map((course) => (
+            {destacados.map((course, posicion) => (
               <li key={course.id} className={styles.tarjetaDestacada}>
                 {course.imageUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={course.imageUrl} alt="" className={styles.miniatura} />
+                  <img
+                    src={course.imageUrl}
+                    alt=""
+                    className={styles.miniatura}
+                    {...DIMENSIONES_MINIATURA}
+                    loading={cargaDeMiniatura(posicion)}
+                    decoding="async"
+                  />
                 ) : (
                   <div className={styles.miniaturaVacia} aria-hidden="true">
                     <span>{course.source === "udemy" ? "U" : "C"}</span>

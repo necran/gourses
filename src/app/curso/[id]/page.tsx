@@ -84,8 +84,19 @@ export default async function CoursePage({ params }: CoursePageProps) {
       <article>
         <header className={styles.cabecera}>
           {course.imageUrl && (
+            // Es lo primero que se ve de la ficha: se pide de inmediato y con
+            // prioridad, nunca diferida (HU-050). width/height reservan el hueco;
+            // el tamaño en pantalla lo pone el CSS.
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={course.imageUrl} alt="" className={styles.imagen} />
+            <img
+              src={course.imageUrl}
+              alt=""
+              className={styles.imagen}
+              width={480}
+              height={270}
+              fetchPriority="high"
+              decoding="async"
+            />
           )}
           <div>
             <h1>{course.title}</h1>

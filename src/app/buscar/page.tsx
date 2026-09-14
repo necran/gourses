@@ -15,6 +15,7 @@ import {
 import { searchCourses } from "../../lib/courses/search-courses";
 import { preferredLanguageFrom } from "../../lib/courses/preferred-language";
 import { formatDuration } from "../../lib/courses/duration";
+import { DIMENSIONES_MINIATURA, cargaDeMiniatura } from "../../lib/imagenes";
 import { isValidCourseId } from "../../lib/courses/get-course";
 import { idsFavoritos } from "../../lib/favorites/favorites";
 import { enlacePagina } from "../../lib/courses/buscar-enlaces";
@@ -264,7 +265,7 @@ export default async function BuscarPage({ searchParams }: BuscarPageProps) {
         <form method="get" action="/comparar">
         <BarraComparar />
         <ul className={styles.results}>
-          {resultados.map((course) => {
+          {resultados.map((course, posicion) => {
             const guardado = favoritos?.has(course.id) ?? false;
             return (
             <li key={course.id} className={styles.card}>
@@ -274,8 +275,17 @@ export default async function BuscarPage({ searchParams }: BuscarPageProps) {
                 defaultChecked={course.id === preseleccionado}
               />
               {course.imageUrl && (
+                // Solo las primeras cargan de inmediato; las otras 46 de la
+                // página esperan a que se acerquen a la pantalla (HU-050).
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={course.imageUrl} alt="" className={styles.image} />
+                <img
+                  src={course.imageUrl}
+                  alt=""
+                  className={styles.image}
+                  {...DIMENSIONES_MINIATURA}
+                  loading={cargaDeMiniatura(posicion)}
+                  decoding="async"
+                />
               )}
               <div>
                 <h2>

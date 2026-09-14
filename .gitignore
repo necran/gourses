@@ -28,6 +28,9 @@ e2e/screenshots/
 # config personal de Claude Code (no compartida con el equipo)
 .claude/settings.local.json
 
+# config local de los IDE de JetBrains: es de cada máquina, no del proyecto
+.idea/
+
 # sistema
 .DS_Store
 *.log

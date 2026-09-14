@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createSupabaseSessionClient } from "../../lib/supabase/session-client";
 import { listarFavoritos } from "../../lib/favorites/favorites";
 import { formatDuration } from "../../lib/courses/duration";
+import { DIMENSIONES_MINIATURA, cargaDeMiniatura } from "../../lib/imagenes";
 import { hrefCompararFavoritos } from "../../lib/courses/compare";
 import { BotonCesta } from "../../components/boton-cesta";
 import { quitarDeFavoritos } from "./actions";
@@ -49,11 +50,18 @@ export default async function FavoritosPage() {
         </p>
       ) : (
         <ul className={styles.lista}>
-          {favoritos.map((curso) => (
+          {favoritos.map((curso, posicion) => (
             <li key={curso.id} className={styles.tarjeta}>
               {curso.imageUrl && (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={curso.imageUrl} alt="" className={styles.imagen} />
+                <img
+                  src={curso.imageUrl}
+                  alt=""
+                  className={styles.imagen}
+                  {...DIMENSIONES_MINIATURA}
+                  loading={cargaDeMiniatura(posicion)}
+                  decoding="async"
+                />
               )}
               <div className={styles.cuerpo}>
                 <h2>

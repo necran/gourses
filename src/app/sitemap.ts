@@ -4,10 +4,15 @@ import { COURSE_CATEGORIES } from "../lib/courses/categories";
 import { enlaceCategoria } from "../lib/courses/categoria-seo";
 import { TITULAR } from "../lib/legal/titular";
 
-// Se genera desde la base de datos en cada petición, no se fija a mano: la
-// ingesta diaria cambia el catálogo y un sitemap escrito a mano quedaría
-// desfasado a los pocos días (HU-016).
-export const dynamic = "force-dynamic";
+// Se genera desde la base de datos, no se fija a mano: la ingesta diaria cambia
+// el catálogo y un sitemap escrito a mano quedaría desfasado (HU-016).
+//
+// Pero no en cada petición (HU-050): con 15.000 cursos eran 16 consultas y 5 s
+// de función por visita de un rastreador, en producción, para algo que solo
+// cambia una vez al día. Se regenera como mucho una vez al día, que coincide con
+// la cadencia de la ingesta. Sin base de datos (la compilación en GitHub,
+// HU-044) el try/catch de abajo devuelve las páginas fijas en vez de fallar.
+export const revalidate = 86400;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const fijas: MetadataRoute.Sitemap = [
