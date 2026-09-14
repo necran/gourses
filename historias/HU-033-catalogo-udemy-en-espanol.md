@@ -74,6 +74,22 @@ propio tope, para no arriesgar la que ya funciona.
 producción la primera ejecución real de `ingesta-es.yml` para medir su duración y
 ajustar el tope, igual que se hizo con la pasada en inglés en HU-023.
 
+**Primer dato medido (2026-09-14), que no sustituye a esa medición.** Se lanzó la pasada
+completa en español **en local, contra el NAS**, no en un ejecutor de GitHub contra
+Supabase Cloud, así que sirve de orientación y nada más. Resultado: **a los 40 minutos
+seguía corriendo** y el sistema operativo la mató por falta de memoria de la máquina
+(15 GB ocupados, con el servidor de desarrollo en 1,1 GB y tres procesos de Chrome
+sumando 1,8 GB; la ingesta fue la gota, no la única causa).
+
+Dos cosas que se aprenden de ahí:
+
+- **El tope de 90 min no es holgado.** Una pasada que a los 40 min no había terminado en
+  una máquina dedicada deja poco margen; conviene medirlo de verdad en producción antes
+  de darlo por bueno, que es justo lo que sigue pendiente.
+- **Aunque se corte a mitad, lo escrito queda bien.** Los upserts son idempotentes: al
+  morir había pasado el catálogo de 9.380 a 15.395 cursos y los de español de 440 a
+  3.800, sin filas a medias ni duplicados. Una interrupción no obliga a limpiar nada.
+
 - Unitarios: 404 pasan.
 - Integración: 6 pasan (`udemy-ingest.test.ts`, incluida la nueva de locale).
 - Revisión de seguridad: sin hallazgos.

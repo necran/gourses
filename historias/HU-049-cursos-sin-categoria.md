@@ -123,6 +123,21 @@ funcionando.
 Los 306 restantes quedan a la espera de la próxima pasada completa en español, que los
 actualizará sin necesidad de tocar la base a mano.
 
+**Comprobado a escala el 2026-09-14.** Se lanzó esa pasada completa en la base de
+desarrollo. El sistema la mató a mitad por falta de memoria de la máquina (ver HU-033),
+pero para entonces ya había hecho el trabajo:
+
+| | Antes | Después |
+|---|---|---|
+| Cursos | 9.380 | 15.395 |
+| Sin categoría | 306 | **2** |
+| En español | 440 | 3.800 |
+
+De los dos que quedan, ninguno contradice el arreglo: uno es un curso real que no se ha
+vuelto a visitar desde el 10 de agosto —lo clasificará el primer recorrido que lo
+cubra—, y el otro es una fila de prueba (`test-hu037-…`) que un test de integración dejó
+sin limpiar, no un curso del catálogo.
+
 ### Revisión de seguridad
 
 Sin hallazgos:
