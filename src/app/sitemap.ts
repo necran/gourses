@@ -3,6 +3,7 @@ import { createSupabaseServerClient } from "../lib/supabase/server-client";
 import { COURSE_CATEGORIES } from "../lib/courses/categories";
 import { enlaceCategoria } from "../lib/courses/categoria-seo";
 import { TITULAR } from "../lib/legal/titular";
+import { RUTA_GUIA } from "../lib/courses/guia-plataformas";
 import { enlaceTema, leerResumenTemas, temasEnlazables } from "../lib/courses/temas-datos";
 import {
   enlaceNovedades,
@@ -25,6 +26,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const fijas: MetadataRoute.Sitemap = [
     { url: `${TITULAR.url}/`, changeFrequency: "daily", priority: 1 },
     { url: `${TITULAR.url}/buscar`, changeFrequency: "daily", priority: 0.8 },
+    // La guía «Udemy o Coursera» (HU-063): sus cifras se recalculan a diario,
+    // pero el contenido cambia poco.
+    { url: `${TITULAR.url}${RUTA_GUIA}`, changeFrequency: "weekly", priority: 0.7 },
     { url: `${TITULAR.url}/afiliacion`, changeFrequency: "yearly", priority: 0.3 },
     { url: `${TITULAR.url}/privacidad`, changeFrequency: "yearly", priority: 0.3 },
     { url: `${TITULAR.url}/aviso-legal`, changeFrequency: "yearly", priority: 0.3 },

@@ -14,6 +14,7 @@ import { serializeStructuredData } from "../lib/courses/course-seo";
 import { datosEstructuradosSitio } from "../lib/seo/seo-sitio";
 import { nombreTema, type TemaId } from "../lib/courses/temas";
 import { enlaceTema, leerResumenTemas, temasEnlazables } from "../lib/courses/temas-datos";
+import { RUTA_GUIA } from "../lib/courses/guia-plataformas";
 import styles from "./page.module.css";
 
 // Las cifras vienen de la base de datos en cada carga, así que la portada no
@@ -129,6 +130,10 @@ export default async function Home() {
             </li>
           ))}
         </ul>
+        {/* HU-063: la guía con datos de las dos plataformas del catálogo. */}
+        <p className={styles.verNovedades}>
+          <Link href={RUTA_GUIA}>¿Udemy o Coursera? En qué se diferencian, con datos →</Link>
+        </p>
       </section>
 
       {temas.length > 0 && (

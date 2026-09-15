@@ -5,7 +5,9 @@ import { expect, test, type Page } from "@playwright/test";
 
 test.use({ viewport: { width: 400, height: 800 } });
 
-const PAGINAS = ["/", "/categoria/desarrollo", "/cursos/python", "/novedades", "/privacidad"];
+// La guía de HU-063 se añade aquí: su tabla tiene que desplazarse sola, sin que
+// la página se salga de la pantalla.
+const PAGINAS = ["/", "/categoria/desarrollo", "/cursos/python", "/novedades", "/privacidad", "/guias/udemy-o-coursera"];
 
 async function medir(page: Page) {
   return page.evaluate(() => {
