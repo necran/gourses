@@ -12,6 +12,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { listarFavoritos } from "../../src/lib/favorites/favorites.ts";
 import { avisosActivados } from "../../src/lib/alertas/preferencias.ts";
+import { boletinActivo } from "../../src/lib/boletin/preferencias.ts";
 import { componerExportacion } from "../../src/lib/cuenta/exportacion.ts";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -58,15 +59,17 @@ describeIfConfigured("HU-024 — exportación de los datos propios", () => {
 
   // Arma la exportación igual que la ruta: mismas funciones, misma sesión.
   async function exportarCon(cliente: SupabaseClient, correo: string) {
-    const [favoritos, avisos] = await Promise.all([
+    const [favoritos, avisos, boletin] = await Promise.all([
       listarFavoritos(cliente),
       avisosActivados(cliente),
+      boletinActivo(cliente),
     ]);
     return componerExportacion({
       correo,
       altaEn: "2026-01-01T00:00:00.000Z",
       ultimoAccesoEn: "2026-01-02T00:00:00.000Z",
       avisosDeBajadaDePrecio: avisos,
+      boletinSemanal: boletin,
       favoritos,
     });
   }

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createSupabaseSessionClient } from "../../../lib/supabase/session-client";
 import { listarFavoritos } from "../../../lib/favorites/favorites";
 import { avisosActivados } from "../../../lib/alertas/preferencias";
+import { boletinActivo } from "../../../lib/boletin/preferencias";
 import {
   componerExportacion,
   nombreFicheroExportacion,
@@ -38,9 +39,10 @@ export async function GET(request: Request) {
   // del token verificado (ver 0004_favorites.sql y 0006_alertas_precio.sql). Es
   // deliberado — si el filtro viviera aquí, olvidarlo un día sería una fuga; con
   // la RLS, la base de datos no entregaría filas ajenas ni queriendo.
-  const [favoritos, avisos] = await Promise.all([
+  const [favoritos, avisos, boletin] = await Promise.all([
     listarFavoritos(client),
     avisosActivados(client),
+    boletinActivo(client),
   ]);
 
   const datos = componerExportacion({
@@ -48,6 +50,7 @@ export async function GET(request: Request) {
     altaEn: user.created_at ?? null,
     ultimoAccesoEn: user.last_sign_in_at ?? null,
     avisosDeBajadaDePrecio: avisos,
+    boletinSemanal: boletin,
     favoritos,
   });
 

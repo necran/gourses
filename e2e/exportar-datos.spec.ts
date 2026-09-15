@@ -56,10 +56,12 @@ test.describe("HU-024 — exportar mis datos", () => {
 
       expect(datos.cuenta.correo).toBe(correo);
       expect(datos.preferencias).toHaveProperty("avisosDeBajadaDePrecio");
+      expect(datos.preferencias.boletinSemanal).toBe(false);
       expect(datos.favoritos.map((f: { titulo: string }) => f.titulo)).toContain(titulo);
       // Legible por máquina de verdad: la versión del formato permite saber
       // contra qué forma se está leyendo.
-      expect(datos.formato).toBe(1);
+      // 2 desde HU-066, que añadió el boletín a las preferencias.
+      expect(datos.formato).toBe(2);
     } finally {
       await borrarUsuario(userId);
     }

@@ -1,0 +1,44 @@
+# Boletín semanal (HU-066).
+#
+# Los lunes, después de la ingesta de la madrugada: así las novedades y las
+# bajadas de la semana ya están en la base.
+name: Boletín semanal
+
+on:
+  schedule:
+    # 07:23 UTC del lunes, fuera de las horas en punto.
+    - cron: "23 7 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: boletin
+  cancel-in-progress: false
+
+jobs:
+  boletin:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    env:
+      DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+      # A nivel de job para poder usarlo en el `if` del paso (ver ingesta.yml).
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      RESEND_FROM: ${{ secrets.RESEND_FROM }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+
+      - run: npm ci
+
+      # Mientras no exista RESEND_API_KEY, se salta en vez de fallar cada semana.
+      - name: Boletín semanal
+        if: ${{ env.RESEND_API_KEY != '' }}
+        run: node scripts/boletin-semanal.mjs

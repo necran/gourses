@@ -16,7 +16,7 @@ export default function Privacidad() {
       </p>
 
       <h1>Política de privacidad</h1>
-      <p className={styles.actualizado}>Última actualización: 11 de septiembre de 2026</p>
+      <p className={styles.actualizado}>Última actualización: 15 de septiembre de 2026</p>
 
       <p>
         Esta política describe lo que este sitio hace <strong>hoy</strong>, no lo que suele
@@ -30,7 +30,9 @@ export default function Privacidad() {
         <li>No activamos ninguna analítica sin que la aceptes antes.</li>
         <li>No pedimos nombre, apellidos, teléfono ni datos de pago.</li>
         <li>No vendemos ni cedemos datos personales a nadie con fines comerciales.</li>
-        <li>No usamos tu correo para enviarte publicidad.</li>
+        <li>
+          No te enviamos correos comerciales, salvo el boletín semanal si te apuntas tú.
+        </li>
       </ul>
 
       <h2>Si creas una cuenta</h2>
@@ -62,11 +64,27 @@ export default function Privacidad() {
         favoritos también corta sus avisos. Cada correo lleva ambas indicaciones.
       </p>
 
+      <h3 id="boletin">Boletín semanal, solo si te apuntas</h3>
+      <p>
+        Si marcas «Quiero recibir el boletín semanal» en <Link href="/mi-cuenta">Mi cuenta</Link>,
+        te enviamos un correo a la semana con los cursos nuevos en español y las mayores bajadas
+        de precio del catálogo. Viene desmarcado: sin esa casilla no lo recibes, y si una semana
+        no hay nada nuevo, no se envía.
+      </p>
+      <p>
+        La base jurídica es tu <strong>consentimiento</strong> (artículo 6.1.a del RGPD y
+        artículo 21 de la LSSI). Guardamos si estás apuntado, cuándo te apuntaste —para poder
+        demostrar que lo pediste— y qué semanas te lo hemos enviado, para no repetirlo. Puedes
+        darte de baja cuando quieras con el enlace que lleva cada boletín, sin necesidad de
+        entrar en tu cuenta, o desmarcando la casilla en Mi cuenta.
+      </p>
+
       <h3>Para qué y con qué base jurídica</h3>
       <p>
-        Únicamente para identificarte y poder asociarte lo que guardes en el sitio. La base
-        jurídica es la ejecución del servicio que tú mismo solicitas al crear la cuenta
-        (artículo 6.1.b del RGPD).
+        Para identificarte y poder asociarte lo que guardes en el sitio. La base jurídica es la
+        ejecución del servicio que tú mismo solicitas al crear la cuenta (artículo 6.1.b del
+        RGPD). Si te apuntas al boletín, también para enviártelo, con tu consentimiento (ver
+        «Boletín semanal»).
       </p>
 
       <h3>Cookies de sesión</h3>
@@ -84,7 +102,8 @@ export default function Privacidad() {
           alojan en la Unión Europea (Irlanda).
         </li>
         <li>
-          <strong>Resend</strong> envía el correo con tu enlace de acceso.
+          <strong>Resend</strong> envía el correo con tu enlace de acceso, los avisos de bajada
+          de precio y el boletín si te apuntas.
         </li>
         <li>
           <strong>Google</strong> presta la analítica, solo si la aceptas (ver más abajo).

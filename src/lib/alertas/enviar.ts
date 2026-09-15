@@ -43,6 +43,7 @@ export function crearEnviadorResend(apiKey: string, remitente?: string): Enviado
           subject: mensaje.asunto,
           text: mensaje.texto,
           html: mensaje.html,
+          ...(mensaje.cabeceras ? { headers: mensaje.cabeceras } : {}),
         }),
       });
 

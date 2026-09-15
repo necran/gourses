@@ -13,9 +13,25 @@ function entrada(overrides: Partial<EntradaResumen> = {}): EntradaResumen {
     ultimoAccesoEn: "2026-09-10T08:30:00.000Z",
     numeroDeFavoritos: 3,
     avisosDeBajadaDePrecio: true,
+    boletinSemanal: false,
     ...overrides,
   };
 }
+
+describe("resumenDeCuenta — boletín semanal (HU-066)", () => {
+  const valor = (e: EntradaResumen) =>
+    resumenDeCuenta(e).lineas.find((l) => l.etiqueta === "Boletín semanal")?.valor;
+
+  it("dice si está apuntada, y «no disponible» si no se pudo leer", () => {
+    expect(valor(entrada())).toBe("No apuntado");
+    expect(valor(entrada({ boletinSemanal: true }))).toBe("Apuntado");
+    expect(valor(entrada({ boletinSemanal: null }))).toBe("No disponible ahora mismo");
+  });
+
+  it("la finalidad declara el boletín y su base, el consentimiento", () => {
+    expect(FINALIDAD_Y_CONSERVACION).toMatch(/boletín semanal.*consentimiento.*6\.1\.a/);
+  });
+});
 
 describe("formatearFecha", () => {
   it("da el día en español, sin hora", () => {

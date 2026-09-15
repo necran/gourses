@@ -14,7 +14,9 @@ const NO_DISPONIBLE = "No disponible ahora mismo";
 export const FINALIDAD_Y_CONSERVACION =
   "Todo esto se guarda mientras tengas la cuenta, y solo para identificarte y " +
   "asociarte lo que guardas aquí. La base jurídica es la ejecución del servicio " +
-  "que pides al crear la cuenta (artículo 6.1.b del RGPD).";
+  "que pides al crear la cuenta (artículo 6.1.b del RGPD). Si te apuntas al boletín " +
+  "semanal, tu correo se usa también para enviártelo, con tu consentimiento " +
+  "(artículo 6.1.a), hasta que te des de baja.";
 
 const MESES = [
   "enero",
@@ -54,6 +56,8 @@ export interface EntradaResumen {
   numeroDeFavoritos: number | null;
   /** Preferencia de avisos, o `null` si no se pudo leer. */
   avisosDeBajadaDePrecio: boolean | null;
+  /** Si está apuntada al boletín (HU-066), o `null` si no se pudo leer. */
+  boletinSemanal: boolean | null;
 }
 
 export interface LineaResumen {
@@ -88,6 +92,15 @@ export function resumenDeCuenta(entrada: EntradaResumen): ResumenDeCuenta {
             : entrada.avisosDeBajadaDePrecio
               ? "Activados"
               : "Desactivados",
+      },
+      {
+        etiqueta: "Boletín semanal",
+        valor:
+          entrada.boletinSemanal === null
+            ? NO_DISPONIBLE
+            : entrada.boletinSemanal
+              ? "Apuntado"
+              : "No apuntado",
       },
     ],
     finalidadYConservacion: FINALIDAD_Y_CONSERVACION,

@@ -41,6 +41,7 @@ function entrada(overrides: Partial<EntradaExportacion> = {}): EntradaExportacio
     altaEn: "2026-08-01T10:00:00.000Z",
     ultimoAccesoEn: "2026-09-01T12:00:00.000Z",
     avisosDeBajadaDePrecio: true,
+    boletinSemanal: false,
     favoritos: [curso()],
     ...overrides,
   };
@@ -59,7 +60,8 @@ describe("componerExportacion", () => {
       altaEn: "2026-08-01T10:00:00.000Z",
       ultimoAccesoEn: "2026-09-01T12:00:00.000Z",
     });
-    expect(datos.preferencias).toEqual({ avisosDeBajadaDePrecio: true });
+    expect(datos.preferencias).toEqual({ avisosDeBajadaDePrecio: true, boletinSemanal: false });
+    expect(VERSION_FORMATO).toBe(2);
     expect(datos.favoritos).toHaveLength(1);
   });
 

@@ -18,6 +18,7 @@
     "ingest:udemy": "node --env-file=.env.local scripts/ingest-udemy.mjs",
     "resumir:cursos": "node --env-file=.env.local scripts/resumir-cursos.mjs",
     "clasificar:temas": "node --env-file=.env.local scripts/clasificar-temas.mjs",
+    "boletin:semanal": "node --env-file=.env.local scripts/boletin-semanal.mjs",
     "test:integration": "node --env-file=.env.local node_modules/.bin/vitest run --no-file-parallelism tests/integration",
     "correo:plantillas": "node --env-file=.env.local scripts/aplicar-plantillas-correo.mjs",
     "correo:plantillas-nas": "node --env-file=.env.local scripts/plantillas-correo-nas.mjs"

@@ -9,6 +9,7 @@ import { isValidEmail, normalizeEmail } from "../../lib/auth/email";
 import { resultadoCambioCorreo, type ResultadoCambioCorreo } from "../../lib/auth/resultado-cambio-correo";
 import { urlSitio } from "../../lib/auth/sitio";
 import { guardarPreferenciaAvisos } from "../../lib/alertas/preferencias";
+import { guardarPreferenciaBoletin } from "../../lib/boletin/preferencias";
 
 export interface AvisosEstado {
   guardado?: boolean;
@@ -42,6 +43,32 @@ export async function cambiarAvisos(
   revalidatePath("/mi-cuenta");
 
   return { guardado: true, activados };
+}
+
+export interface BoletinEstado {
+  guardado?: boolean;
+  activo?: boolean;
+}
+
+// Apunta o da de baja del boletín semanal (HU-066). Como en los avisos, de quién
+// es la preferencia sale de la sesión verificada, no del formulario.
+export async function cambiarBoletin(
+  _previo: BoletinEstado,
+  formData: FormData
+): Promise<BoletinEstado> {
+  const client = await createSupabaseSessionClient();
+  const {
+    data: { user },
+  } = await client.auth.getUser();
+
+  if (!user) redirect("/acceder");
+
+  const activo = formData.get("boletin") !== null;
+
+  await guardarPreferenciaBoletin(client, user.id, activo);
+  revalidatePath("/mi-cuenta");
+
+  return { guardado: true, activo };
 }
 
 export interface BorradoEstado {

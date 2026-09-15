@@ -13,6 +13,8 @@ export interface MensajeAviso {
   asunto: string;
   texto: string;
   html: string;
+  /** Cabeceras extra del correo, p. ej. `List-Unsubscribe` en el boletín (HU-066). */
+  cabeceras?: Record<string, string>;
 }
 
 function formatearPrecio(cantidad: number, divisa: string): string {
@@ -30,7 +32,7 @@ function porcentajeBajada(anterior: number, actual: number): number {
 // obligó a escapar los datos estructurados de la ficha (HU-016). Un cliente de
 // correo que interprete etiquetas convertiría un título malicioso en algo peor
 // que un título feo.
-function escaparHtml(texto: string): string {
+export function escaparHtml(texto: string): string {
   return texto
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")

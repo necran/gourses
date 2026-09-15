@@ -9,6 +9,8 @@ import { avisoCambioCorreo } from "../../lib/auth/aviso-cambio-correo";
 import { cerrarSesion } from "../acceder/actions";
 import { BorrarCuentaForm } from "./borrar-form";
 import { AvisosForm } from "./avisos-form";
+import { BoletinForm } from "./boletin-form";
+import { boletinActivo } from "../../lib/boletin/preferencias";
 import { CerrarSesionGlobalForm } from "./cerrar-sesion-global-form";
 import { CambiarCorreoForm } from "./cambiar-correo-form";
 import styles from "./page.module.css";
@@ -54,12 +56,20 @@ export default async function MiCuentaPage({ searchParams }: MiCuentaPageProps) 
     avisos = null;
   }
 
+  let boletin: boolean | null = null;
+  try {
+    boletin = await boletinActivo(client);
+  } catch {
+    boletin = null;
+  }
+
   const resumen = resumenDeCuenta({
     correo: usuario.email,
     altaEn: usuario.created_at,
     ultimoAccesoEn: usuario.last_sign_in_at,
     numeroDeFavoritos: numFavoritos,
     avisosDeBajadaDePrecio: avisos,
+    boletinSemanal: boletin,
   });
 
   // Lo manda `mi-cuenta/correo/callback` al volver del enlace de confirmación.
@@ -153,6 +163,10 @@ export default async function MiCuentaPage({ searchParams }: MiCuentaPageProps) 
           por defecto documentado («sin fila = activados»); el resumen de arriba
           ya avisa de que no se pudo leer. */}
       <AvisosForm activados={avisos ?? true} />
+
+      {/* HU-066. Si la lectura falló, desmarcado: nunca se da por apuntado a
+          nadie que no lo haya pedido. */}
+      <BoletinForm activo={boletin ?? false} />
 
       {/* Va antes de la zona de peligro a propósito: llevarse los datos solo
           sirve si se puede hacer *antes* de borrarlos (HU-024). */}

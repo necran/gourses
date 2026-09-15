@@ -31,7 +31,7 @@ test.describe("HU-021 — avisos de bajada de precio", () => {
 
       const casilla = page.getByRole("checkbox", { name: /quiero recibir estos avisos/i });
       await casilla.uncheck();
-      await page.getByRole("button", { name: "Guardar" }).click();
+      await page.getByRole("button", { name: "Guardar", exact: true }).click();
 
       // Hay que esperar a que el servidor confirme antes de navegar: si no, la
       // navegación cancela el envío a media escritura y el test culpa al código
@@ -54,13 +54,13 @@ test.describe("HU-021 — avisos de bajada de precio", () => {
       const casilla = page.getByRole("checkbox", { name: /quiero recibir estos avisos/i });
 
       await casilla.uncheck();
-      await page.getByRole("button", { name: "Guardar" }).click();
+      await page.getByRole("button", { name: "Guardar", exact: true }).click();
       await expect(page.getByRole("status")).toContainText(/no te enviaremos más avisos/i);
       await page.goto("/mi-cuenta");
       await expect(casilla).not.toBeChecked();
 
       await casilla.check();
-      await page.getByRole("button", { name: "Guardar" }).click();
+      await page.getByRole("button", { name: "Guardar", exact: true }).click();
       await expect(page.getByRole("status")).toContainText(/te avisaremos/i);
       await page.goto("/mi-cuenta");
       await expect(casilla).toBeChecked();

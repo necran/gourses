@@ -10,7 +10,8 @@ import type { FavoriteCourse } from "../favorites/favorites";
 // Versión del formato. Va dentro del propio fichero porque quien se lo lleve a
 // otro sitio necesita saber contra qué forma lo está leyendo, y esa forma puede
 // cambiar cuando cambien los datos que guardamos.
-export const VERSION_FORMATO = 1;
+// 2: añade `preferencias.boletinSemanal` (HU-066).
+export const VERSION_FORMATO = 2;
 
 export interface EntradaExportacion {
   correo: string | null;
@@ -19,6 +20,7 @@ export interface EntradaExportacion {
   /** Último acceso, en ISO. Lo declara `/privacidad` como dato guardado. */
   ultimoAccesoEn: string | null;
   avisosDeBajadaDePrecio: boolean;
+  boletinSemanal: boolean;
   favoritos: FavoriteCourse[];
 }
 
@@ -45,6 +47,7 @@ export interface DatosExportados {
   };
   preferencias: {
     avisosDeBajadaDePrecio: boolean;
+    boletinSemanal: boolean;
   };
   favoritos: CursoExportado[];
 }
@@ -91,6 +94,7 @@ export function componerExportacion(
     },
     preferencias: {
       avisosDeBajadaDePrecio: entrada.avisosDeBajadaDePrecio,
+      boletinSemanal: entrada.boletinSemanal,
     },
     favoritos: entrada.favoritos.map(exportarCurso),
   };
