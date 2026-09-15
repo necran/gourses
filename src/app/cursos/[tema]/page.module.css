@@ -195,3 +195,17 @@
   display: block;
   margin: 0.15rem 0 0;
 }
+
+/* HU-062. Medían 17–21 px de alto: con el relleno superan los 24 px de WCAG 2.2
+   AA y se aciertan con el dedo. `inline-block` para que el relleno cuente como
+   zona táctil sin separar las líneas del texto. */
+.volver a,
+.intro a {
+  display: inline-block;
+  padding-block: 0.3rem;
+}
+
+.card h2 a {
+  display: inline-block;
+  padding-block: 0.15rem;
+}

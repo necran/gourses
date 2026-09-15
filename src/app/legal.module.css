@@ -58,3 +58,19 @@
 .main li {
   margin-bottom: 0.4rem;
 }
+
+/* HU-062. El enlace de vuelta medía 17 px de alto: con el relleno supera los 24 px
+   de WCAG 2.2 AA. */
+.volver a {
+  display: inline-block;
+  padding-block: 0.3rem;
+}
+
+/* Los enlaces dentro del texto medían 21 px de alto. Se quedan en línea (un
+   inline-block partiría mal los enlaces largos entre dos líneas) y el relleno
+   vertical, que en un elemento en línea cuenta como zona táctil sin mover las
+   líneas del párrafo, los lleva por encima de 24 px (HU-062). */
+.main p a,
+.main li a {
+  padding-block: 0.2rem;
+}

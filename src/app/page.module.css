@@ -201,7 +201,8 @@
 }
 
 .tarjetaCategoria {
-  font-size: 0.72rem;
+  /* 12,5 px: por debajo de 12 no se lee bien en el móvil (HU-062, como HU-054). */
+  font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
@@ -273,4 +274,19 @@
 .verNovedades a:hover {
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+
+/* HU-062. «Ver todos» medía 18 px de alto: con el relleno supera los 24 px de
+   WCAG 2.2 AA y se acierta con el dedo. */
+.verTodos {
+  display: inline-block;
+  padding-block: 0.3rem;
+}
+
+/* Los títulos de los destacados medían 20 px. El `h3` recorta a dos líneas con
+   line-clamp, que se rompería con un inline-block: el enlace se queda en línea y
+   el relleno vertical, que en un elemento en línea cuenta en su zona táctil pero
+   no mueve las líneas, basta para superar los 24 px. */
+.tarjetaDestacada h3 a {
+  padding-block: 0.2rem;
 }
