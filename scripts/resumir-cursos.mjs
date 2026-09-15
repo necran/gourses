@@ -1,6 +1,6 @@
-// Ejecuta el job de resumen con IA bajo demanda (HU-030). Nunca automático:
-// a diferencia de la ingesta, no hay cron para esto — se lanza a mano cuando
-// se quiere, para ver el resultado antes de repetirlo.
+// Ejecuta el job de resumen con IA (HU-030). En producción lo lanza cada día
+// la tarea programada `.github/workflows/resumenes.yml` (HU-053); en local se
+// lanza a mano con `npm run resumir:cursos`, contra la base de desarrollo.
 //
 // La clave se lee aquí, en el entrypoint del job, y se pasa hacia abajo:
 // nunca dentro de la librería ni llega al frontend (ver .claude/rules/seguridad.md).

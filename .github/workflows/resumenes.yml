@@ -1,0 +1,57 @@
+# Resúmenes con IA en producción (HU-053).
+#
+# Va aparte de la ingesta: esa ya roza su tope de tiempo, y un fallo de la IA no
+# debe llevarse por delante la actualización del catálogo.
+#
+# Con la cuota gratuita de Gemini no se puede resumir el catálogo de una vez: el
+# job avanza cada día por orden (español primero) y se detiene al agotar la
+# cuota diaria (HU-052). Cada resumen se guarda en cuanto se genera, así que
+# nada se pierde si la ejecución se corta.
+name: Resúmenes con IA
+
+on:
+  schedule:
+    # 09:37 UTC: después de la ingesta (04:17) y de la ingesta en español
+    # (07:17), y después de que Google reinicie la cuota diaria (medianoche en la
+    # costa del Pacífico, 07:00–08:00 UTC según la época del año).
+    - cron: "37 9 * * *"
+  # Para probarla sin esperar, desde la pestaña Actions.
+  workflow_dispatch:
+
+# Solo necesita leer el código; no escribe nada en el repositorio.
+permissions:
+  contents: read
+
+concurrency:
+  group: resumenes
+  cancel-in-progress: false
+
+jobs:
+  resumenes:
+    runs-on: ubuntu-latest
+    # A una petición cada 4,5 s (el ritmo del adaptador) caben unas 2.000. Si la
+    # cuota se agota antes, el job para solo y la ejecución acaba en verde.
+    timeout-minutes: 150
+
+    env:
+      # La conexión directa de Supabase es solo IPv6; se usa el pooler.
+      DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+      # A nivel de job, y no solo en el paso, porque el contexto `secrets` no está
+      # disponible en el `if` de un paso pero `env` sí. Sin el secreto, el paso
+      # se salta en vez de fallar cada día en rojo.
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # Los scripts ejecutan TypeScript directamente con Node.
+          node-version: "24"
+          cache: npm
+
+      - run: npm ci
+
+      - name: Generar resúmenes
+        if: ${{ env.GEMINI_API_KEY != '' }}
+        run: node scripts/resumir-cursos.mjs
