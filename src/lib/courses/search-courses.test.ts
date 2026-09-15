@@ -4,6 +4,7 @@ import {
   paginarIntercalado,
   patronPalabraClave,
   priorizarIdioma,
+  sinTildes,
   valorFiltroOr,
 } from "./search-courses";
 import type { CourseSearchResult } from "./search-courses";
@@ -142,6 +143,41 @@ describe("patronPalabraClave (HU-057)", () => {
     expect(patronPalabraClave("año").soloTitulo).toBe(false);
     expect(patronPalabraClave("日本語").soloTitulo).toBe(false);
     expect(patronPalabraClave("🐍ab").soloTitulo).toBe(true);
+  });
+});
+
+// Lo que devuelve `unaccent` en la base, comprobado el 2026-09-15: «Programación,
+// DISEÑO, pingüino, Ñandú, café, naïve, œuvre, 100% C#» → «Programacion, DISENO,
+// pinguino, Nandu, cafe, naive, oeuvre, 100% C#».
+describe("sinTildes (HU-061)", () => {
+  it("quita tildes, diéresis y la virgulilla de la ñ, respetando mayúsculas", () => {
+    expect(sinTildes("Programación, DISEÑO, pingüino, Ñandú, café, naïve")).toBe(
+      "Programacion, DISENO, pinguino, Nandu, cafe, naive"
+    );
+  });
+
+  it("convierte las ligaduras que unaccent convierte", () => {
+    expect(sinTildes("œuvre Æsir straße")).toBe("oeuvre AEsir strasse");
+  });
+
+  it("deja intactos los signos que importan a la búsqueda", () => {
+    expect(sinTildes("100% C# snake_case (2026), \"x\" \\")).toBe("100% C# snake_case (2026), \"x\" \\");
+  });
+
+  it("un texto sin tildes no cambia", () => {
+    expect(sinTildes("python para principiantes")).toBe("python para principiantes");
+  });
+});
+
+describe("patronPalabraClave sobre el texto sin tildes (HU-061)", () => {
+  it("el patrón no lleva tildes, así que «diseño» y «diseno» buscan lo mismo", () => {
+    expect(patronPalabraClave("diseño").patron).toBe("%diseno%");
+    expect(patronPalabraClave("diseno").patron).toBe(patronPalabraClave("diseño").patron);
+  });
+
+  it("las tildes no cuentan de más ni de menos para decidir si va solo al título", () => {
+    expect(patronPalabraClave("ñú").soloTitulo).toBe(true);
+    expect(patronPalabraClave("año").soloTitulo).toBe(false);
   });
 });
 

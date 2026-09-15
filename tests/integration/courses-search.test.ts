@@ -9,7 +9,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { Client } from "pg";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { searchCourses } from "../../src/lib/courses/search-courses";
+import { searchCourses, sinTildes } from "../../src/lib/courses/search-courses";
 import { parseCourseSearchFilters } from "../../src/lib/courses/search-filters";
 
 const databaseUrl = process.env.DATABASE_URL;
@@ -37,8 +37,10 @@ describeIfConfigured("HU-007 — searchCourses", () => {
         ('coursera', $3, 'Curso de prueba HU-007: sin valoración ni precio', 'catálogo por suscripción', null, null, null, 'es'),
         ('coursera', $4, 'Curso de prueba HU-057: zq9 100% práctico', 'sin comodines', null, null, null, 'es'),
         ('coursera', $5, 'Curso de prueba HU-057: 100 x práctico', 'la descripción menciona zq9 de pasada', null, null, null, 'es'),
-        ('coursera', $6, 'Curso de prueba "HU-059": Godot, nivel (2026) C:\\ruta', 'con signos', null, null, null, 'es')`,
-      [`${MARKER}rust`, `${MARKER}cocina`, `${MARKER}sin-precio`, `${MARKER}porcentaje`, `${MARKER}sin-porcentaje`, `${MARKER}signos`]
+        ('coursera', $6, 'Curso de prueba "HU-059": Godot, nivel (2026) C:\\ruta', 'con signos', null, null, null, 'es'),
+        ('coursera', $7, 'Curso de prueba HU-061: Diseño y Programación zqx', 'con tildes', null, null, null, 'es'),
+        ('coursera', $8, 'Curso de prueba HU-061: Diseno sin tildes zqy', 'escrito sin tildes', null, null, null, 'es')`,
+      [`${MARKER}rust`, `${MARKER}cocina`, `${MARKER}sin-precio`, `${MARKER}porcentaje`, `${MARKER}sin-porcentaje`, `${MARKER}signos`, `${MARKER}tildes`, `${MARKER}sin-tildes`]
     );
   });
 
@@ -131,6 +133,26 @@ describeIfConfigured("HU-007 — searchCourses", () => {
       expect(resultados.map((r) => r.title), JSON.stringify(params)).toContain(
         'Curso de prueba "HU-059": Godot, nivel (2026) C:\\ruta'
       );
+    }
+  });
+
+  // HU-061. Por el mismo camino que la web.
+  it("sin tildes encuentra lo escrito con tildes, y con tildes lo escrito sin ellas", async () => {
+    const titulos = async (keyword: string) =>
+      (await searchCourses(supabase, parseCourseSearchFilters({ keyword }), 1000)).resultados.map((r) => r.title);
+
+    expect(await titulos("diseno y programacion zqx")).toContain("Curso de prueba HU-061: Diseño y Programación zqx");
+    expect(await titulos("diseño sin tildes zqy")).toContain("Curso de prueba HU-061: Diseno sin tildes zqy");
+  });
+
+  it("la palabra clave se normaliza en TypeScript igual que unaccent en la base", async () => {
+    const palabras = ["Programación", "DISEÑO", "pingüino", "Ñandú", "café", "naïve", "œuvre", "Fotografía", "Inglés", "informática", "100% C#"];
+    const { rows } = await pgClient.query(
+      "select unnest($1::text[]) as original, extensions.sin_tildes(unnest($1::text[])) as base",
+      [palabras]
+    );
+    for (const { original, base } of rows) {
+      expect(sinTildes(original), original).toBe(base);
     }
   });
 

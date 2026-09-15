@@ -56,9 +56,30 @@ export interface PatronPalabraClave {
 // Se escapan con barra invertida (también la propia barra), que es el escape por
 // defecto de LIKE. Este patrón es el de Postgres; cómo viaja por PostgREST lo
 // decide `valorFiltroOr`.
+// Ligaduras y letras que `unaccent` convierte y que la descomposición Unicode no
+// separa. Solo las que pueden aparecer en títulos de cursos en idiomas latinos.
+const LETRAS_SIN_DESCOMPONER: Record<string, string> = {
+  œ: "oe", Œ: "OE", æ: "ae", Æ: "AE", ß: "ss", ø: "o", Ø: "O", đ: "d", Đ: "D", ł: "l", Ł: "L",
+};
+
+/**
+ * Quita tildes y diéresis como lo hace `unaccent` en la base (HU-061), para que
+ * la palabra clave y las columnas `*_busqueda` se comparen igual. Un test de
+ * integración comprueba que coinciden con palabras reales.
+ */
+export function sinTildes(texto: string): string {
+  return texto
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .replace(/[œŒæÆßøØđĐłŁ]/g, (c) => LETRAS_SIN_DESCOMPONER[c])
+    .normalize("NFC");
+}
+
 export function patronPalabraClave(keyword: string): PatronPalabraClave {
   return {
-    patron: `%${keyword.replace(/[\\%_]/g, (c) => `\\${c}`)}%`,
+    // Sobre el texto sin tildes: se compara con titulo_busqueda y
+    // descripcion_busqueda, que también las han perdido (HU-061).
+    patron: `%${sinTildes(keyword).replace(/[\\%_]/g, (c) => `\\${c}`)}%`,
     soloTitulo: (keyword.match(/[\p{L}\p{N}]/gu) ?? []).length < LONGITUD_MINIMA_EN_DESCRIPCION,
   };
 }
@@ -368,12 +389,13 @@ function aplicarFiltros(base: ConsultaCursos, filters: CourseSearchFilters): Con
 
   if (filters.keyword) {
     const { patron, soloTitulo } = patronPalabraClave(filters.keyword);
+    // Las columnas sin tildes (HU-061), con sus índices de trigramas (HU-057).
     if (soloTitulo) {
       // Un filtro suelto no pasa por el analizador de `.or()`: el patrón va tal cual.
-      query = query.ilike("title", patron);
+      query = query.ilike("titulo_busqueda", patron);
     } else {
       const valor = valorFiltroOr(patron);
-      query = query.or(`title.ilike.${valor},description.ilike.${valor}`);
+      query = query.or(`titulo_busqueda.ilike.${valor},descripcion_busqueda.ilike.${valor}`);
     }
   }
   if (filters.category !== null) {

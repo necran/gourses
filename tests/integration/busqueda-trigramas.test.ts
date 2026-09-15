@@ -17,8 +17,9 @@ import { Client } from "pg";
 const databaseUrl = process.env.TEST_DATABASE_URL;
 const describeIfConfigured = databaseUrl ? describe : describe.skip;
 
+// Desde HU-061 la búsqueda compara las columnas sin tildes.
 const CONSULTA = `select id from courses
-  where title ilike $1 or description ilike $1
+  where titulo_busqueda ilike $1 or descripcion_busqueda ilike $1
   order by id`;
 
 describeIfConfigured("HU-057 — búsqueda por palabra clave con índices de trigramas", () => {
@@ -67,9 +68,10 @@ describeIfConfigured("HU-057 — búsqueda por palabra clave con índices de tri
     const { rows } = await client.query(
       "select indexname from pg_indexes where tablename = 'courses' and indexname like '%trgm%' order by indexname"
     );
+    // HU-061 los movió a las columnas sin tildes y quitó los de title/description.
     expect(rows.map((r) => r.indexname)).toEqual([
-      "courses_description_trgm_idx",
-      "courses_title_trgm_idx",
+      "courses_descripcion_busqueda_trgm_idx",
+      "courses_titulo_busqueda_trgm_idx",
     ]);
   });
 
@@ -80,8 +82,8 @@ describeIfConfigured("HU-057 — búsqueda por palabra clave con índices de tri
     const { rows } = await client.query(`explain ${CONSULTA.replace("$1", "'%python%'").replace("$1", "'%python%'")}`);
     const plan = rows.map((r) => r["QUERY PLAN"]).join("\n");
 
-    expect(plan).toMatch(/courses_title_trgm_idx/);
-    expect(plan).toMatch(/courses_description_trgm_idx/);
+    expect(plan).toMatch(/courses_titulo_busqueda_trgm_idx/);
+    expect(plan).toMatch(/courses_descripcion_busqueda_trgm_idx/);
     expect(plan).not.toMatch(/Seq Scan/);
   }, 30_000);
 
