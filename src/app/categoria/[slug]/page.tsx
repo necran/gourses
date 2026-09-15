@@ -18,6 +18,8 @@ import {
 } from "../../../lib/courses/categoria-seo";
 import { serializeStructuredData } from "../../../lib/courses/course-seo";
 import { OPEN_GRAPH_SITIO, migasDePan } from "../../../lib/seo/seo-sitio";
+import { nombreTema, type TemaId } from "../../../lib/courses/temas";
+import { enlaceTema, leerResumenTemas, temasDeCategoria } from "../../../lib/courses/temas-datos";
 import styles from "./page.module.css";
 
 interface CategoriaPageProps {
@@ -98,12 +100,15 @@ export default async function CategoriaPage({ params, searchParams }: CategoriaP
     idiomaPreferido = null;
   }
 
-  const { resultados, pagina, hayMas, total } = await searchCourses(
-    createSupabaseServerClient(),
-    filtros,
-    undefined,
-    idiomaPreferido
-  );
+  const client = createSupabaseServerClient();
+  const [{ resultados, pagina, hayMas, total }, temas] = await Promise.all([
+    searchCourses(client, filtros, undefined, idiomaPreferido),
+    // Los temas de los que esta categoría es la dueña (HU-060). Un añadido: si
+    // falla la lectura, la categoría sale igual, sin la lista.
+    leerResumenTemas(client)
+      .then((resumen) => temasDeCategoria(resumen, slug))
+      .catch((): TemaId[] => []),
+  ]);
 
   return (
     <main className={styles.main}>
@@ -130,6 +135,19 @@ export default async function CategoriaPage({ params, searchParams }: CategoriaP
         duración e idioma. {textoRecuento(total)}{" "}
         <Link href={`/buscar?category=${slug}`}>Afinar la búsqueda</Link>
       </p>
+
+      {temas.length > 0 && (
+        <nav className={styles.temas} aria-label="Temas de esta categoría">
+          <span>Temas en español:</span>
+          <ul>
+            {temas.map((tema) => (
+              <li key={tema}>
+                <Link href={enlaceTema(tema)}>{nombreTema(tema)}</Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )}
 
       {resultados.length === 0 ? (
         // Ninguna categoría está vacía hoy, pero la ingesta puede cambiar: es

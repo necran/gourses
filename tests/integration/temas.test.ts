@@ -15,7 +15,12 @@ import { Client } from "pg";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { createPostgresCourseStore } from "../../src/lib/ingesta/postgres-course-store";
 import type { NormalizedCourse } from "../../src/lib/courses/schema";
-import { contarCursosDeTema, leerCursosDeTema } from "../../src/lib/courses/temas-datos";
+import {
+  contarCursosDeTema,
+  leerCursosDeTema,
+  leerResumenTemas,
+} from "../../src/lib/courses/temas-datos";
+import { RESENAS_MINIMAS, TEMAS } from "../../src/lib/courses/temas";
 
 const testDatabaseUrl = process.env.TEST_DATABASE_URL;
 const databaseUrl = process.env.DATABASE_URL;
@@ -122,6 +127,32 @@ const MARCA = "zzz-hu058-test-";
         "Guitarra HU-058 pocas reseñas",
       ]);
       expect(cursos.every((c) => c.language === "es")).toBe(true);
+    }, 30_000);
+
+    // HU-060. La vista `temas_por_categoria` lleva escrito el 50 de
+    // RESENAS_MINIMAS. Si uno de los dos cambiara sin el otro, la portada y el
+    // sitemap decidirían el umbral con una cifra y la página del tema con otra.
+    // Se compara la vista, leída por PostgREST, con un recuento directo en SQL
+    // hecho con la constante de TypeScript.
+    it("la vista cuenta lo mismo que la regla de TypeScript, umbral de reseñas incluido", async () => {
+      const resumen = await leerResumenTemas(supabase);
+      const { rows } = await pgClient.query(
+        `select t.tema,
+                count(*) filter (where c.language = 'es') as en_espanol,
+                count(*) filter (where c.language = 'es' and c.num_reviews >= $1) as con_resenas
+           from courses c cross join lateral unnest(c.temas) as t(tema)
+          group by t.tema`,
+        [RESENAS_MINIMAS]
+      );
+      const directo = new Map(rows.map((r) => [r.tema, r]));
+
+      for (const tema of TEMAS) {
+        const r = directo.get(tema);
+        expect(resumen.recuentos.get(tema), tema).toEqual({
+          enEspanol: Number(r?.en_espanol ?? 0),
+          enEspanolConResenas: Number(r?.con_resenas ?? 0),
+        });
+      }
     }, 30_000);
 
     it("cuenta los cursos del tema en todos los idiomas", async () => {

@@ -28,6 +28,7 @@ function curso(overrides: Partial<FavoriteCourse> = {}): FavoriteCourse {
     whatYouWillLearn: null,
     requirements: null,
     resumenIA: null,
+    temas: [],
     ...overrides,
   };
 }

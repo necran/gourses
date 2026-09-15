@@ -20,6 +20,8 @@ import { EnlaceUltimaBusqueda } from "../../../components/enlace-ultima-busqueda
 import { conSeparadorDeMiles } from "../../../lib/formato-numero";
 import { nombreIdioma, nombrePlataforma } from "../../../lib/courses/presentacion";
 import { enlaceCategoria, tituloCategoria } from "../../../lib/courses/categoria-seo";
+import { esTema, nombreTema } from "../../../lib/courses/temas";
+import { enlaceTema, leerResumenTemas, temasEnlazables } from "../../../lib/courses/temas-datos";
 import { migasDePan } from "../../../lib/seo/seo-sitio";
 import styles from "./page.module.css";
 
@@ -69,6 +71,16 @@ export default async function CoursePage({ params }: CoursePageProps) {
     course.priceHistory
   );
   const enlace = safeExternalUrl(course.affiliateUrl);
+
+  // HU-060: los temas del curso que tienen página indexable. Solo se consulta si
+  // el curso tiene alguno; y si la lectura falla, la ficha sale sin los enlaces.
+  const temasDelCurso = course.temas.filter(esTema);
+  const temasConPagina =
+    temasDelCurso.length === 0
+      ? []
+      : await leerResumenTemas(client)
+          .then((resumen) => temasEnlazables(resumen).filter((t) => temasDelCurso.includes(t)))
+          .catch(() => []);
 
   const datosEstructurados = courseStructuredData(course, `${TITULAR.url}/curso/${course.id}`);
 
@@ -143,6 +155,19 @@ export default async function CoursePage({ params }: CoursePageProps) {
             )}
           </div>
         </header>
+
+        {temasConPagina.length > 0 && (
+          <nav className={styles.temas} aria-label="Más cursos de este tema">
+            <span>Más cursos en español de:</span>
+            <ul>
+              {temasConPagina.map((tema) => (
+                <li key={tema}>
+                  <Link href={enlaceTema(tema)}>{nombreTema(tema)}</Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        )}
 
         <section className={styles.compra}>
           <p className={styles.precio}>

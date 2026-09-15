@@ -28,6 +28,7 @@ function curso(overrides: Partial<CourseDetail> = {}): CourseDetail {
     whatYouWillLearn: null,
     requirements: null,
     resumenIA: null,
+    temas: [],
     priceHistory: [],
     ...overrides,
   };

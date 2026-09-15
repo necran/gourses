@@ -286,3 +286,41 @@
   opacity: 0.75;
   margin: 0;
 }
+
+/* Enlaces a las páginas de tema (HU-060): pastillas pequeñas, secundarias
+   frente al contenido de la página. */
+.temas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin: 0 0 1.4rem;
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+}
+
+.temas > span {
+  font-weight: 600;
+}
+
+.temas ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.temas a {
+  display: inline-block;
+  padding: 0.35rem 0.8rem;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-soft-ink);
+  font-weight: 600;
+}
+
+.temas a:hover {
+  filter: brightness(1.05);
+}

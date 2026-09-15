@@ -12,6 +12,8 @@ import { nombreIdioma, nombrePlataforma } from "../lib/courses/presentacion";
 import { DIMENSIONES_MINIATURA, cargaDeMiniatura } from "../lib/imagenes";
 import { serializeStructuredData } from "../lib/courses/course-seo";
 import { datosEstructuradosSitio } from "../lib/seo/seo-sitio";
+import { nombreTema, type TemaId } from "../lib/courses/temas";
+import { enlaceTema, leerResumenTemas, temasEnlazables } from "../lib/courses/temas-datos";
 import styles from "./page.module.css";
 
 // Las cifras vienen de la base de datos en cada carga, así que la portada no
@@ -54,6 +56,15 @@ export default async function Home() {
   // Sin filtros ni orden, searchCourses reparte a partes iguales entre
   // plataformas (HU-007): así la portada no enseña solo Udemy, que es la que
   // tiene valoración y ganaría cualquier otro orden.
+  // Temas que superan el umbral (HU-060), para enlazar sus páginas. Como el
+  // resumen del catálogo, es un añadido: si falla, la portada sale sin la sección.
+  let temas: TemaId[] = [];
+  try {
+    temas = temasEnlazables(await leerResumenTemas(client));
+  } catch {
+    temas = [];
+  }
+
   let destacados: CourseSearchResult[] = [];
   try {
     const { resultados } = await searchCourses(
@@ -119,6 +130,19 @@ export default async function Home() {
           ))}
         </ul>
       </section>
+
+      {temas.length > 0 && (
+        <section className={styles.categorias} aria-labelledby="temas-populares">
+          <h2 id="temas-populares">Temas populares</h2>
+          <ul className={styles.listaCategorias}>
+            {temas.map((tema) => (
+              <li key={tema}>
+                <Link href={enlaceTema(tema)}>{nombreTema(tema)}</Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {destacados.length > 0 && (
         <section className={styles.destacados}>

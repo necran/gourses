@@ -2,10 +2,12 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { DurationRange } from "./duration.ts";
 import { formatDuration } from "./duration.ts";
 import { conSeparadorDeMiles } from "../formato-numero.ts";
+import type { CourseCategory } from "./categories.ts";
 import {
   RESENAS_MINIMAS,
   TEMAS,
   nombreEnFrase,
+  superaUmbral,
   type RecuentoTema,
   type TemaId,
 } from "./temas.ts";
@@ -184,29 +186,76 @@ export function textoPresentacion(tema: TemaId, r: ResumenTema): string[] {
   return frases;
 }
 
-// ---------------------------------------------------------------- recuentos
+// ---------------------------------------------------------------- resumen de todos los temas
 
-export interface FilaRecuento {
-  temas: string[] | null;
-  language: string | null;
-  num_reviews: number | null;
+/** Una fila de la vista `temas_por_categoria` (migración 0012). */
+export interface FilaTemaCategoria {
+  tema: string;
+  category: string | null;
+  en_espanol: number | string;
+  en_espanol_con_resenas: number | string;
 }
 
-/** Cuántos cursos tiene cada tema, para decidir cuáles son indexables. */
-export function agregarRecuentos(filas: readonly FilaRecuento[]): Map<TemaId, RecuentoTema> {
+export interface ResumenTemas {
+  /** Cuántos cursos tiene cada tema de la lista, para el umbral. */
+  recuentos: Map<TemaId, RecuentoTema>;
+  /**
+   * La categoría —o categorías, si empatan— con más cursos en español del tema
+   * (HU-060). Se calcula con los datos, no se fija a mano: Excel es de negocios
+   * (25) antes que de productividad (19) porque así lo clasifican las plataformas.
+   */
+  duenas: Map<TemaId, CourseCategory[]>;
+}
+
+/** Agrupa las filas de la vista por tema. Pura: se prueba sin base de datos. */
+export function resumirTemas(filas: readonly FilaTemaCategoria[]): ResumenTemas {
   const recuentos = new Map<TemaId, RecuentoTema>(
     TEMAS.map((t) => [t, { enEspanol: 0, enEspanolConResenas: 0 }])
   );
+  const porCategoria = new Map<TemaId, Map<CourseCategory, number>>();
+
   for (const fila of filas) {
-    if (fila.language !== "es") continue;
-    for (const tema of fila.temas ?? []) {
-      const r = recuentos.get(tema as TemaId);
-      if (!r) continue; // un tema que ya no está en la lista
-      r.enEspanol += 1;
-      if ((fila.num_reviews ?? 0) >= RESENAS_MINIMAS) r.enEspanolConResenas += 1;
+    const tema = fila.tema as TemaId;
+    const recuento = recuentos.get(tema);
+    if (!recuento) continue; // un tema que ya no está en la lista
+    const enEspanol = Number(fila.en_espanol);
+    recuento.enEspanol += enEspanol;
+    recuento.enEspanolConResenas += Number(fila.en_espanol_con_resenas);
+
+    if (fila.category && enEspanol > 0) {
+      const mapa = porCategoria.get(tema) ?? new Map<CourseCategory, number>();
+      mapa.set(fila.category as CourseCategory, enEspanol);
+      porCategoria.set(tema, mapa);
     }
   }
-  return recuentos;
+
+  const duenas = new Map<TemaId, CourseCategory[]>();
+  for (const tema of TEMAS) {
+    const mapa = porCategoria.get(tema);
+    if (!mapa) {
+      duenas.set(tema, []);
+      continue;
+    }
+    const maximo = Math.max(...mapa.values());
+    // Un empate enlaza desde todas las empatadas: meditación y mindfulness tiene
+    // 14 cursos en desarrollo personal y 14 en salud y bienestar, y es de las dos.
+    duenas.set(
+      tema,
+      [...mapa].filter(([, n]) => n === maximo).map(([c]) => c).sort()
+    );
+  }
+
+  return { recuentos, duenas };
+}
+
+/** Los temas que superan el umbral, en el orden de la lista. Son los únicos que se enlazan. */
+export function temasEnlazables(resumen: ResumenTemas): TemaId[] {
+  return TEMAS.filter((t) => superaUmbral(resumen.recuentos.get(t)!));
+}
+
+/** Los temas enlazables cuya categoría dueña es esta (HU-060). */
+export function temasDeCategoria(resumen: ResumenTemas, categoria: CourseCategory): TemaId[] {
+  return temasEnlazables(resumen).filter((t) => resumen.duenas.get(t)?.includes(categoria));
 }
 
 // ---------------------------------------------------------------- lectura
@@ -286,24 +335,16 @@ export async function contarCursosDeTema(client: SupabaseClient, tema: TemaId): 
   return count ?? 0;
 }
 
-/** Recuento de todos los temas, leyendo solo los cursos que tienen alguno. */
-export async function leerRecuentosDeTemas(client: SupabaseClient): Promise<Map<TemaId, RecuentoTema>> {
-  const PAGINA = 1000;
-  const filas: FilaRecuento[] = [];
+/**
+ * Resumen de todos los temas en una sola consulta a la vista
+ * `temas_por_categoria` (migración 0012): como mucho una fila por tema y
+ * categoría, en vez de leer los ~4.400 cursos con tema en cada visita.
+ */
+export async function leerResumenTemas(client: SupabaseClient): Promise<ResumenTemas> {
+  const { data, error } = await client
+    .from("temas_por_categoria")
+    .select("tema, category, en_espanol, en_espanol_con_resenas");
 
-  for (let desde = 0; ; desde += PAGINA) {
-    const { data, error } = await client
-      .from("courses")
-      .select("temas, language, num_reviews")
-      .not("temas", "eq", "{}")
-      .order("id", { ascending: true })
-      .range(desde, desde + PAGINA - 1);
-
-    if (error) throw new Error(`Fallo al contar los temas: ${error.message}`);
-    if (!data || data.length === 0) break;
-    filas.push(...(data as FilaRecuento[]));
-    if (data.length < PAGINA) break;
-  }
-
-  return agregarRecuentos(filas);
+  if (error) throw new Error(`Fallo al resumir los temas: ${error.message}`);
+  return resumirTemas((data ?? []) as FilaTemaCategoria[]);
 }

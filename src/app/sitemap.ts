@@ -3,8 +3,7 @@ import { createSupabaseServerClient } from "../lib/supabase/server-client";
 import { COURSE_CATEGORIES } from "../lib/courses/categories";
 import { enlaceCategoria } from "../lib/courses/categoria-seo";
 import { TITULAR } from "../lib/legal/titular";
-import { TEMAS, superaUmbral } from "../lib/courses/temas";
-import { enlaceTema, leerRecuentosDeTemas } from "../lib/courses/temas-datos";
+import { enlaceTema, leerResumenTemas, temasEnlazables } from "../lib/courses/temas-datos";
 
 // Se genera desde la base de datos, no se fija a mano: la ingesta diaria cambia
 // el catálogo y un sitemap escrito a mano quedaría desfasado (HU-016).
@@ -56,8 +55,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // catálogo, así que si ese recuento falla se omiten un día.
     let temas: MetadataRoute.Sitemap = [];
     try {
-      const recuentos = await leerRecuentosDeTemas(client);
-      temas = TEMAS.filter((t) => superaUmbral(recuentos.get(t)!)).map((t) => ({
+      temas = temasEnlazables(await leerResumenTemas(client)).map((t) => ({
         url: `${TITULAR.url}${enlaceTema(t)}`,
         changeFrequency: "daily" as const,
         priority: 0.7,

@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
-  agregarRecuentos,
   descripcionTema,
   enlaceTema,
   resumenTema,
+  resumirTemas,
+  temasDeCategoria,
+  temasEnlazables,
   textoPresentacion,
   tituloTema,
   type CursoDeTema,
@@ -143,18 +145,46 @@ describe("textoPresentacion", () => {
   });
 });
 
-describe("agregarRecuentos", () => {
-  it("cuenta por tema solo los cursos en español, y los que tienen reseñas", () => {
-    const recuentos = agregarRecuentos([
-      { temas: ["python", "trading"], language: "es", num_reviews: 500 },
-      { temas: ["python"], language: "es", num_reviews: 3 },
-      { temas: ["python"], language: "en", num_reviews: 9000 },
-      { temas: ["tema-retirado"], language: "es", num_reviews: 100 },
-      { temas: null, language: "es", num_reviews: 100 },
-    ]);
-    expect(recuentos.get("python")).toEqual({ enEspanol: 2, enEspanolConResenas: 1 });
-    expect(recuentos.get("trading")).toEqual({ enEspanol: 1, enEspanolConResenas: 1 });
-    expect(recuentos.get("excel")).toEqual({ enEspanol: 0, enEspanolConResenas: 0 });
-    expect(recuentos.size).toBe(TEMAS.length);
+describe("resumirTemas (HU-060)", () => {
+  // Las cifras de la vista llegan como texto o como número según el tipo; se
+  // prueban las dos formas.
+  const filas = [
+    { tema: "python", category: "desarrollo", en_espanol: "31", en_espanol_con_resenas: "28" },
+    { tema: "python", category: "negocios", en_espanol: 15, en_espanol_con_resenas: 12 },
+    { tema: "python", category: null, en_espanol: 8, en_espanol_con_resenas: 6 },
+    { tema: "meditacion-y-mindfulness", category: "salud-y-bienestar", en_espanol: 14, en_espanol_con_resenas: 6 },
+    { tema: "meditacion-y-mindfulness", category: "desarrollo-personal", en_espanol: 14, en_espanol_con_resenas: 6 },
+    { tema: "trading", category: "negocios", en_espanol: 0, en_espanol_con_resenas: 0 },
+    { tema: "tema-retirado", category: "negocios", en_espanol: 99, en_espanol_con_resenas: 99 },
+  ];
+  const resumen = resumirTemas(filas);
+
+  it("suma los recuentos de un tema en todas sus categorías, también sin categoría", () => {
+    expect(resumen.recuentos.get("python")).toEqual({ enEspanol: 54, enEspanolConResenas: 46 });
+    expect(resumen.recuentos.get("excel")).toEqual({ enEspanol: 0, enEspanolConResenas: 0 });
+    expect(resumen.recuentos.size).toBe(TEMAS.length);
+  });
+
+  it("la categoría dueña es la de más cursos en español", () => {
+    expect(resumen.duenas.get("python")).toEqual(["desarrollo"]);
+  });
+
+  it("un empate deja como dueñas a todas las empatadas", () => {
+    expect(resumen.duenas.get("meditacion-y-mindfulness")).toEqual(["desarrollo-personal", "salud-y-bienestar"]);
+  });
+
+  it("un tema sin cursos en español no tiene dueña", () => {
+    expect(resumen.duenas.get("trading")).toEqual([]);
+    expect(resumen.duenas.get("excel")).toEqual([]);
+  });
+
+  it("solo son enlazables los temas que superan el umbral", () => {
+    expect(temasEnlazables(resumen)).toEqual(["python", "meditacion-y-mindfulness"]);
+  });
+
+  it("una categoría enlaza a los temas enlazables de los que es dueña", () => {
+    expect(temasDeCategoria(resumen, "desarrollo")).toEqual(["python"]);
+    expect(temasDeCategoria(resumen, "salud-y-bienestar")).toEqual(["meditacion-y-mindfulness"]);
+    expect(temasDeCategoria(resumen, "negocios")).toEqual([]);
   });
 });
