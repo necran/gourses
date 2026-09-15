@@ -34,8 +34,10 @@ describeIfConfigured("HU-007 — searchCourses", () => {
        values
         ('coursera', $1, 'Curso de prueba HU-007: introducción a Rust', 'aprende rust desde cero', 19.99, 'EUR', 4.5, 'en'),
         ('coursera', $2, 'Curso de prueba HU-007: cocina italiana', 'pasta y pizza', 99.99, 'EUR', 3.0, 'es'),
-        ('coursera', $3, 'Curso de prueba HU-007: sin valoración ni precio', 'catálogo por suscripción', null, null, null, 'es')`,
-      [`${MARKER}rust`, `${MARKER}cocina`, `${MARKER}sin-precio`]
+        ('coursera', $3, 'Curso de prueba HU-007: sin valoración ni precio', 'catálogo por suscripción', null, null, null, 'es'),
+        ('coursera', $4, 'Curso de prueba HU-057: zq9 100% práctico', 'sin comodines', null, null, null, 'es'),
+        ('coursera', $5, 'Curso de prueba HU-057: 100 x práctico', 'la descripción menciona zq9 de pasada', null, null, null, 'es')`,
+      [`${MARKER}rust`, `${MARKER}cocina`, `${MARKER}sin-precio`, `${MARKER}porcentaje`, `${MARKER}sin-porcentaje`]
     );
   });
 
@@ -76,6 +78,38 @@ describeIfConfigured("HU-007 — searchCourses", () => {
     expect(results.map((r) => r.title).sort()).toEqual([
       "Curso de prueba HU-007: cocina italiana",
       "Curso de prueba HU-007: sin valoración ni precio",
+    ]);
+  });
+
+  // HU-057. Por el mismo camino que producción (supabase-js → PostgREST): el
+  // escapado tiene que sobrevivir al filtro .or() y llegar literal al ILIKE.
+  it("un % en la palabra clave se busca como carácter, no como comodín", async () => {
+    const filters = parseCourseSearchFilters({ keyword: "100% práctico" });
+    const { resultados } = await searchCourses(supabase, filters, 100);
+    const titles = resultados.map((r) => r.title);
+
+    expect(titles).toContain("Curso de prueba HU-057: zq9 100% práctico");
+    // Con el % como comodín, «100 x práctico» también coincidía.
+    expect(titles).not.toContain("Curso de prueba HU-057: 100 x práctico");
+  });
+
+  it("una palabra clave de menos de tres caracteres se busca solo en el título", async () => {
+    // «zq» está en el título de uno y solo en la descripción del otro.
+    const filters = parseCourseSearchFilters({ keyword: "zq" });
+    const { resultados } = await searchCourses(supabase, filters, 100);
+    const titles = resultados.map((r) => r.title);
+
+    expect(titles).toContain("Curso de prueba HU-057: zq9 100% práctico");
+    expect(titles).not.toContain("Curso de prueba HU-057: 100 x práctico");
+  });
+
+  it("con tres caracteres o más se sigue buscando también en la descripción", async () => {
+    const filters = parseCourseSearchFilters({ keyword: "zq9" });
+    const { resultados } = await searchCourses(supabase, filters, 100);
+
+    expect(resultados.map((r) => r.title).sort()).toEqual([
+      "Curso de prueba HU-057: 100 x práctico",
+      "Curso de prueba HU-057: zq9 100% práctico",
     ]);
   });
 

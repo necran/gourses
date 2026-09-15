@@ -40,6 +40,36 @@ export function escapeOrFilterValue(value: string): string {
   return value.replace(/[,()]/g, (char) => `\\${char}`);
 }
 
+// Con menos de tres letras o números, el índice de trigramas (HU-057) no sirve
+// y la búsqueda leería las 15.000 descripciones enteras: ~2,6 s por página,
+// cerca del límite de 3 s del rol anon. Se cuentan letras y números, no
+// caracteres: los trigramas solo se forman con ellos, y `%%%` —tres
+// caracteres, cero letras— seguía tardando 1,4 s. En la descripción tampoco
+// aportan nada: «ab» aparece en el 84 % de los cursos, casi siempre dentro de
+// otra palabra. Con tan pocas letras («Go», «UX», «IA», «C++») lo que se busca
+// es el nombre del curso.
+export const LONGITUD_MINIMA_EN_DESCRIPCION = 3;
+
+export interface PatronPalabraClave {
+  /** Patrón para ILIKE, ya escapado para Postgres y para el filtro .or() de PostgREST. */
+  patron: string;
+  /** Si solo se busca en el título. */
+  soloTitulo: boolean;
+}
+
+// HU-057. `%` y `_` son comodines de ILIKE: sin escaparlos, buscar «100%»
+// encontraba «100 cursos» y `%%%` devolvía el catálogo entero leyendo la tabla.
+// Se escapan con barra invertida (también la propia barra), que es el escape por
+// defecto de LIKE y llega intacto a través de PostgREST (comprobado contra el
+// PostgREST real: `\%` en .or() e .ilike() da los mismos cursos que en SQL).
+export function patronPalabraClave(keyword: string): PatronPalabraClave {
+  const sinComodines = keyword.replace(/[\\%_]/g, (c) => `\\${c}`);
+  return {
+    patron: `%${escapeOrFilterValue(sinComodines)}%`,
+    soloTitulo: (keyword.match(/[\p{L}\p{N}]/gu) ?? []).length < LONGITUD_MINIMA_EN_DESCRIPCION,
+  };
+}
+
 interface CourseRow {
   id: string;
   source: CourseSource;
@@ -329,8 +359,10 @@ function aplicarFiltros(base: ConsultaCursos, filters: CourseSearchFilters): Con
   let query = base;
 
   if (filters.keyword) {
-    const value = `%${escapeOrFilterValue(filters.keyword)}%`;
-    query = query.or(`title.ilike.${value},description.ilike.${value}`);
+    const { patron, soloTitulo } = patronPalabraClave(filters.keyword);
+    query = soloTitulo
+      ? query.ilike("title", patron)
+      : query.or(`title.ilike.${patron},description.ilike.${patron}`);
   }
   if (filters.category !== null) {
     query = query.eq("category", filters.category);

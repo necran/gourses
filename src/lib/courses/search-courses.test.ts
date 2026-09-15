@@ -3,6 +3,7 @@ import {
   escapeOrFilterValue,
   interleaveBySource,
   paginarIntercalado,
+  patronPalabraClave,
   priorizarIdioma,
 } from "./search-courses";
 import type { CourseSearchResult } from "./search-courses";
@@ -85,6 +86,51 @@ describe("escapeOrFilterValue", () => {
     expect(escapeOrFilterValue("curso (avanzado), nivel 2")).toBe(
       "curso \\(avanzado\\)\\, nivel 2"
     );
+  });
+});
+
+describe("patronPalabraClave (HU-057)", () => {
+  it("una palabra normal se busca contenida, en título y descripción", () => {
+    expect(patronPalabraClave("python")).toEqual({ patron: "%python%", soloTitulo: false });
+  });
+
+  it("% y _ se buscan como caracteres, no como comodines", () => {
+    expect(patronPalabraClave("100%").patron).toBe("%100\\%%");
+    expect(patronPalabraClave("snake_case").patron).toBe("%snake\\_case%");
+    expect(patronPalabraClave("%%%").patron).toBe("%\\%\\%\\%%");
+  });
+
+  it("la barra invertida también se escapa, para no escaparse a sí misma lo siguiente", () => {
+    expect(patronPalabraClave("C:\\ruta").patron).toBe("%C:\\\\ruta%");
+  });
+
+  it("se siguen escapando coma y paréntesis para el filtro .or()", () => {
+    expect(patronPalabraClave("curso (avanzado), 50%").patron).toBe(
+      "%curso \\(avanzado\\)\\, 50\\%%"
+    );
+  });
+
+  it("con menos de tres letras o números busca solo en el título", () => {
+    expect(patronPalabraClave("go").soloTitulo).toBe(true);
+    expect(patronPalabraClave("R").soloTitulo).toBe(true);
+    expect(patronPalabraClave("sql").soloTitulo).toBe(false);
+  });
+
+  // Los trigramas solo se forman con letras y números: `%%%` son tres
+  // caracteres pero ninguno sirve al índice, y tardaba 1,4 s (HU-057).
+  it("los signos no cuentan como letras", () => {
+    expect(patronPalabraClave("%%%").soloTitulo).toBe(true);
+    expect(patronPalabraClave("C++").soloTitulo).toBe(true);
+    expect(patronPalabraClave("c#").soloTitulo).toBe(true);
+    expect(patronPalabraClave("100%").soloTitulo).toBe(false);
+  });
+
+  // Letras con tilde o de otros alfabetos cuentan; un emoji no es una letra.
+  it("cuenta letras de cualquier alfabeto, no bytes", () => {
+    expect(patronPalabraClave("ñú").soloTitulo).toBe(true);
+    expect(patronPalabraClave("año").soloTitulo).toBe(false);
+    expect(patronPalabraClave("日本語").soloTitulo).toBe(false);
+    expect(patronPalabraClave("🐍ab").soloTitulo).toBe(true);
   });
 });
 
