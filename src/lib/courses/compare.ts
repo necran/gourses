@@ -3,6 +3,7 @@ import { isValidCourseId } from "./get-course";
 import { CATEGORY_LABELS } from "./categories";
 import { formatDuration } from "./duration";
 import { sourceLabel } from "./course-seo";
+import { nombreIdioma } from "./presentacion";
 
 // La comparación no necesita el histórico de precios: pedir el CourseDetail
 // completo sería exigir más de lo que usa.
@@ -86,7 +87,9 @@ export function buildCompareRows(courses: ComparableCourse[]): CompareRow[] {
     ["Valoración", (c) => (c.rating === null ? null : String(c.rating))],
     ["Duración", (c) => formatDuration(c.duration)],
     ["Nivel", (c) => c.level],
-    ["Idioma", (c) => c.language],
+    // Con su nombre, como en el resto del sitio (HU-054, HU-055): «en» obligaba
+    // a saber el código.
+    ["Idioma", (c) => (c.language ? nombreIdioma(c.language) : null)],
     ["Categoría", (c) => (c.category ? CATEGORY_LABELS[c.category] : null)],
     ["Imparte", (c) => c.instructor],
   ];

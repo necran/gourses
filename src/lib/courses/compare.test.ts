@@ -163,6 +163,18 @@ describe("buildCompareRows", () => {
     expect(plataforma.celdas.map((c) => c.valor)).toEqual(["Udemy", "Coursera"]);
   });
 
+  it("muestra el idioma con su nombre, no el código (HU-055)", () => {
+    const filas = buildCompareRows([
+      curso({ language: "es" }),
+      curso({ language: "pt-BR" }),
+      curso({ language: "xx" }),
+    ]);
+    const idioma = filas.find((f) => f.etiqueta === "Idioma")!;
+
+    // Un código que no se conoce se enseña tal cual antes que dejar un hueco.
+    expect(idioma.celdas.map((c) => c.valor)).toEqual(["Español", "Portugués de Brasil", "xx"]);
+  });
+
   it("muestra la categoría con su nombre legible, no el identificador interno", () => {
     const filas = buildCompareRows([curso({ category: "datos-e-ia" })]);
     const categoria = filas.find((f) => f.etiqueta === "Categoría")!;

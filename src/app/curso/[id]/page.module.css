@@ -53,10 +53,12 @@
     gap: 1.2rem;
   }
 
+  /* 16:9 y no 21:13: la miniatura de las plataformas ya es 16:9, y así roba
+     menos alto a la primera pantalla (HU-055). */
   .imagen {
     width: 100%;
     height: auto;
-    aspect-ratio: 21 / 13;
+    aspect-ratio: 16 / 9;
   }
 }
 
@@ -147,6 +149,61 @@
 /* El botón de comparar vive en components/boton-cesta.module.css (HU-041),
    compartido con favoritos. Sigue siendo secundario a propósito: ir a la
    plataforma es la acción principal de la ficha. */
+
+/* Guardar y comparar, detrás del botón principal (HU-055). */
+.secundarias {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* HU-055. En el móvil el precio y «Ver curso» tienen que caber en la primera
+   pantalla: título más contenido, bloque de compra en columna y el botón a lo
+   ancho, que es lo que se pulsa con el pulgar. */
+@media (max-width: 48rem) {
+  .volver a {
+    display: inline-block;
+    padding-block: 0.4rem;
+  }
+
+  .volver {
+    margin-bottom: 0.8rem;
+  }
+
+  .cabecera {
+    margin-bottom: 1.2rem;
+  }
+
+  .cabecera h1 {
+    font-size: 1.45rem;
+  }
+
+  .compra {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.9rem;
+    padding: 1.1rem;
+  }
+
+  .acciones {
+    align-items: stretch;
+  }
+
+  .boton {
+    justify-content: center;
+  }
+
+  .divulgacion {
+    max-width: none;
+    text-align: left;
+  }
+
+  .divulgacion a {
+    display: inline-block;
+    padding-block: 0.25rem;
+  }
+}
 
 .descripcion {
   white-space: pre-line;

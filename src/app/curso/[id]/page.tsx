@@ -145,14 +145,10 @@ export default async function CoursePage({ params }: CoursePageProps) {
             )}
           </p>
 
-          {/* Guardar no depende de que la plataforma tenga enlace de salida, así
-              que va fuera del bloque de abajo. */}
-          <BotonFavorito courseId={course.id} />
-
-          {/* HU-041: añadir o quitar de la cesta de comparación, sin salir de la
-              ficha. Tampoco depende de si el curso tiene enlace de salida. */}
-          <BotonCesta courseId={course.id} title={course.title} />
-
+          {/* HU-055: ir al curso va justo después del precio, en el HTML y no
+              solo a la vista, para que teclado y lector de pantalla sigan el
+              mismo orden. Antes iba el último y en el móvil quedaba fuera de la
+              primera pantalla. */}
           {enlace && (
             <div className={styles.acciones}>
               <a
@@ -171,6 +167,15 @@ export default async function CoursePage({ params }: CoursePageProps) {
               </p>
             </div>
           )}
+
+          <div className={styles.secundarias}>
+            {/* Guardar no depende de que la plataforma tenga enlace de salida. */}
+            <BotonFavorito courseId={course.id} />
+
+            {/* HU-041: añadir o quitar de la cesta de comparación, sin salir de la
+                ficha. Tampoco depende de si el curso tiene enlace de salida. */}
+            <BotonCesta courseId={course.id} title={course.title} />
+          </div>
         </section>
 
         {/* Marcado explícitamente como generado, y separado de la descripción

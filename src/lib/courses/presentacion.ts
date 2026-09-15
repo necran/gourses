@@ -1,17 +1,18 @@
 import type { CourseSearchFilters } from "./search-filters.ts";
+import { sourceLabel } from "./course-seo.ts";
 
 // Cómo se nombran ante la persona los datos que la base guarda como códigos
 // (HU-054). Antes las tarjetas decían «udemy · en»: correcto, pero hay que
 // saber qué significa. Vive en un solo sitio para que todas las páginas digan
 // lo mismo.
 
-const NOMBRES_PLATAFORMA: Record<string, string> = {
-  udemy: "Udemy",
-  coursera: "Coursera",
-};
-
+/**
+ * «udemy» → «Udemy». Usa la misma tabla que los títulos y la comparación
+ * (`sourceLabel`, HU-016): una segunda tabla acabaría nombrando distinto la
+ * misma plataforma en dos páginas.
+ */
 export function nombrePlataforma(source: string): string {
-  return NOMBRES_PLATAFORMA[source] ?? source;
+  return sourceLabel(source);
 }
 
 // `Intl.DisplayNames` trae los nombres en español del propio motor, así que no

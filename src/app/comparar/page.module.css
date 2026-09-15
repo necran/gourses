@@ -103,6 +103,61 @@
   width: 1%;
 }
 
+/* HU-055. En el móvil la columna de etiquetas se comía media pantalla y con dos
+   cursos solo cabía uno. Las etiquetas de fila se ocultan solo a la vista —el
+   lector de pantalla las sigue leyendo como encabezados— y cada celda pinta la
+   suya encima del dato. Con dos cursos caben los dos; con más, la tabla se
+   desplaza como siempre (HU-043). */
+@media (max-width: 48rem) {
+  .tabla {
+    min-width: 0;
+  }
+
+  .tabla th.etiqueta,
+  .tabla th.esquina {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .tabla th,
+  .tabla td {
+    padding: 0.8rem 0.9rem;
+  }
+
+  .cabeceraCurso,
+  .tabla td {
+    min-width: 9.5rem;
+  }
+
+  .tabla td::before {
+    content: attr(data-etiqueta);
+    /* El texto alternativo vacío evita que el lector lo lea además del
+       encabezado de fila. Va detrás, para que un navegador que no lo entienda
+       se quede con la línea de arriba. */
+    content: attr(data-etiqueta) / "";
+    display: block;
+    margin-bottom: 0.3rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--ink-muted);
+  }
+
+  .boton,
+  .quitar {
+    display: inline-flex;
+    min-height: 2.25rem;
+    align-items: center;
+  }
+}
+
 /* Un hueco debe leerse como hueco, nunca confundirse con un cero. */
 .sinDato {
   color: var(--ink-muted);

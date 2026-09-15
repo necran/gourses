@@ -109,7 +109,8 @@ export default async function CompararPage({ searchParams }: CompararPageProps) 
                   {fila.etiqueta}
                 </th>
                 {fila.celdas.map((celda, i) => (
-                  <td key={cursos[i].id}>
+                  // En el móvil la etiqueta se pinta encima del dato (HU-055).
+                  <td key={cursos[i].id} data-etiqueta={fila.etiqueta}>
                     {celda.valor ?? (
                       <span className={styles.sinDato}>No disponible</span>
                     )}
@@ -124,7 +125,7 @@ export default async function CompararPage({ searchParams }: CompararPageProps) 
               {cursos.map((c) => {
                 const enlace = safeExternalUrl(c.affiliateUrl);
                 return (
-                  <td key={c.id}>
+                  <td key={c.id} data-etiqueta="Ir al curso">
                     {enlace ? (
                       <a
                         className={styles.boton}
@@ -148,7 +149,7 @@ export default async function CompararPage({ searchParams }: CompararPageProps) 
                 Quitar
               </th>
               {cursos.map((c) => (
-                <td key={c.id}>
+                <td key={c.id} data-etiqueta="Quitar">
                   <Link
                     href={hrefQuitarDeComparacion(idsComparados, c.id)}
                     className={styles.quitar}

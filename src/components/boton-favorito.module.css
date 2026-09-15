@@ -65,3 +65,13 @@
   font-size: 0.9rem;
   margin: 0;
 }
+
+/* Medía 18 px de alto: con el relleno supera los 24 px y se acierta con el dedo
+   (HU-055). `inline-block` para que el relleno cuente en la zona táctil sin
+   separar las líneas del párrafo. */
+.invitacion a {
+  display: inline-block;
+  padding-block: 0.3rem;
+  color: var(--accent);
+  font-weight: 700;
+}
