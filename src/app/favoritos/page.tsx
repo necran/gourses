@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createSupabaseSessionClient } from "../../lib/supabase/session-client";
 import { listarFavoritos } from "../../lib/favorites/favorites";
 import { formatDuration } from "../../lib/courses/duration";
+import { nombrePlataforma } from "../../lib/courses/presentacion";
 import { DIMENSIONES_MINIATURA, cargaDeMiniatura } from "../../lib/imagenes";
 import { hrefCompararFavoritos } from "../../lib/courses/compare";
 import { BotonCesta } from "../../components/boton-cesta";
@@ -68,7 +69,7 @@ export default async function FavoritosPage() {
                   <Link href={`/curso/${curso.id}`}>{curso.title}</Link>
                 </h2>
                 <p className={styles.meta}>
-                  <span>{curso.source}</span>
+                  <span>{nombrePlataforma(curso.source)}</span>
                   {curso.priceAmount !== null && (
                     <span>
                       {" "}

@@ -63,8 +63,10 @@ test.describe("HU-007 — buscador de cursos", () => {
     const fuentes = await page.locator("main li p").allTextContents();
     const texto = fuentes.join(" ");
 
-    expect(texto).toContain("udemy");
-    expect(texto).toContain("coursera");
+    // Con su nombre y no con el código de la base desde HU-054 («udemy» →
+    // «Udemy»). Lo que se comprueba no cambia: salen las dos plataformas.
+    expect(texto).toContain("Udemy");
+    expect(texto).toContain("Coursera");
   });
 
   test("una búsqueda sin resultados muestra un mensaje claro, nunca una lista vacía sin explicación", async ({

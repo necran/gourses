@@ -16,6 +16,13 @@
   color: var(--ink-muted);
 }
 
+/* Medían 17 px de alto: con el relleno superan los 24 px de WCAG 2.2 AA y se
+   aciertan con el dedo (HU-054). */
+.enlaces a,
+.boton {
+  padding-block: 0.35rem;
+}
+
 .enlaces a:hover,
 .boton:hover {
   color: var(--ink);

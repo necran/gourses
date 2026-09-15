@@ -72,7 +72,6 @@
 }
 
 .etiqueta {
-  text-transform: capitalize;
   background: var(--accent-soft);
   color: var(--accent-soft-ink);
   padding: 0.2rem 0.7rem;
@@ -138,7 +137,6 @@
   font-family: var(--font-display), -apple-system, "Segoe UI", sans-serif;
   font-weight: 700;
   font-size: 0.95rem;
-  text-transform: capitalize;
   box-shadow: 0 10px 24px -10px oklch(55% 0.19 292 / 0.5);
 }
 

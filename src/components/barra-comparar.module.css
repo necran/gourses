@@ -55,6 +55,25 @@
   transform: rotate(45deg) translate(-1px, -1px);
 }
 
+/* 18 px es poco para el dedo: en el móvil sube a 1,6rem (25,6 px), por encima
+   del mínimo de 24 × 24 px de WCAG 2.2 AA (HU-054). */
+@media (max-width: 48rem) {
+  .casilla {
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 0.45rem;
+  }
+
+  .casilla:checked::after {
+    width: 0.4rem;
+    height: 0.75rem;
+  }
+
+  .botonComparar {
+    min-height: 2.5rem;
+  }
+}
+
 /* La cesta ya tiene el máximo (HU-040): apagada, para que no responder al
    pulsarla no parezca un fallo. */
 .casilla:disabled {

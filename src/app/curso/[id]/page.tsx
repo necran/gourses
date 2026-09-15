@@ -18,6 +18,7 @@ import { BotonFavorito } from "../../../components/boton-favorito";
 import { BotonCesta } from "../../../components/boton-cesta";
 import { EnlaceUltimaBusqueda } from "../../../components/enlace-ultima-busqueda";
 import { conSeparadorDeMiles } from "../../../lib/formato-numero";
+import { nombreIdioma, nombrePlataforma } from "../../../lib/courses/presentacion";
 import styles from "./page.module.css";
 
 interface CoursePageProps {
@@ -101,7 +102,7 @@ export default async function CoursePage({ params }: CoursePageProps) {
           <div>
             <h1>{course.title}</h1>
             <p className={styles.fuente}>
-              <span className={styles.etiqueta}>{course.source}</span>
+              <span className={styles.etiqueta}>{nombrePlataforma(course.source)}</span>
               {course.category && <span> · {CATEGORY_LABELS[course.category]}</span>}
               {course.rating !== null && (
                 <span>
@@ -111,7 +112,7 @@ export default async function CoursePage({ params }: CoursePageProps) {
                 </span>
               )}
               {course.level && <span> · {course.level}</span>}
-              {course.language && <span> · {course.language}</span>}
+              {course.language && <span> · {nombreIdioma(course.language)}</span>}
               {formatDuration(course.duration) && (
                 <span> · ⏱ {formatDuration(course.duration)}</span>
               )}
@@ -160,7 +161,7 @@ export default async function CoursePage({ params }: CoursePageProps) {
                 target="_blank"
                 rel="noopener noreferrer nofollow sponsored"
               >
-                Ver curso en {course.source}
+                Ver curso en {nombrePlataforma(course.source)}
               </a>
               {/* La divulgación va junto al enlace, no escondida en una página
                   legal: es donde la persona decide si pulsa (HU-013). */}

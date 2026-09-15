@@ -20,6 +20,13 @@ import { isValidCourseId } from "../../lib/courses/get-course";
 import { idsFavoritos } from "../../lib/favorites/favorites";
 import { enlacePagina } from "../../lib/courses/buscar-enlaces";
 import { CATEGORY_LABELS, COURSE_CATEGORIES } from "../../lib/courses/categories";
+import {
+  filtrosPlegadosAplicados,
+  nombreIdioma,
+  nombrePlataforma,
+  opcionesIdioma,
+  valorIdiomaSeleccionado,
+} from "../../lib/courses/presentacion";
 import { BarraComparar, CasillaComparar } from "../../components/barra-comparar";
 import { alternarFavorito } from "../favoritos/actions";
 import { RecordarBusqueda } from "./recordar-busqueda";
@@ -95,13 +102,15 @@ export default async function BuscarPage({ searchParams }: BuscarPageProps) {
   } = await sesion.auth.getUser();
   const favoritos = user ? new Set(await idsFavoritos(sesion)) : null;
 
+  const plegadosAplicados = filtrosPlegadosAplicados(filters);
+
   return (
     <main className={styles.main}>
       <RecordarBusqueda href={enlacePagina(filters, pagina)} />
       <h1>Buscar cursos</h1>
 
       <form method="get" className={styles.form}>
-        <div className={styles.campo}>
+        <div className={`${styles.campo} ${styles.campoClave}`}>
           <label htmlFor="f-keyword">Palabra clave</label>
           <input
             id="f-keyword"
@@ -111,6 +120,27 @@ export default async function BuscarPage({ searchParams }: BuscarPageProps) {
             defaultValue={filters.keyword ?? ""}
           />
         </div>
+
+        {/* HU-054. En el móvil, los demás campos se pliegan tras «Filtros y
+            orden» para que los resultados se vean nada más entrar. Es una
+            casilla con su etiqueta, no JavaScript: así se despliega igual sin
+            él. Sin `name`, no viaja en la búsqueda. En escritorio el CSS la
+            esconde y los campos se ven siempre. */}
+        <input
+          type="checkbox"
+          id="ver-filtros"
+          className={styles.interruptorFiltros}
+          aria-controls="filtros-busqueda"
+          defaultChecked={plegadosAplicados > 0}
+        />
+        <label htmlFor="ver-filtros" className={styles.botonFiltros}>
+          Filtros y orden
+          {plegadosAplicados > 0 && (
+            <span className={styles.contadorFiltros}>{plegadosAplicados}</span>
+          )}
+        </label>
+
+        <div id="filtros-busqueda" className={styles.filtros}>
         <div className={`${styles.campo} ${styles.campoEstrecho}`}>
           <label htmlFor="f-maxPrice">Precio máximo</label>
           <input
@@ -150,15 +180,24 @@ export default async function BuscarPage({ searchParams }: BuscarPageProps) {
             defaultValue={filters.maxDuration !== null ? filters.maxDuration / 60 : ""}
           />
         </div>
+        {/* Una lista con nombres y no un texto libre (HU-054): antes había que
+            saber el código. Los valores son los códigos exactos de la base. */}
         <div className={`${styles.campo} ${styles.campoEstrecho}`}>
           <label htmlFor="f-language">Idioma</label>
-          <input
+          <select
             id="f-language"
-            type="text"
             name="language"
-            placeholder="es, en…"
-            defaultValue={filters.language ?? ""}
-          />
+            defaultValue={valorIdiomaSeleccionado(filters.language)}
+          >
+            {/* «Todos» y no «Todos los idiomas»: en la columna estrecha del móvil
+                se cortaba, y la etiqueta de encima ya dice de qué es. */}
+            <option value="">Todos</option>
+            {opcionesIdioma(filters.language).map((o) => (
+              <option key={o.valor} value={o.valor}>
+                {o.nombre}
+              </option>
+            ))}
+          </select>
         </div>
         {/* Va en el formulario para que se vea cuál está aplicada y se pueda
             quitar; si no, quien llega desde la portada no entiende por qué ve
@@ -187,6 +226,7 @@ export default async function BuscarPage({ searchParams }: BuscarPageProps) {
               </option>
             ))}
           </select>
+        </div>
         </div>
 
         {/* Se conserva al volver a filtrar: si se perdiera, cambiar la palabra
@@ -292,7 +332,7 @@ export default async function BuscarPage({ searchParams }: BuscarPageProps) {
                   <Link href={`/curso/${course.id}`}>{course.title}</Link>
                 </h2>
                 <p className={styles.meta}>
-                  <span>{course.source}</span>
+                  <span>{nombrePlataforma(course.source)}</span>
                   {course.priceAmount !== null && (
                     <span>
                       {" "}
@@ -303,7 +343,7 @@ export default async function BuscarPage({ searchParams }: BuscarPageProps) {
                   {formatDuration(course.duration) && (
                     <span> · ⏱ {formatDuration(course.duration)}</span>
                   )}
-                  {course.language && <span> · {course.language}</span>}
+                  {course.language && <span> · {nombreIdioma(course.language)}</span>}
                 </p>
                 {course.description && (
                   <p className={styles.description}>{course.description}</p>

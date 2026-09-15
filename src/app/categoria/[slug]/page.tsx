@@ -7,6 +7,7 @@ import { searchCourses } from "../../../lib/courses/search-courses";
 import { parseCourseSearchFilters, textoRecuento } from "../../../lib/courses/search-filters";
 import { preferredLanguageFrom } from "../../../lib/courses/preferred-language";
 import { formatDuration } from "../../../lib/courses/duration";
+import { nombreIdioma, nombrePlataforma } from "../../../lib/courses/presentacion";
 import { DIMENSIONES_MINIATURA, cargaDeMiniatura } from "../../../lib/imagenes";
 import { CATEGORY_LABELS } from "../../../lib/courses/categories";
 import {
@@ -136,7 +137,7 @@ export default async function CategoriaPage({ params, searchParams }: CategoriaP
                     <Link href={`/curso/${course.id}`}>{course.title}</Link>
                   </h2>
                   <p className={styles.meta}>
-                    <span>{course.source}</span>
+                    <span>{nombrePlataforma(course.source)}</span>
                     {course.priceAmount !== null && (
                       <span>
                         {" "}
@@ -147,7 +148,7 @@ export default async function CategoriaPage({ params, searchParams }: CategoriaP
                     {formatDuration(course.duration) && (
                       <span> · ⏱ {formatDuration(course.duration)}</span>
                     )}
-                    {course.language && <span> · {course.language}</span>}
+                    {course.language && <span> · {nombreIdioma(course.language)}</span>}
                   </p>
                   {course.description && (
                     <p className={styles.description}>{course.description}</p>

@@ -8,6 +8,7 @@ import { searchCourses, type CourseSearchResult } from "../lib/courses/search-co
 import { parseCourseSearchFilters } from "../lib/courses/search-filters";
 import { preferredLanguageFrom } from "../lib/courses/preferred-language";
 import { formatDuration } from "../lib/courses/duration";
+import { nombreIdioma, nombrePlataforma } from "../lib/courses/presentacion";
 import { DIMENSIONES_MINIATURA, cargaDeMiniatura } from "../lib/imagenes";
 import styles from "./page.module.css";
 
@@ -136,7 +137,7 @@ export default async function Home() {
                     <span>{course.source === "udemy" ? "U" : "C"}</span>
                   </div>
                 )}
-                <p className={styles.tarjetaCategoria}>{course.source}</p>
+                <p className={styles.tarjetaCategoria}>{nombrePlataforma(course.source)}</p>
                 <h3>
                   <Link href={`/curso/${course.id}`}>{course.title}</Link>
                 </h3>
@@ -144,7 +145,7 @@ export default async function Home() {
                   {[
                     course.rating !== null ? `⭐ ${course.rating}` : null,
                     formatDuration(course.duration) ? `⏱ ${formatDuration(course.duration)}` : null,
-                    course.language,
+                    course.language ? nombreIdioma(course.language) : null,
                   ]
                     .filter(Boolean)
                     .join(" · ")}
