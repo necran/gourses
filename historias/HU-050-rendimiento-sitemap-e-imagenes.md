@@ -157,3 +157,9 @@ primeros. El test contaba la posición entre las **imágenes**, y el código dec
 posición de la **tarjeta**; con una tarjeta sin imagen arriba, la quinta tarjeta (bien
 marcada como `lazy`) pasaba por cuarta. El código era correcto: se corrige el test, que
 ahora mide la posición de cada tarjeta dentro de su lista.
+
+Otra más, del mismo tipo (2026-09-15, durante HU-052): «la imagen principal de la
+ficha» abría la ficha del **primer** resultado de `/buscar`. En la suite completa ese
+primero era a veces un curso sembrado por otro test en paralelo, que lo borró antes de
+que cargara la ficha (la instantánea mostraba «Curso no encontrado»). Ahora abre el
+primer resultado con imagen: los sembrados no la tienen y los del catálogo real sí.

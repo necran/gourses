@@ -53,8 +53,12 @@ test.describe("HU-050 — rendimiento: imágenes y sitemap", () => {
   test("la imagen principal de la ficha carga de inmediato y con prioridad", async ({
     page,
   }) => {
+    // El primer resultado con imagen, no el primero a secas: otros tests siembran
+    // cursos sin imagen que salen arriba y los borran al terminar, y en la suite
+    // completa este test llegó a abrir uno ya borrado («Curso no encontrado»).
+    // Los cursos del catálogo real sí tienen imagen.
     await page.goto("/buscar");
-    const href = (await page.locator("main li h2 a").first().getAttribute("href"))!;
+    const href = (await page.locator("main li:has(img) h2 a").first().getAttribute("href"))!;
     await page.goto(href);
 
     const [principal] = await atributosDeImagenes(page, "main article header img");
