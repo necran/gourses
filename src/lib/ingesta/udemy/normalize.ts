@@ -1,6 +1,7 @@
 import type { NormalizedCourse } from "../../courses/schema";
 import { mapUdemyCategory, mapUdemyCategoryId } from "../../courses/categories.ts";
 import { parseDuration } from "../../courses/duration.ts";
+import { normalizarNivel } from "../../courses/nivel.ts";
 import { fechaActualizacionUdemy, fechaPublicacionUdemy } from "../../courses/fechas-plataforma.ts";
 
 // Cambio de forma en la respuesta de la API (contrato roto): detiene el job,
@@ -204,7 +205,8 @@ export function normalizeUdemyCourse(
     // upsertCourse conserva lo que ya hubiera en vez de borrarlo con null.
     priceUnknown: detail === null,
     rating: parseRating(raw),
-    level: firstString(raw.instructional_level_simple, raw.instructional_level),
+    // Siempre en español, venga la pasada en el idioma que venga (HU-065).
+    level: normalizarNivel(firstString(raw.instructional_level_simple, raw.instructional_level)),
     language: parseLanguage(raw),
     instructor: parseInstructor(raw),
     affiliateUrl: new URL(raw.url, baseUrl).toString(),

@@ -50,7 +50,8 @@ describe("normalizeUdemyCourse", () => {
       priceCurrency: "EUR",
       priceUnknown: false,
       rating: 4.66,
-      level: "All Levels",
+      // Llega «All Levels» y se guarda en español (HU-065).
+      level: "Todos los niveles",
       language: "en",
       instructor: "Ligency, Ed Donner",
       affiliateUrl:
@@ -64,6 +65,14 @@ describe("normalizeUdemyCourse", () => {
       durationMinMinutes: null,
       durationMaxMinutes: null,
     });
+  });
+
+  it("guarda el nivel en español venga la pasada en inglés o en español (HU-065)", () => {
+    const nivel = (instructional_level_simple: string) =>
+      normalizeUdemyCourse({ ...rawCompleto, instructional_level_simple }, detalleCompleto, BASE).level;
+    expect(nivel("Beginner")).toBe("Principiante");
+    expect(nivel("Principiante")).toBe("Principiante");
+    expect(nivel("Expert")).toBe("Experto");
   });
 
   it("deja a null los campos opcionales ausentes sin romper", () => {
