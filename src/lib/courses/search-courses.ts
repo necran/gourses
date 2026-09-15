@@ -33,12 +33,6 @@ export interface CourseSearchPage {
   total: number;
 }
 
-// PostgREST interpreta `,`, `(` y `)` como separadores dentro del valor de un
-// filtro .or(); si el texto de búsqueda del visitante los contiene sin
-// escapar, rompe la sintaxis del filtro en vez de tratarse como texto literal.
-export function escapeOrFilterValue(value: string): string {
-  return value.replace(/[,()]/g, (char) => `\\${char}`);
-}
 
 // Con menos de tres letras o números, el índice de trigramas (HU-057) no sirve
 // y la búsqueda leería las 15.000 descripciones enteras: ~2,6 s por página,
@@ -51,7 +45,7 @@ export function escapeOrFilterValue(value: string): string {
 export const LONGITUD_MINIMA_EN_DESCRIPCION = 3;
 
 export interface PatronPalabraClave {
-  /** Patrón para ILIKE, ya escapado para Postgres y para el filtro .or() de PostgREST. */
+  /** Patrón para ILIKE tal como lo tiene que recibir Postgres: comodines de la persona escapados. */
   patron: string;
   /** Si solo se busca en el título. */
   soloTitulo: boolean;
@@ -60,14 +54,28 @@ export interface PatronPalabraClave {
 // HU-057. `%` y `_` son comodines de ILIKE: sin escaparlos, buscar «100%»
 // encontraba «100 cursos» y `%%%` devolvía el catálogo entero leyendo la tabla.
 // Se escapan con barra invertida (también la propia barra), que es el escape por
-// defecto de LIKE y llega intacto a través de PostgREST (comprobado contra el
-// PostgREST real: `\%` en .or() e .ilike() da los mismos cursos que en SQL).
+// defecto de LIKE. Este patrón es el de Postgres; cómo viaja por PostgREST lo
+// decide `valorFiltroOr`.
 export function patronPalabraClave(keyword: string): PatronPalabraClave {
-  const sinComodines = keyword.replace(/[\\%_]/g, (c) => `\\${c}`);
   return {
-    patron: `%${escapeOrFilterValue(sinComodines)}%`,
+    patron: `%${keyword.replace(/[\\%_]/g, (c) => `\\${c}`)}%`,
     soloTitulo: (keyword.match(/[\p{L}\p{N}]/gu) ?? []).length < LONGITUD_MINIMA_EN_DESCRIPCION,
   };
+}
+
+// Un valor dentro del filtro `.or()` de PostgREST, entre comillas dobles, que es
+// la forma documentada para valores con comas o paréntesis. Dentro de las
+// comillas, PostgREST quita una barra invertida delante de `\` y de `"`, así que
+// esas dos se duplican.
+//
+// Antes (HU-007) se escapaban la coma y los paréntesis con barra invertida, sin
+// comillas, y **nunca funcionó** con paréntesis: PostgREST respondía «LIKE
+// pattern must not end with escape character» y la página daba 500. Se vio el
+// 2026-09-15 al buscar «Godot 4 Intermediate Game Development Course (2026)».
+// Comprobado contra el PostgREST real que con comillas dan los mismos cursos
+// que la consulta SQL: paréntesis, coma, comilla, barra y `%` literal.
+export function valorFiltroOr(patron: string): string {
+  return `"${patron.replace(/[\\"]/g, (c) => `\\${c}`)}"`;
 }
 
 interface CourseRow {
@@ -360,9 +368,13 @@ function aplicarFiltros(base: ConsultaCursos, filters: CourseSearchFilters): Con
 
   if (filters.keyword) {
     const { patron, soloTitulo } = patronPalabraClave(filters.keyword);
-    query = soloTitulo
-      ? query.ilike("title", patron)
-      : query.or(`title.ilike.${patron},description.ilike.${patron}`);
+    if (soloTitulo) {
+      // Un filtro suelto no pasa por el analizador de `.or()`: el patrón va tal cual.
+      query = query.ilike("title", patron);
+    } else {
+      const valor = valorFiltroOr(patron);
+      query = query.or(`title.ilike.${valor},description.ilike.${valor}`);
+    }
   }
   if (filters.category !== null) {
     query = query.eq("category", filters.category);

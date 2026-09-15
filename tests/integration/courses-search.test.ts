@@ -36,8 +36,9 @@ describeIfConfigured("HU-007 — searchCourses", () => {
         ('coursera', $2, 'Curso de prueba HU-007: cocina italiana', 'pasta y pizza', 99.99, 'EUR', 3.0, 'es'),
         ('coursera', $3, 'Curso de prueba HU-007: sin valoración ni precio', 'catálogo por suscripción', null, null, null, 'es'),
         ('coursera', $4, 'Curso de prueba HU-057: zq9 100% práctico', 'sin comodines', null, null, null, 'es'),
-        ('coursera', $5, 'Curso de prueba HU-057: 100 x práctico', 'la descripción menciona zq9 de pasada', null, null, null, 'es')`,
-      [`${MARKER}rust`, `${MARKER}cocina`, `${MARKER}sin-precio`, `${MARKER}porcentaje`, `${MARKER}sin-porcentaje`]
+        ('coursera', $5, 'Curso de prueba HU-057: 100 x práctico', 'la descripción menciona zq9 de pasada', null, null, null, 'es'),
+        ('coursera', $6, 'Curso de prueba "HU-059": Godot, nivel (2026) C:\\ruta', 'con signos', null, null, null, 'es')`,
+      [`${MARKER}rust`, `${MARKER}cocina`, `${MARKER}sin-precio`, `${MARKER}porcentaje`, `${MARKER}sin-porcentaje`, `${MARKER}signos`]
     );
   });
 
@@ -111,6 +112,26 @@ describeIfConfigured("HU-007 — searchCourses", () => {
       "Curso de prueba HU-057: 100 x práctico",
       "Curso de prueba HU-057: zq9 100% práctico",
     ]);
+  });
+
+  // Descubierto el 2026-09-15: buscar un título con paréntesis daba 500 desde
+  // HU-007. Por el mismo camino que producción, con los signos que el filtro
+  // .or() de PostgREST trata como sintaxis: comilla, coma, paréntesis y barra.
+  it("un título con comillas, coma, paréntesis y barra se encuentra buscándolo tal cual", async () => {
+    const titulo = 'Curso de prueba "HU-059": Godot, nivel (2026) C:\\ruta';
+    const { resultados } = await searchCourses(supabase, parseCourseSearchFilters({ keyword: titulo }), 100);
+
+    expect(resultados.map((r) => r.title)).toEqual([titulo]);
+  });
+
+  it("también con el camino de solo título y con orden explícito", async () => {
+    // «(2026)» tiene 4 números: va por título y descripción; «C:\» no llega a 3 letras.
+    for (const params of [{ keyword: "(2026)", orden: "precio-asc" }, { keyword: "C:\\" }]) {
+      const { resultados } = await searchCourses(supabase, parseCourseSearchFilters(params), 1000);
+      expect(resultados.map((r) => r.title), JSON.stringify(params)).toContain(
+        'Curso de prueba "HU-059": Godot, nivel (2026) C:\\ruta'
+      );
+    }
   });
 
   it("una búsqueda sin coincidencias devuelve una lista vacía, no un error", async () => {

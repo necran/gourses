@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
-  escapeOrFilterValue,
   interleaveBySource,
   paginarIntercalado,
   patronPalabraClave,
   priorizarIdioma,
+  valorFiltroOr,
 } from "./search-courses";
 import type { CourseSearchResult } from "./search-courses";
 
@@ -75,17 +75,28 @@ describe("priorizarIdioma (HU-032)", () => {
   });
 });
 
-describe("escapeOrFilterValue", () => {
-  it("deja intacto un texto de búsqueda normal", () => {
-    expect(escapeOrFilterValue("python para principiantes")).toBe(
-      "python para principiantes"
-    );
+// Las cadenas esperadas se comprobaron contra el PostgREST real (2026-09-15):
+// dan los mismos cursos que la consulta SQL equivalente.
+describe("valorFiltroOr", () => {
+  it("va entre comillas dobles, así que coma y paréntesis quedan como texto", () => {
+    expect(valorFiltroOr("%curso (avanzado), nivel 2%")).toBe('"%curso (avanzado), nivel 2%"');
   });
 
-  it("escapa coma y paréntesis, que PostgREST interpreta como sintaxis de filtro", () => {
-    expect(escapeOrFilterValue("curso (avanzado), nivel 2")).toBe(
-      "curso \\(avanzado\\)\\, nivel 2"
-    );
+  it("duplica la barra invertida: dentro de las comillas PostgREST quita una", () => {
+    // El patrón de LIKE `%100\%%` (un % literal) viaja como `"%100\\%%"`.
+    expect(valorFiltroOr("%100\\%%")).toBe('"%100\\\\%%"');
+  });
+
+  it("escapa la comilla doble para no cerrar el valor antes de tiempo", () => {
+    expect(valorFiltroOr('%el "mejor" curso%')).toBe('"%el \\"mejor\\" curso%"');
+  });
+
+  it("un intento de meter otra condición en el filtro queda como texto dentro de las comillas", () => {
+    const valor = valorFiltroOr('%x",id.neq.0,title.ilike."%');
+    expect(valor.startsWith('"')).toBe(true);
+    expect(valor.endsWith('"')).toBe(true);
+    // Todas las comillas interiores van escapadas: ninguna cierra el valor.
+    expect(valor.slice(1, -1)).not.toMatch(/(?<!\\)"/);
   });
 });
 
@@ -104,10 +115,10 @@ describe("patronPalabraClave (HU-057)", () => {
     expect(patronPalabraClave("C:\\ruta").patron).toBe("%C:\\\\ruta%");
   });
 
-  it("se siguen escapando coma y paréntesis para el filtro .or()", () => {
-    expect(patronPalabraClave("curso (avanzado), 50%").patron).toBe(
-      "%curso \\(avanzado\\)\\, 50\\%%"
-    );
+  // El patrón es el de Postgres: coma y paréntesis no son especiales en LIKE.
+  // Protegerlos del filtro .or() es cosa de valorFiltroOr.
+  it("coma y paréntesis quedan tal cual en el patrón de LIKE", () => {
+    expect(patronPalabraClave("curso (avanzado), 50%").patron).toBe("%curso (avanzado), 50\\%%");
   });
 
   it("con menos de tres letras o números busca solo en el título", () => {

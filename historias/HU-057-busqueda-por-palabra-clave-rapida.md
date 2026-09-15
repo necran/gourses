@@ -152,3 +152,29 @@ Sin hallazgos críticos ni altos, y se cierra uno que había:
 - **Filtro `.or()` de PostgREST**: se sigue escapando coma y paréntesis, y la barra
   invertida se escapa antes, para que un `\` de la persona no pueda deshacer esos escapes.
 - **Migración**: `create extension` e índices, sin cambios de permisos ni de RLS.
+
+### Corrección posterior: buscar un título con paréntesis daba 500 (2026-09-15)
+
+Visto durante HU-059: un e2e buscó un curso por su título completo, «Godot 4 Intermediate
+Game Development Course (2026)», y la página dio **HTTP 500** («LIKE pattern must not end
+with escape character»). El fallo **venía de HU-007**, no de esta historia: el valor del
+filtro `.or()` de PostgREST se protegía escapando coma y paréntesis con barra invertida,
+y con paréntesis eso nunca funcionó. No se había visto porque ningún test buscaba por el
+camino real un texto con paréntesis, y hasta ese día el primer curso de `/buscar` no los
+tenía.
+
+Arreglo, comprobado contra el PostgREST real antes de escribirlo (cada caso da los mismos
+cursos que la consulta SQL equivalente):
+
+- `patronPalabraClave` devuelve solo el patrón de LIKE (`%`, `_` y `\` escapados).
+- `valorFiltroOr` lo mete **entre comillas dobles**, que es la forma documentada para
+  valores con comas o paréntesis, escapando `\` y `"`. Dentro de las comillas PostgREST quita
+  una barra, así que un `%` literal viaja como `\\%`: con una sola barra daba 1.324 cursos en
+  vez de 738.
+- La búsqueda solo por título (`.ilike`) no pasa por el analizador de `.or()` y usa el patrón
+  tal cual.
+- `escapeOrFilterValue`, el escapado que fallaba, se elimina.
+
+Tests: unitarios de `valorFiltroOr` (comillas, barra, comilla, intento de colar otra
+condición) y de integración por PostgREST con un título que tiene comilla, coma, paréntesis
+y barra, por los dos caminos.
