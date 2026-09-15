@@ -1,24 +1,29 @@
 import { describe, expect, it, vi } from "vitest";
 import { runResumenJob, type ResumenStore } from "./resumen-job";
-import { LONGITUD_MINIMA_DESCRIPCION, type CursoConEstadoResumen } from "./resumen-curso";
+import {
+  CuotaDiariaAgotadaError,
+  LONGITUD_MINIMA_DESCRIPCION,
+  huellaDescripcion,
+  type CursoConEstadoResumen,
+} from "./resumen-curso";
 
 const sinEsperas = { dormir: async () => {} };
+const DESCRIPCION = "d".repeat(LONGITUD_MINIMA_DESCRIPCION);
 
 function curso(overrides: Partial<CursoConEstadoResumen> = {}): CursoConEstadoResumen {
   return {
     id: "1",
     title: "Curso",
-    description: "d".repeat(LONGITUD_MINIMA_DESCRIPCION),
-    updatedAt: "2026-01-02T00:00:00.000Z",
+    description: DESCRIPCION,
     resumenIA: null,
-    resumenIAGeneradoEn: null,
+    resumenIADescripcionSha256: null,
     ...overrides,
   };
 }
 
 function makeStore(cursos: CursoConEstadoResumen[]): ResumenStore {
   return {
-    cursosUdemyConDescripcion: vi.fn().mockResolvedValue(cursos),
+    cursosConDescripcion: vi.fn().mockResolvedValue(cursos),
     guardarResumen: vi.fn().mockResolvedValue(undefined),
   };
 }
@@ -34,8 +39,11 @@ describe("runResumenJob", () => {
     expect(result.candidatos).toBe(2);
     expect(result.generados).toBe(2);
     expect(result.fallidos).toEqual([]);
-    expect(store.guardarResumen).toHaveBeenCalledWith("a", "Un resumen.");
-    expect(store.guardarResumen).toHaveBeenCalledWith("b", "Un resumen.");
+    // Con la huella de la descripción que se resumió (HU-052).
+    expect(store.guardarResumen).toHaveBeenCalledWith("a", "Un resumen.", huellaDescripcion(DESCRIPCION));
+    expect(store.guardarResumen).toHaveBeenCalledWith("b", "Un resumen.", huellaDescripcion(DESCRIPCION));
+    expect(result.detenidoPorCuota).toBe(false);
+    expect(result.pendientes).toBe(0);
   });
 
   // El filtrado de candidatos no lo repite el job: confía en necesitaResumen.
@@ -46,8 +54,7 @@ describe("runResumenJob", () => {
       curso({
         id: "ya-resumido",
         resumenIA: "Ya está.",
-        resumenIAGeneradoEn: "2026-01-05T00:00:00.000Z",
-        updatedAt: "2026-01-02T00:00:00.000Z",
+        resumenIADescripcionSha256: huellaDescripcion(DESCRIPCION),
       }),
     ];
     const store = makeStore(cursos);
@@ -82,7 +89,57 @@ describe("runResumenJob", () => {
     expect(result.fallidos).toEqual([
       { id: "malo", error: expect.stringContaining("fallo del servidor") },
     ]);
-    expect(store.guardarResumen).toHaveBeenCalledWith("bueno", "Resumen de Bueno.");
+    expect(store.guardarResumen).toHaveBeenCalledWith(
+      "bueno",
+      "Resumen de Bueno.",
+      huellaDescripcion(DESCRIPCION)
+    );
+  });
+
+  // HU-052. Con la cuota diaria agotada fallarían todos los que quedan: se
+  // para en vez de pasar horas esperando turno para nada.
+  it("se detiene al agotarse la cuota diaria, sin pedir más ni reintentar", async () => {
+    const cursos = ["a", "b", "c", "d"].map((id) => curso({ id, title: id }));
+    const store = makeStore(cursos);
+    const pedidos: string[] = [];
+    const generador = vi.fn().mockImplementation(async (c: { title: string }) => {
+      pedidos.push(c.title);
+      if (c.title === "b") throw new CuotaDiariaAgotadaError();
+      return `Resumen de ${c.title}.`;
+    });
+
+    const result = await runResumenJob({
+      store,
+      generador,
+      concurrencia: 1,
+      opcionesReintento: sinEsperas,
+    });
+
+    expect(pedidos).toEqual(["a", "b"]);
+    expect(result).toMatchObject({
+      candidatos: 4,
+      generados: 1,
+      fallidos: [],
+      detenidoPorCuota: true,
+      pendientes: 3,
+    });
+  });
+
+  // El orden lo decide el store (español primero); el job no debe deshacerlo.
+  it("resume en el orden en que el store entrega los cursos", async () => {
+    const cursos = ["es-1", "es-2", "en-1"].map((id) => curso({ id, title: id }));
+    const pedidos: string[] = [];
+
+    await runResumenJob({
+      store: makeStore(cursos),
+      concurrencia: 1,
+      generador: async ({ title }) => {
+        pedidos.push(title);
+        return "R";
+      },
+    });
+
+    expect(pedidos).toEqual(["es-1", "es-2", "en-1"]);
   });
 
   it("reintenta un fallo reintentable antes de darlo por perdido", async () => {

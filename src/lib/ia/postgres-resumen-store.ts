@@ -5,32 +5,39 @@ import type { ResumenStore } from "./resumen-job.ts";
 // mismo criterio que postgres-course-store.ts: corre server-side, en el job,
 // nunca desde el cliente (ver .claude/rules/seguridad.md).
 //
-// Solo Udemy y solo con descripción: es la condición fija que no depende del
-// estado del resumen (HU-030 deja Coursera fuera de alcance). El resto de la
-// decisión —si hace falta generar o regenerar— vive en `necesitaResumen`,
-// pura y sin base de datos.
+// Udemy y Coursera, solo con descripción (HU-052; HU-030 dejaba Coursera
+// fuera). El resto de la decisión —si hace falta generar o regenerar— vive en
+// `necesitaResumen`, pura y sin base de datos.
+//
+// El orden es parte del contrato: español primero (es el contenido que puede
+// posicionar), luego los cursos con más alumnos, y `id` para que dos
+// ejecuciones recorran lo mismo en el mismo orden.
 export function createPostgresResumenStore(client: Client | Pool): ResumenStore {
   return {
-    async cursosUdemyConDescripcion() {
+    async cursosConDescripcion() {
       const { rows } = await client.query(
-        `select id, title, description, updated_at, resumen_ia, resumen_ia_generado_en
+        `select id, title, description, resumen_ia, resumen_ia_descripcion_sha256
          from courses
-         where source = 'udemy' and description is not null`
+         where source in ('udemy', 'coursera') and description is not null
+         order by coalesce(language ilike 'es%', false) desc,
+                  num_subscribers desc nulls last,
+                  id`
       );
       return rows.map((r) => ({
         id: r.id,
         title: r.title,
         description: r.description,
-        updatedAt: r.updated_at.toISOString(),
         resumenIA: r.resumen_ia,
-        resumenIAGeneradoEn: r.resumen_ia_generado_en ? r.resumen_ia_generado_en.toISOString() : null,
+        resumenIADescripcionSha256: r.resumen_ia_descripcion_sha256,
       }));
     },
 
-    async guardarResumen(id, resumen) {
+    async guardarResumen(id, resumen, huella) {
       await client.query(
-        `update courses set resumen_ia = $2, resumen_ia_generado_en = now() where id = $1`,
-        [id, resumen]
+        `update courses
+            set resumen_ia = $2, resumen_ia_generado_en = now(), resumen_ia_descripcion_sha256 = $3
+          where id = $1`,
+        [id, resumen, huella]
       );
     },
   };

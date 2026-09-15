@@ -6,6 +6,8 @@
 // content abuse* — páginas finas en masa con afiliación detrás. Resumir con el
 // texto delante acota mucho el riesgo de que el modelo se invente algo.
 
+import { createHash } from "node:crypto";
+
 // La descripción más corta que merece la pena resumir. Por debajo de esto, un
 // resumen no acorta nada de verdad — solo gasta una llamada a cambio de nada.
 export const LONGITUD_MINIMA_DESCRIPCION = 200;
@@ -61,21 +63,45 @@ export type GeneradorDeResumen = (curso: CursoParaResumir) => Promise<string>;
 
 export interface CursoConEstadoResumen extends CursoParaResumir {
   id: string;
-  /** Última vez que cambió el curso (incluida su descripción). */
-  updatedAt: string;
   resumenIA: string | null;
-  /** Cuándo se generó el resumen actual, si lo hay. */
-  resumenIAGeneradoEn: string | null;
+  /** Huella de la descripción que se resumió, si hay resumen (HU-052). */
+  resumenIADescripcionSha256: string | null;
+}
+
+/** SHA-256 en hexadecimal; coincide con `encode(sha256(convert_to(t, 'UTF8')), 'hex')`. */
+export function huellaDescripcion(descripcion: string): string {
+  return createHash("sha256").update(descripcion, "utf8").digest("hex");
 }
 
 // Decide si un curso necesita (re)generar su resumen. Pura, sin tocar la base
-// de datos: así se prueba cada caso —sin descripción, descripción corta, ya
-// resumido y sin cambios, desactualizado— sin sembrar nada (HU-030).
+// de datos: así se prueba cada caso sin sembrar nada (HU-030).
+//
+// Compara huellas y no fechas (HU-052): la ingesta diaria actualiza
+// `updated_at` de todos los cursos aunque no cambie nada, y comparar fechas
+// daba cada resumen por caducado al día siguiente.
 export function necesitaResumen(curso: CursoConEstadoResumen): boolean {
   if (curso.description.length < LONGITUD_MINIMA_DESCRIPCION) return false;
-  if (!curso.resumenIA || !curso.resumenIAGeneradoEn) return true;
+  if (!curso.resumenIA || !curso.resumenIADescripcionSha256) return true;
 
-  // Si la descripción ha cambiado después del último resumen, el resumen que
-  // hay habla de un texto que ya no es el que se ve en la ficha.
-  return new Date(curso.updatedAt).getTime() > new Date(curso.resumenIAGeneradoEn).getTime();
+  // Si la descripción ya no es la que se resumió, el resumen habla de un texto
+  // que no es el que se ve en la ficha.
+  return curso.resumenIADescripcionSha256 !== huellaDescripcion(curso.description);
+}
+
+// La cuota **diaria** agotada no es un fallo de un curso: fallarían todos los
+// que quedan, y reintentar no sirve hasta el día siguiente. Por eso tiene su
+// propio error, cuyo mensaje no lleva el código 429 a propósito — así
+// `esReintentable` no lo reintenta y el job lo reconoce para parar (HU-052).
+export class CuotaDiariaAgotadaError extends Error {
+  constructor() {
+    super("Cuota diaria gratuita de la API de IA agotada");
+    this.name = "CuotaDiariaAgotadaError";
+  }
+}
+
+// Gemini nombra la cuota en el propio mensaje del 429:
+// "GenerateRequestsPerDayPerProjectPerModel-FreeTier" (visto el 2026-09-09).
+// La de por minuto también es un 429, pero esa sí se pasa esperando.
+export function esCuotaDiariaAgotada(status: number | undefined, mensaje: string): boolean {
+  return status === 429 && /per ?day/i.test(mensaje);
 }

@@ -1,11 +1,15 @@
 import { describe, expect, it } from "vitest";
 import {
+  CuotaDiariaAgotadaError,
   LONGITUD_MINIMA_DESCRIPCION,
   construirPrompt,
+  esCuotaDiariaAgotada,
+  huellaDescripcion,
   limpiarResumen,
   necesitaResumen,
   type CursoConEstadoResumen,
 } from "./resumen-curso";
+import { esReintentable } from "../ingesta/comun/reintentos";
 
 describe("construirPrompt", () => {
   it("incluye el título y la descripción real, tal cual", () => {
@@ -65,15 +69,59 @@ describe("limpiarResumen", () => {
   });
 });
 
+describe("huellaDescripcion", () => {
+  // Tiene que coincidir con lo que calcula la migración 0009 en SQL, o los
+  // resúmenes rellenados por la migración se darían por caducados.
+  // Vectores de prueba publicados de SHA-256 (FIPS 180-2). La igualdad con el
+  // `sha256()` de Postgres, acentos incluidos, se comprueba en integración.
+  it("es el SHA-256 en hexadecimal del texto", () => {
+    expect(huellaDescripcion("")).toBe(
+      "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    );
+    expect(huellaDescripcion("abc")).toBe(
+      "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+    );
+  });
+
+  it("cambia con cualquier cambio del texto, también uno mínimo", () => {
+    expect(huellaDescripcion("Curso de Python")).not.toBe(huellaDescripcion("Curso de Python."));
+  });
+});
+
+describe("cuota diaria agotada", () => {
+  it("reconoce el 429 de cuota diaria por el nombre de la cuota", () => {
+    expect(
+      esCuotaDiariaAgotada(429, "Quota exceeded for GenerateRequestsPerDayPerProjectPerModel-FreeTier")
+    ).toBe(true);
+  });
+
+  it("el 429 de ritmo por minuto no es cuota diaria: ese se pasa esperando", () => {
+    expect(
+      esCuotaDiariaAgotada(429, "Quota exceeded for GenerateRequestsPerMinutePerProjectPerModel-FreeTier")
+    ).toBe(false);
+  });
+
+  it("otro código con «PerDay» en el mensaje tampoco lo es", () => {
+    expect(esCuotaDiariaAgotada(500, "PerDay")).toBe(false);
+    expect(esCuotaDiariaAgotada(undefined, "PerDay")).toBe(false);
+  });
+
+  // Si se reintentara, cada curso restante perdería 15 s en esperas inútiles.
+  it("su error no se reintenta", () => {
+    expect(esReintentable(new CuotaDiariaAgotadaError())).toBe(false);
+  });
+});
+
 describe("necesitaResumen", () => {
+  const DESCRIPCION = "d".repeat(LONGITUD_MINIMA_DESCRIPCION);
+
   function curso(overrides: Partial<CursoConEstadoResumen> = {}): CursoConEstadoResumen {
     return {
       id: "1",
       title: "Curso",
-      description: "d".repeat(LONGITUD_MINIMA_DESCRIPCION),
-      updatedAt: "2026-01-02T00:00:00.000Z",
+      description: DESCRIPCION,
       resumenIA: null,
-      resumenIAGeneradoEn: null,
+      resumenIADescripcionSha256: null,
       ...overrides,
     };
   }
@@ -83,28 +131,29 @@ describe("necesitaResumen", () => {
   });
 
   // El caso que evita pagar dos veces por lo mismo.
-  it("no hace falta si ya hay resumen y la descripción no ha cambiado desde entonces", () => {
+  it("no hace falta si ya hay resumen de esta misma descripción", () => {
     expect(
       necesitaResumen(
-        curso({
-          resumenIA: "Ya resumido.",
-          resumenIAGeneradoEn: "2026-01-03T00:00:00.000Z",
-          updatedAt: "2026-01-02T00:00:00.000Z",
-        })
+        curso({ resumenIA: "Ya resumido.", resumenIADescripcionSha256: huellaDescripcion(DESCRIPCION) })
       )
     ).toBe(false);
   });
 
-  it("hace falta regenerar si el curso ha cambiado después del último resumen", () => {
+  it("hace falta regenerar si la descripción ya no es la que se resumió", () => {
     expect(
       necesitaResumen(
         curso({
           resumenIA: "Resumen desactualizado.",
-          resumenIAGeneradoEn: "2026-01-01T00:00:00.000Z",
-          updatedAt: "2026-01-05T00:00:00.000Z",
+          resumenIADescripcionSha256: huellaDescripcion("otra descripción anterior"),
         })
       )
     ).toBe(true);
+  });
+
+  it("hace falta si hay resumen pero no se sabe de qué descripción salió", () => {
+    expect(necesitaResumen(curso({ resumenIA: "Sin huella.", resumenIADescripcionSha256: null }))).toBe(
+      true
+    );
   });
 
   it("no hace falta si la descripción es demasiado corta para merecer resumen", () => {

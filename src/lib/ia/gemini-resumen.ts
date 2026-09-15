@@ -1,5 +1,12 @@
 import { GoogleGenAI, ApiError } from "@google/genai";
-import { construirPrompt, limpiarResumen, type CursoParaResumir, type GeneradorDeResumen } from "./resumen-curso.ts";
+import {
+  CuotaDiariaAgotadaError,
+  construirPrompt,
+  esCuotaDiariaAgotada,
+  limpiarResumen,
+  type CursoParaResumir,
+  type GeneradorDeResumen,
+} from "./resumen-curso.ts";
 
 // Adaptador real contra la API de Gemini (HU-030), separado de la lógica pura
 // del prompt para poder probar esta última sin red ni clave — mismo criterio
@@ -71,13 +78,14 @@ export function creaGeneradorDeResumenGemini(
     } catch (error) {
       // Se normaliza a un mensaje con el código de estado dentro, mismo
       // formato que ya usa la ingesta de Udemy: es lo que `esReintentable`
-      // sabe leer para decidir si merece la pena reintentar. Un 429 aquí
-      // puede ser la cuota diaria agotada, no solo el ritmo por minuto: si
-      // se agota, este curso se anota en `fallidos` y el job sigue con el
-      // resto; volver a lanzar el job al día siguiente recoge justo los que
-      // faltaron, porque `necesitaResumen` no vuelve a pedir lo que ya tiene.
+      // sabe leer para decidir si merece la pena reintentar.
+      //
+      // La cuota **diaria** agotada es la excepción (HU-052): reintentar no
+      // sirve hasta mañana y fallarían todos los cursos restantes, así que
+      // tiene su propio error, que el job reconoce para parar.
       const status = error instanceof ApiError ? error.status : undefined;
       const motivo = error instanceof Error ? error.message : String(error);
+      if (esCuotaDiariaAgotada(status, motivo)) throw new CuotaDiariaAgotadaError();
       throw new Error(`API de Gemini respondió ${status ?? "error"}: ${motivo}`);
     }
 

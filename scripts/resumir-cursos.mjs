@@ -37,12 +37,14 @@ try {
   const result = await runResumenJob({ store, generador, concurrencia });
 
   console.log(
-    `Candidatos: ${result.candidatos}, resúmenes generados: ${result.generados}`
+    `Candidatos: ${result.candidatos}, resúmenes generados: ${result.generados}, pendientes: ${result.pendientes}`
   );
+  if (result.detenidoPorCuota) {
+    // Con el nivel gratuito es lo normal, no una avería: la siguiente
+    // ejecución sigue por los pendientes, en el mismo orden (HU-052).
+    console.log("Detenido: la cuota diaria de la API de IA está agotada.");
+  }
   if (result.fallidos.length > 0) {
-    // Con el nivel gratuito, agotar la cuota diaria es un motivo normal de
-    // fallo, no una avería: relanzar el job otro día recoge justo estos,
-    // porque necesitaResumen no vuelve a pedir lo que ya tiene.
     console.warn(`Cursos fallidos (${result.fallidos.length}):`, result.fallidos.slice(0, 10));
   }
 } finally {
