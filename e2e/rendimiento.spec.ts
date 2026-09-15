@@ -9,9 +9,18 @@ import { expect, test, type Page } from "@playwright/test";
 // Mismo número que MINIATURAS_INMEDIATAS en src/lib/imagenes.ts.
 const INMEDIATAS = 4;
 
+// `posicion` es la de la tarjeta dentro de su lista, no la de la imagen entre
+// las imágenes: hay cursos sin miniatura, y el código decide por la tarjeta. Si
+// se contaran imágenes, una tarjeta sin imagen arriba desplazaría la cuenta y
+// la quinta tarjeta pasaría por cuarta (pasó con los cursos que siembra HU-032
+// mientras corre la suite completa).
 async function atributosDeImagenes(page: Page, selector: string) {
   return page.locator(selector).evaluateAll((imagenes) =>
     (imagenes as HTMLImageElement[]).map((img) => ({
+      posicion: (() => {
+        const tarjeta = img.closest("li");
+        return tarjeta?.parentElement ? [...tarjeta.parentElement.children].indexOf(tarjeta) : -1;
+      })(),
       loading: img.getAttribute("loading"),
       fetchpriority: img.getAttribute("fetchpriority"),
       width: img.getAttribute("width"),
@@ -20,25 +29,25 @@ async function atributosDeImagenes(page: Page, selector: string) {
   );
 }
 
+function comprobarCarga(imagenes: Awaited<ReturnType<typeof atributosDeImagenes>>) {
+  expect(imagenes.some((img) => img.posicion >= INMEDIATAS)).toBe(true);
+  for (const img of imagenes) {
+    const esperado = img.posicion < INMEDIATAS ? "eager" : "lazy";
+    expect(img.loading, `tarjeta ${img.posicion}`).toBe(esperado);
+  }
+}
+
 test.describe("HU-050 — rendimiento: imágenes y sitemap", () => {
   test("en el buscador, las primeras miniaturas cargan de inmediato y el resto en diferido", async ({
     page,
   }) => {
     await page.goto("/buscar");
-    const imagenes = await atributosDeImagenes(page, "main li img");
-
-    expect(imagenes.length).toBeGreaterThan(INMEDIATAS);
-    for (const img of imagenes.slice(0, INMEDIATAS)) expect(img.loading).not.toBe("lazy");
-    for (const img of imagenes.slice(INMEDIATAS)) expect(img.loading).toBe("lazy");
+    comprobarCarga(await atributosDeImagenes(page, "main li img"));
   });
 
   test("en la portada pasa lo mismo con los cursos destacados", async ({ page }) => {
     await page.goto("/");
-    const imagenes = await atributosDeImagenes(page, "main li img");
-
-    expect(imagenes.length).toBeGreaterThan(INMEDIATAS);
-    for (const img of imagenes.slice(0, INMEDIATAS)) expect(img.loading).not.toBe("lazy");
-    for (const img of imagenes.slice(INMEDIATAS)) expect(img.loading).toBe("lazy");
+    comprobarCarga(await atributosDeImagenes(page, "main li img"));
   });
 
   test("la imagen principal de la ficha carga de inmediato y con prioridad", async ({

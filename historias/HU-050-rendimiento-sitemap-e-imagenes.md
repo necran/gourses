@@ -148,3 +148,12 @@ Sin hallazgos:
 Durante esta historia apareció en el árbol de trabajo un cambio ajeno en
 `src/app/layout.tsx` que carga Google Analytics sin consentimiento y contradice la
 política de privacidad. No forma parte de este commit; se trata en HU-051.
+
+### Corrección posterior del test (2026-09-15, durante HU-051)
+
+Los dos tests de carga diferida fallaban en la suite completa y pasaban solos. No era
+inestabilidad: HU-032 siembra cursos sin miniatura que, mientras existen, salen los
+primeros. El test contaba la posición entre las **imágenes**, y el código decide por la
+posición de la **tarjeta**; con una tarjeta sin imagen arriba, la quinta tarjeta (bien
+marcada como `lazy`) pasaba por cuarta. El código era correcto: se corrige el test, que
+ahora mide la posición de cada tarjeta dentro de su lista.
