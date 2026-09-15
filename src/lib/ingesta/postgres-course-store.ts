@@ -1,6 +1,7 @@
 import type { Client, Pool } from "pg";
 import type { CourseStore } from "./upsert-course.ts";
 import type { NormalizedCourse } from "../courses/schema.ts";
+import { temasDelTitulo } from "../courses/temas.ts";
 
 // Implementación de CourseStore contra Postgres directo (no PostgREST) —
 // usada por los jobs de ingesta, que corren server-side y nunca desde el
@@ -34,8 +35,8 @@ export function createPostgresCourseStore(client: Client | Pool): CourseStore {
     async insertCourse(course: NormalizedCourse) {
       const { rows } = await client.query(
         `insert into courses
-          (source, source_id, title, description, price_amount, price_currency, rating, level, language, instructor, affiliate_url, image_url, category, duration_min_minutes, duration_max_minutes, num_reviews, num_subscribers, what_you_will_learn, requirements, updated_at)
-         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, now())
+          (source, source_id, title, description, price_amount, price_currency, rating, level, language, instructor, affiliate_url, image_url, category, duration_min_minutes, duration_max_minutes, num_reviews, num_subscribers, what_you_will_learn, requirements, temas, updated_at)
+         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, now())
          returning id`,
         [
           course.source,
@@ -57,6 +58,9 @@ export function createPostgresCourseStore(client: Client | Pool): CourseStore {
           course.numSubscribers,
           course.whatYouWillLearn,
           course.requirements,
+          // Los temas salen del título (HU-058), así que se recalculan en cada
+          // escritura: si el título cambia, cambian con él.
+          temasDelTitulo(course.title),
         ]
       );
       return { id: rows[0].id };
@@ -70,7 +74,7 @@ export function createPostgresCourseStore(client: Client | Pool): CourseStore {
           affiliate_url = $10, image_url = $11, category = $12,
           duration_min_minutes = $13, duration_max_minutes = $14,
           num_reviews = $15, num_subscribers = $16, what_you_will_learn = $17, requirements = $18,
-          updated_at = now()
+          temas = $19, updated_at = now()
          where id = $1`,
         [
           id,
@@ -91,6 +95,7 @@ export function createPostgresCourseStore(client: Client | Pool): CourseStore {
           course.numSubscribers,
           course.whatYouWillLearn,
           course.requirements,
+          temasDelTitulo(course.title),
         ]
       );
     },

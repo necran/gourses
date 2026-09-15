@@ -3,6 +3,8 @@ import { createSupabaseServerClient } from "../lib/supabase/server-client";
 import { COURSE_CATEGORIES } from "../lib/courses/categories";
 import { enlaceCategoria } from "../lib/courses/categoria-seo";
 import { TITULAR } from "../lib/legal/titular";
+import { TEMAS, superaUmbral } from "../lib/courses/temas";
+import { enlaceTema, leerRecuentosDeTemas } from "../lib/courses/temas-datos";
 
 // Se genera desde la base de datos, no se fija a mano: la ingesta diaria cambia
 // el catálogo y un sitemap escrito a mano quedaría desfasado (HU-016).
@@ -48,7 +50,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.6,
     }));
 
-    return [...fijas, ...categorias, ...fichas];
+    // Las páginas de tema (HU-058), solo las que superan el umbral: anunciar una
+    // que se sirve con `noindex` sería pedirle a Google que rastree algo que se le
+    // dice que no indexe. A diferencia de las categorías, dependen de leer el
+    // catálogo, así que si ese recuento falla se omiten un día.
+    let temas: MetadataRoute.Sitemap = [];
+    try {
+      const recuentos = await leerRecuentosDeTemas(client);
+      temas = TEMAS.filter((t) => superaUmbral(recuentos.get(t)!)).map((t) => ({
+        url: `${TITULAR.url}${enlaceTema(t)}`,
+        changeFrequency: "daily" as const,
+        priority: 0.7,
+      }));
+    } catch {
+      temas = [];
+    }
+
+    return [...fijas, ...categorias, ...temas, ...fichas];
   } catch {
     // Un fallo leyendo el catálogo no debe dejar al buscador sin sitemap:
     // mejor servir las páginas fijas que devolver un error.
