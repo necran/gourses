@@ -1,5 +1,7 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { headers } from "next/headers";
+import { busquedaIndexable } from "../../lib/seo/seo-sitio";
 import { createSupabaseServerClient } from "../../lib/supabase/server-client";
 import { createSupabaseSessionClient } from "../../lib/supabase/session-client";
 import {
@@ -49,6 +51,21 @@ function enlaceIncluyendoSinDato(filters: CourseSearchFilters): string {
 function preseleccionadoDesde(raw: string | string[] | undefined): string | null {
   const valor = Array.isArray(raw) ? raw[0] : raw;
   return valor && isValidCourseId(valor) ? valor : null;
+}
+
+// HU-056. Antes /buscar heredaba el título de la portada, y cada combinación de
+// filtros era una dirección indexable con casi el mismo contenido. Solo /buscar
+// a secas se indexa; las búsquedas concretas llevan `noindex, follow` (sus
+// enlaces a fichas se siguen) y todas apuntan a la misma canónica.
+export async function generateMetadata({ searchParams }: BuscarPageProps): Promise<Metadata> {
+  const filters = parseCourseSearchFilters(await searchParams);
+  return {
+    title: "Buscar cursos",
+    description:
+      "Busca entre miles de cursos de Udemy y Coursera y compáralos por precio, valoración, duración e idioma.",
+    alternates: { canonical: "/buscar" },
+    ...(busquedaIndexable(filters) ? {} : { robots: { index: false, follow: true } }),
+  };
 }
 
 // El corazón de HU-019, en pequeño: lleno cuando el curso está guardado.

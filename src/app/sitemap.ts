@@ -38,9 +38,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const client = createSupabaseServerClient();
     const cursos = await leerTodosLosCursos(client);
 
+    // Sin `lastModified` (HU-056): salía de `updated_at`, que la ingesta diaria
+    // pone al día aunque el curso no cambie, así que todas las fichas se
+    // anunciaban «modificadas» cada día. Un `lastmod` que siempre cambia enseña
+    // a Google a ignorarlo; mejor no declarar una fecha que no significa nada.
     const fichas: MetadataRoute.Sitemap = cursos.map((c) => ({
       url: `${TITULAR.url}/curso/${c.id}`,
-      lastModified: c.updated_at ? new Date(c.updated_at) : undefined,
       changeFrequency: "weekly" as const,
       priority: 0.6,
     }));
@@ -55,7 +58,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
 interface FilaCurso {
   id: string;
-  updated_at: string | null;
 }
 
 // El límite real de un sitemap es 50.000 URLs; se deja margen para las
@@ -79,7 +81,7 @@ async function leerTodosLosCursos(
   for (let desde = 0; desde < TOPE_SITEMAP; desde += PAGINA) {
     const { data, error } = await client
       .from("courses")
-      .select("id, updated_at")
+      .select("id")
       .order("id", { ascending: true })
       .range(desde, Math.min(desde + PAGINA, TOPE_SITEMAP) - 1);
 

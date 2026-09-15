@@ -6,6 +6,7 @@ import { Footer } from "../components/footer";
 import { BarraCesta } from "../components/barra-cesta";
 import { Analitica } from "../components/analitica";
 import { idMedicionValido } from "../lib/id-analitica";
+import { IMAGEN_COMPARTIR, OPEN_GRAPH_SITIO } from "../lib/seo/seo-sitio";
 
 // Google Analytics (HU-051). El identificador sale del entorno y no del código:
 // solo se fija en producción (netlify.toml), así que en local y en los tests no
@@ -42,8 +43,14 @@ export const metadata: Metadata = {
     title: "Gourses — Compara cursos online de varias plataformas",
     description:
       "Busca y compara cursos de Udemy y Coursera en un solo sitio: precio, valoración, duración e idioma, uno al lado del otro.",
-    type: "website",
-    locale: "es_ES",
+    // Imagen, nombre del sitio e idioma, compartidos con las páginas que declaran
+    // su propio openGraph (HU-056).
+    ...OPEN_GRAPH_SITIO,
+  },
+  // Tarjeta grande, que es la que enseña la imagen a buen tamaño en X.
+  twitter: {
+    card: "summary_large_image",
+    images: [IMAGEN_COMPARTIR],
   },
 };
 

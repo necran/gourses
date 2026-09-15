@@ -19,6 +19,8 @@ import { BotonCesta } from "../../../components/boton-cesta";
 import { EnlaceUltimaBusqueda } from "../../../components/enlace-ultima-busqueda";
 import { conSeparadorDeMiles } from "../../../lib/formato-numero";
 import { nombreIdioma, nombrePlataforma } from "../../../lib/courses/presentacion";
+import { enlaceCategoria, tituloCategoria } from "../../../lib/courses/categoria-seo";
+import { migasDePan } from "../../../lib/seo/seo-sitio";
 import styles from "./page.module.css";
 
 interface CoursePageProps {
@@ -77,6 +79,21 @@ export default async function CoursePage({ params }: CoursePageProps) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: serializeStructuredData(datosEstructurados) }}
+      />
+      {/* Migas de pan (HU-056): portada, su categoría si la tiene, y el curso. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: serializeStructuredData(
+            migasDePan([
+              { nombre: "Inicio", ruta: "/" },
+              ...(course.category
+                ? [{ nombre: tituloCategoria(course.category), ruta: enlaceCategoria(course.category) }]
+                : []),
+              { nombre: course.title, ruta: `/curso/${course.id}` },
+            ])
+          ),
+        }}
       />
       <p className={styles.volver}>
         <EnlaceUltimaBusqueda>← Volver a la búsqueda</EnlaceUltimaBusqueda>

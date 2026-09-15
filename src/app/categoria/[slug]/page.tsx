@@ -16,6 +16,8 @@ import {
   esCategoria,
   tituloCategoria,
 } from "../../../lib/courses/categoria-seo";
+import { serializeStructuredData } from "../../../lib/courses/course-seo";
+import { OPEN_GRAPH_SITIO, migasDePan } from "../../../lib/seo/seo-sitio";
 import styles from "./page.module.css";
 
 interface CategoriaPageProps {
@@ -33,9 +35,13 @@ async function contarEnCategoria(slug: string): Promise<number> {
   return total;
 }
 
-export async function generateMetadata({ params }: CategoriaPageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+  searchParams,
+}: CategoriaPageProps): Promise<Metadata> {
   const { slug } = await params;
   if (!esCategoria(slug)) return { title: "Categoría no encontrada" };
+  const { pagina } = parseCourseSearchFilters({ pagina: (await searchParams).pagina });
 
   // Si el catálogo no responde, se publica igualmente la página con su título:
   // quedarse sin descripción es mucho menos malo que caerse.
@@ -52,8 +58,20 @@ export async function generateMetadata({ params }: CategoriaPageProps): Promise<
       total > 0
         ? descripcionCategoria(slug, total)
         : `Cursos de ${CATEGORY_LABELS[slug]} de Udemy y Coursera, comparados con los mismos datos.`,
-    // Esta es la dirección buena de la categoría, no `/buscar?category=`.
-    alternates: { canonical: enlaceCategoria(slug) },
+    // Esta es la dirección buena de la categoría, no `/buscar?category=`. Cada
+    // página de la paginación es canónica de sí misma (HU-056): apuntarlas
+    // todas a la primera invitaba a Google a ignorar los cursos de las demás.
+    alternates: { canonical: enlaceCategoria(slug, pagina) },
+    openGraph: {
+      title: tituloCategoria(slug),
+      description:
+        total > 0
+          ? descripcionCategoria(slug, total)
+          : `Cursos de ${CATEGORY_LABELS[slug]} de Udemy y Coursera, comparados con los mismos datos.`,
+      // Sin esto, el openGraph propio sustituía entero el del layout y la
+      // categoría se compartía sin imagen (HU-056).
+      ...OPEN_GRAPH_SITIO,
+    },
   };
 }
 
@@ -89,6 +107,19 @@ export default async function CategoriaPage({ params, searchParams }: CategoriaP
 
   return (
     <main className={styles.main}>
+      {/* Migas de pan para el buscador (HU-056). La navegación visible ya es el
+          enlace de vuelta de aquí debajo. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: serializeStructuredData(
+            migasDePan([
+              { nombre: "Inicio", ruta: "/" },
+              { nombre: tituloCategoria(slug), ruta: enlaceCategoria(slug) },
+            ])
+          ),
+        }}
+      />
       <p className={styles.volver}>
         <Link href="/">← Todas las categorías</Link>
       </p>

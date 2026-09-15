@@ -43,10 +43,12 @@ test.describe("HU-016 — SEO de las fichas", () => {
     const [uno] = await dosFichas(page);
     await page.goto(uno);
 
-    const json = await page.locator('script[type="application/ld+json"]').textContent();
-    expect(json).toBeTruthy();
-
-    const datos = JSON.parse(json!);
+    // Desde HU-056 la ficha tiene dos bloques (el curso y sus migas de pan): se
+    // lee el del curso. Por su contenido y no con `filter({ hasText })`, que no
+    // mira dentro de un <script>.
+    const bloques = await page.locator('script[type="application/ld+json"]').allTextContents();
+    const datos = bloques.map((b) => JSON.parse(b)).find((d) => d["@type"] === "Course");
+    expect(datos).toBeTruthy();
     expect(datos["@type"]).toBe("Course");
     expect(datos.name).toBeTruthy();
     expect(datos.provider?.name).toMatch(/Udemy|Coursera/);

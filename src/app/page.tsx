@@ -10,13 +10,17 @@ import { preferredLanguageFrom } from "../lib/courses/preferred-language";
 import { formatDuration } from "../lib/courses/duration";
 import { nombreIdioma, nombrePlataforma } from "../lib/courses/presentacion";
 import { DIMENSIONES_MINIATURA, cargaDeMiniatura } from "../lib/imagenes";
+import { serializeStructuredData } from "../lib/courses/course-seo";
+import { datosEstructuradosSitio } from "../lib/seo/seo-sitio";
 import styles from "./page.module.css";
 
 // Las cifras vienen de la base de datos en cada carga, así que la portada no
 // puede prerenderizarse de una vez para siempre.
 export const dynamic = "force-dynamic";
 
-const CATEGORIAS_DESTACADAS = COURSE_CATEGORIES.slice(0, 6);
+// Las once, no seis (HU-056): con seis, cinco páginas de categoría solo se
+// descubrían por el sitemap, sin ningún enlace desde el propio sitio.
+const CATEGORIAS_DESTACADAS = COURSE_CATEGORIES;
 
 // Antes eran 6: se veían demasiado pocos para dar una idea real del
 // catálogo. 12 sigue siendo una muestra —el catálogo completo, con
@@ -65,6 +69,11 @@ export default async function Home() {
 
   return (
     <main className={styles.main}>
+      {/* Qué es el sitio y su buscador, para los buscadores (HU-056). */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: serializeStructuredData(datosEstructuradosSitio()) }}
+      />
       <section className={styles.hero}>
         <h1>Compara cursos online de varias plataformas a la vez</h1>
         <p className={styles.subtitulo}>

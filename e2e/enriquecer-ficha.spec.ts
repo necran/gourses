@@ -89,8 +89,10 @@ test.describe("HU-029 — enriquecer la ficha con los datos reales de Udemy", ()
 
       await page.goto(`/curso/${rows[0].id}`);
 
-      const json = await page.locator('script[type="application/ld+json"]').textContent();
-      const datos = JSON.parse(json!);
+      // El bloque del curso: desde HU-056 la ficha tiene también el de migas de
+      // pan. Por su contenido: `filter({ hasText })` no mira dentro de un <script>.
+      const bloques = await page.locator('script[type="application/ld+json"]').allTextContents();
+      const datos = bloques.map((b) => JSON.parse(b)).find((d) => d["@type"] === "Course");
 
       expect(datos.aggregateRating).toEqual({
         "@type": "AggregateRating",
@@ -125,9 +127,10 @@ test.describe("HU-029 — enriquecer la ficha con los datos reales de Udemy", ()
 
       await page.goto(`/curso/${rows[0].id}`);
 
-      const json = await page.locator('script[type="application/ld+json"]').textContent();
-      const datos = JSON.parse(json!);
+      const bloques = await page.locator('script[type="application/ld+json"]').allTextContents();
+      const datos = bloques.map((b) => JSON.parse(b)).find((d) => d["@type"] === "Course");
 
+      expect(datos).toBeTruthy();
       expect(datos.aggregateRating).toBeUndefined();
     } finally {
       await client.query(`delete from courses where source_id = $1`, [sourceId]);
