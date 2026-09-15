@@ -138,8 +138,11 @@
 }
 
 .paginaInactiva {
+  /* HU-064. Con `opacity: 0.5` el contraste bajaba a 2,25:1 (axe, WCAG 1.4.3).
+     Se distingue de los enlaces por el color gris y el borde discontinuo, no por
+     ser ilegible. */
   color: var(--ink-muted);
-  opacity: 0.5;
+  border: 1.5px dashed var(--line);
 }
 
 @media (max-width: 30rem) {

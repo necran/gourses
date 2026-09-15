@@ -42,19 +42,24 @@
 }
 
 /* Oculta pero enfocable: con teclado se llega a ella y se marca con espacio. */
-.interruptorFiltros {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
-  pointer-events: none;
-}
-
+/* HU-064. En escritorio la casilla no hace nada (los filtros se ven siempre), así
+   que no existe: antes era invisible pero enfocable, el tabulador se paraba en
+   ella y axe la marcaba por tener la etiqueta oculta. */
+.interruptorFiltros,
 .botonFiltros {
   display: none;
 }
 
 @media (max-width: 48rem) {
+  .interruptorFiltros {
+    display: block;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+  }
+
   .form {
     display: grid;
     grid-template-columns: 1fr auto;
@@ -358,6 +363,9 @@
 
 /* Extremo sin destino: se ve, pero no invita a pulsar. */
 .paginaInactiva {
+  /* HU-064. Con `opacity: 0.5` el contraste bajaba a 2,25:1 (axe, WCAG 1.4.3).
+     Se distingue de los enlaces por el color gris y el borde discontinuo, no por
+     ser ilegible. */
   color: var(--ink-muted);
-  opacity: 0.5;
+  border: 1.5px dashed var(--line);
 }
