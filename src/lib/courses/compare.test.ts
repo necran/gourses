@@ -36,6 +36,8 @@ function curso(overrides: Partial<CourseDetail> = {}): CourseDetail {
     requirements: null,
     resumenIA: null,
     temas: [],
+    publicadoEn: null,
+    actualizadoEnPlataforma: null,
     priceHistory: [],
     ...overrides,
   };

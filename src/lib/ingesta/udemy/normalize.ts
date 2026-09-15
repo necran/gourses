@@ -1,6 +1,7 @@
 import type { NormalizedCourse } from "../../courses/schema";
 import { mapUdemyCategory, mapUdemyCategoryId } from "../../courses/categories.ts";
 import { parseDuration } from "../../courses/duration.ts";
+import { fechaActualizacionUdemy, fechaPublicacionUdemy } from "../../courses/fechas-plataforma.ts";
 
 // Cambio de forma en la respuesta de la API (contrato roto): detiene el job,
 // igual que CourseraShapeError en HU-006.
@@ -39,6 +40,9 @@ export interface UdemyRawCourse {
   image_240x135?: unknown;
   content_info_short?: unknown;
   content_info?: unknown;
+  /** Publicación y última actualización (HU-059). Vienen en el listado, sin llamada extra. */
+  published_time?: unknown;
+  last_update_date?: unknown;
 }
 
 // Detalle de curso (/api-2.0/courses/{id}/), pedido con fields[course] (HU-029):
@@ -213,6 +217,18 @@ export function normalizeUdemyCourse(
     whatYouWillLearn: parseListaDeItems(detail?.what_you_will_learn_data),
     requirements: parseListaDeItems(detail?.requirements_data),
     ...duracion(raw),
+    ...fechas(raw),
+  };
+}
+
+// HU-059. Solo se incluyen si la plataforma las da y son válidas: ausentes
+// significa «no lo sabemos», y el guardado no borra una fecha que ya había.
+function fechas(raw: UdemyRawCourse): Pick<NormalizedCourse, "publishedAt" | "platformUpdatedAt"> {
+  const publishedAt = fechaPublicacionUdemy(raw.published_time);
+  const platformUpdatedAt = fechaActualizacionUdemy(raw.last_update_date);
+  return {
+    ...(publishedAt ? { publishedAt } : {}),
+    ...(platformUpdatedAt ? { platformUpdatedAt } : {}),
   };
 }
 

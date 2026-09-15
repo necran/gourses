@@ -15,7 +15,9 @@ export interface CourseraCatalogPage {
 }
 
 const FIELDS =
-  "name,description,photoUrl,primaryLanguages,domainTypes,instructorIds,partnerIds,workload";
+  // startDate (HU-059): la única fecha de su Catalog API; launchedAt, createdAt
+  // y publishedAt se piden y se ignoran en silencio (comprobado el 2026-09-15).
+  "name,description,photoUrl,primaryLanguages,domainTypes,instructorIds,partnerIds,workload,startDate";
 const INCLUDES = "instructorIds,partnerIds";
 
 function indexById(

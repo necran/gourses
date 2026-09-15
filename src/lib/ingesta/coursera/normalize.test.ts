@@ -119,3 +119,19 @@ describe("normalizeCourseraCourse", () => {
     });
   });
 });
+
+// HU-059. startDate es la única fecha de su Catalog API.
+describe("normalizeCourseraCourse — fecha de lanzamiento", () => {
+  const base = { id: "abc123", slug: "intro-a-python", name: "Introducción a Python" };
+
+  it("convierte startDate en la fecha de publicación", () => {
+    const curso = normalizeCourseraCourse({ ...base, startDate: Date.UTC(2025, 8, 1) });
+    expect(curso.publishedAt).toBe("2025-09-01T00:00:00.000Z");
+    // Coursera no publica la última actualización.
+    expect(curso).not.toHaveProperty("platformUpdatedAt");
+  });
+
+  it.each([[0], [undefined], ["1700000000000"]])("startDate %j no da fecha", (startDate) => {
+    expect(normalizeCourseraCourse({ ...base, startDate })).not.toHaveProperty("publishedAt");
+  });
+});

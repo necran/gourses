@@ -4,6 +4,12 @@ import { COURSE_CATEGORIES } from "../lib/courses/categories";
 import { enlaceCategoria } from "../lib/courses/categoria-seo";
 import { TITULAR } from "../lib/legal/titular";
 import { enlaceTema, leerResumenTemas, temasEnlazables } from "../lib/courses/temas-datos";
+import {
+  enlaceNovedades,
+  leerNovedades,
+  resumenNovedades,
+  superaUmbralNovedades,
+} from "../lib/courses/novedades";
 
 // Se genera desde la base de datos, no se fija a mano: la ingesta diaria cambia
 // el catálogo y un sitemap escrito a mano quedaría desfasado (HU-016).
@@ -64,7 +70,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       temas = [];
     }
 
-    return [...fijas, ...categorias, ...temas, ...fichas];
+    // Las novedades (HU-059), solo si hay suficientes para ser indexables. Cambian
+    // a diario, que es justo lo que se le dice al rastreador.
+    let novedades: MetadataRoute.Sitemap = [];
+    try {
+      if (superaUmbralNovedades(resumenNovedades(await leerNovedades(client)))) {
+        novedades = [{ url: `${TITULAR.url}${enlaceNovedades()}`, changeFrequency: "daily" as const, priority: 0.8 }];
+      }
+    } catch {
+      novedades = [];
+    }
+
+    return [...fijas, ...categorias, ...temas, ...novedades, ...fichas];
   } catch {
     // Un fallo leyendo el catálogo no debe dejar al buscador sin sitemap:
     // mejor servir las páginas fijas que devolver un error.

@@ -35,8 +35,8 @@ export function createPostgresCourseStore(client: Client | Pool): CourseStore {
     async insertCourse(course: NormalizedCourse) {
       const { rows } = await client.query(
         `insert into courses
-          (source, source_id, title, description, price_amount, price_currency, rating, level, language, instructor, affiliate_url, image_url, category, duration_min_minutes, duration_max_minutes, num_reviews, num_subscribers, what_you_will_learn, requirements, temas, updated_at)
-         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, now())
+          (source, source_id, title, description, price_amount, price_currency, rating, level, language, instructor, affiliate_url, image_url, category, duration_min_minutes, duration_max_minutes, num_reviews, num_subscribers, what_you_will_learn, requirements, temas, publicado_en, actualizado_en_plataforma, updated_at)
+         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, now())
          returning id`,
         [
           course.source,
@@ -61,6 +61,8 @@ export function createPostgresCourseStore(client: Client | Pool): CourseStore {
           // Los temas salen del título (HU-058), así que se recalculan en cada
           // escritura: si el título cambia, cambian con él.
           temasDelTitulo(course.title),
+          course.publishedAt ?? null,
+          course.platformUpdatedAt ?? null,
         ]
       );
       return { id: rows[0].id };
@@ -74,7 +76,12 @@ export function createPostgresCourseStore(client: Client | Pool): CourseStore {
           affiliate_url = $10, image_url = $11, category = $12,
           duration_min_minutes = $13, duration_max_minutes = $14,
           num_reviews = $15, num_subscribers = $16, what_you_will_learn = $17, requirements = $18,
-          temas = $19, updated_at = now()
+          temas = $19,
+          -- HU-059: una pasada que no trae la fecha no borra la que ya había,
+          -- igual que un precio desconocido no borra el bueno (HU-029).
+          publicado_en = coalesce($20, publicado_en),
+          actualizado_en_plataforma = coalesce($21, actualizado_en_plataforma),
+          updated_at = now()
          where id = $1`,
         [
           id,
@@ -96,6 +103,8 @@ export function createPostgresCourseStore(client: Client | Pool): CourseStore {
           course.whatYouWillLearn,
           course.requirements,
           temasDelTitulo(course.title),
+          course.publishedAt ?? null,
+          course.platformUpdatedAt ?? null,
         ]
       );
     },

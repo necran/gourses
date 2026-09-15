@@ -272,3 +272,32 @@ describe("normalizeUdemyCourse — categoría por identificador (HU-049)", () =>
     ).toBeNull();
   });
 });
+
+// HU-059. El listado trae las dos fechas; se guardan solo si son válidas.
+describe("normalizeUdemyCourse — fechas de la plataforma", () => {
+  it("lee la fecha de publicación y la de última actualización del listado", () => {
+    const curso = normalizeUdemyCourse(
+      { ...rawCompleto, published_time: "2017-07-03T17:39:15Z", last_update_date: "2026-06-04" },
+      detalleCompleto,
+      BASE
+    );
+    expect(curso.publishedAt).toBe("2017-07-03T17:39:15.000Z");
+    expect(curso.platformUpdatedAt).toBe("2026-06-04");
+  });
+
+  it("sin fechas, no las inventa: quedan ausentes («no lo sabemos»)", () => {
+    const curso = normalizeUdemyCourse(rawCompleto, detalleCompleto, BASE);
+    expect(curso).not.toHaveProperty("publishedAt");
+    expect(curso).not.toHaveProperty("platformUpdatedAt");
+  });
+
+  it("una fecha mal formada se descarta sin afectar a la otra", () => {
+    const curso = normalizeUdemyCourse(
+      { ...rawCompleto, published_time: "ayer", last_update_date: "2026-06-04" },
+      null,
+      BASE
+    );
+    expect(curso).not.toHaveProperty("publishedAt");
+    expect(curso.platformUpdatedAt).toBe("2026-06-04");
+  });
+});

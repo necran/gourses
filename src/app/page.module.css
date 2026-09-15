@@ -256,3 +256,21 @@
 .pasos li {
   margin-bottom: 0.6rem;
 }
+
+/* Enlace a las novedades, bajo los temas (HU-059). */
+.verNovedades {
+  margin: 1rem 0 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.verNovedades a {
+  display: inline-block;
+  padding-block: 0.3rem;
+  color: var(--accent);
+}
+
+.verNovedades a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

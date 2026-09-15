@@ -141,6 +141,11 @@ export default async function Home() {
               </li>
             ))}
           </ul>
+          {/* HU-059: los cursos recién publicados, junto a los temas porque es la
+              otra forma de explorar el catálogo en español. */}
+          <p className={styles.verNovedades}>
+            <Link href="/novedades">Ver los cursos nuevos en español →</Link>
+          </p>
         </section>
       )}
 

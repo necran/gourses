@@ -40,4 +40,11 @@ export interface NormalizedCourse {
   /** Duración total en minutos (HU-011). Rango, porque a menudo lo es. */
   durationMinMinutes: number | null;
   durationMaxMinutes: number | null;
+  /**
+   * Publicación (Udemy) o lanzamiento (Coursera), en ISO (HU-059). Ausente o
+   * null = la plataforma no la dio en esta pasada, que no borra la guardada.
+   */
+  publishedAt?: string | null;
+  /** Última actualización del contenido según la plataforma, «AAAA-MM-DD». Solo Udemy. */
+  platformUpdatedAt?: string | null;
 }

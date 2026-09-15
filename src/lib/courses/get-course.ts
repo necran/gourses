@@ -27,6 +27,10 @@ export interface CourseDetail {
   resumenIA: string | null;
   /** Temas del título (HU-058), para enlazar a su página desde la ficha (HU-060). */
   temas: string[];
+  /** Publicación (Udemy) o lanzamiento (Coursera), en ISO (HU-059). */
+  publicadoEn: string | null;
+  /** Última actualización del contenido según la plataforma, «AAAA-MM-DD» (HU-059). */
+  actualizadoEnPlataforma: string | null;
   priceHistory: PriceHistoryEntry[];
 }
 
@@ -61,6 +65,8 @@ interface CourseRow {
   requirements: string[] | null;
   resumen_ia: string | null;
   temas: string[] | null;
+  publicado_en: string | null;
+  actualizado_en_plataforma: string | null;
 }
 
 interface PriceHistoryRow {
@@ -98,11 +104,13 @@ function mapRow(row: CourseRow): Omit<CourseDetail, "priceHistory"> {
     requirements: row.requirements,
     resumenIA: row.resumen_ia,
     temas: row.temas ?? [],
+    publicadoEn: row.publicado_en,
+    actualizadoEnPlataforma: row.actualizado_en_plataforma,
   };
 }
 
 const CAMPOS_CURSO =
-  "id, source, title, description, price_amount, price_currency, rating, level, language, instructor, image_url, affiliate_url, category, duration_min_minutes, duration_max_minutes, num_reviews, num_subscribers, what_you_will_learn, requirements, resumen_ia, temas";
+  "id, source, title, description, price_amount, price_currency, rating, level, language, instructor, image_url, affiliate_url, category, duration_min_minutes, duration_max_minutes, num_reviews, num_subscribers, what_you_will_learn, requirements, resumen_ia, temas, publicado_en, actualizado_en_plataforma";
 
 // Recupera varios cursos de una vez para el comparador (HU-017). Los ids ya
 // vienen validados por parseCompareIds, pero se vuelven a filtrar aquí porque

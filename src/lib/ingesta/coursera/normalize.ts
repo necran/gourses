@@ -1,6 +1,7 @@
 import type { NormalizedCourse } from "../../courses/schema";
 import { mapCourseraDomainTypes } from "../../courses/categories.ts";
 import { parseDuration } from "../../courses/duration.ts";
+import { fechaLanzamientoCoursera } from "../../courses/fechas-plataforma.ts";
 
 // La Catalog API de Coursera está en beta (ver .claude/rules/ingesta-fuentes.md):
 // si cambia de forma de manera incompatible, este error lo deja claro en vez
@@ -35,6 +36,8 @@ export interface CourseraRawCourse {
   instructorIds?: unknown;
   partnerIds?: unknown;
   workload?: unknown;
+  /** Milisegundos (HU-059). La única fecha de su Catalog API. */
+  startDate?: unknown;
 }
 
 // Nombres ya resueltos que acompañan a la página del catálogo (HU-010).
@@ -115,6 +118,12 @@ export function normalizeCourseraCourse(
     whatYouWillLearn: null,
     requirements: null,
     ...duracion(raw.workload),
+    // Lanzamiento (HU-059), solo si la da y es válida: ausente es «no lo
+    // sabemos» y no borra la guardada. Coursera no publica la última actualización.
+    ...(() => {
+      const publishedAt = fechaLanzamientoCoursera(raw.startDate);
+      return publishedAt ? { publishedAt } : {};
+    })(),
   };
 }
 

@@ -22,6 +22,7 @@ import { nombreIdioma, nombrePlataforma } from "../../../lib/courses/presentacio
 import { enlaceCategoria, tituloCategoria } from "../../../lib/courses/categoria-seo";
 import { esTema, nombreTema } from "../../../lib/courses/temas";
 import { enlaceTema, leerResumenTemas, temasEnlazables } from "../../../lib/courses/temas-datos";
+import { fechaLegible } from "../../../lib/courses/novedades";
 import { migasDePan } from "../../../lib/seo/seo-sitio";
 import styles from "./page.module.css";
 
@@ -151,6 +152,22 @@ export default async function CoursePage({ params }: CoursePageProps) {
                 Impartido por {course.instructor}
                 {course.numSubscribers !== null &&
                   ` · ${conSeparadorDeMiles(course.numSubscribers)} alumnos`}
+              </p>
+            )}
+            {/* HU-059: las fechas que publica la plataforma. Coursera solo da la de
+                lanzamiento; Udemy, también la de última actualización. */}
+            {course.publicadoEn && fechaLegible(course.publicadoEn) && (
+              <p className={styles.instructor}>
+                {course.source === "coursera" ? "Lanzado el " : "Publicado el "}
+                <time dateTime={course.publicadoEn}>{fechaLegible(course.publicadoEn)}</time>
+                {course.actualizadoEnPlataforma && fechaLegible(course.actualizadoEnPlataforma) && (
+                  <>
+                    {" · Actualizado el "}
+                    <time dateTime={course.actualizadoEnPlataforma}>
+                      {fechaLegible(course.actualizadoEnPlataforma)}
+                    </time>
+                  </>
+                )}
               </p>
             )}
           </div>
