@@ -4,6 +4,14 @@ import "./globals.css";
 import { Header } from "../components/header";
 import { Footer } from "../components/footer";
 import { BarraCesta } from "../components/barra-cesta";
+import { Analitica } from "../components/analitica";
+import { idMedicionValido } from "../lib/id-analitica";
+
+// Google Analytics (HU-051). El identificador sale del entorno y no del código:
+// solo se fija en producción (netlify.toml), así que en local y en los tests no
+// se carga nada ni se manda tráfico falso a la propiedad real. Se valida su
+// formato porque acaba dentro de un script.
+const ID_ANALITICA = idMedicionValido(process.env.NEXT_PUBLIC_GA_ID);
 
 // Tipografía del rediseño (2026-08-24): Sora para titulares, Plus Jakarta Sans
 // para el cuerpo. Sustituyen a las Geist por defecto de la plantilla de
@@ -64,6 +72,8 @@ export default function RootLayout({
         {children}
         <Footer />
         <BarraCesta />
+        {/* Solo con consentimiento previo: sin él no se carga nada de Google. */}
+        {ID_ANALITICA && <Analitica idMedicion={ID_ANALITICA} />}
       </body>
     </html>
   );

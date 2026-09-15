@@ -40,15 +40,19 @@ test.describe("HU-013 — páginas legales", () => {
   });
 
   // La política debe describir lo que el sitio hace de verdad, ni más ni
-  // menos. Desde HU-018 hay cookies de sesión, así que ya no puede afirmar que
-  // no usa ninguna; lo que sigue siendo cierto es que no hay analítica ni
-  // rastreo, y eso debe seguir declarándose.
+  // menos. Desde HU-018 hay cookies de sesión, y desde HU-051 Google Analytics
+  // con consentimiento: ya no puede afirmar que no hay analítica. Antes este
+  // test exigía justo esa frase, y habría seguido en verde con la web haciendo
+  // lo contrario.
   test("la privacidad describe el uso real de cookies y analítica", async ({ page }) => {
     await page.goto("/privacidad");
 
     const main = page.locator("main");
-    await expect(main).toContainText(/no usamos herramientas de anal[íi]tica/i);
-    await expect(main).toContainText(/no usamos cookies de publicidad ni de seguimiento/i);
+    await expect(main).not.toContainText(/no usamos herramientas de anal[íi]tica/i);
+    await expect(main).toContainText(/google analytics/i);
+    await expect(main).toContainText(/solo si lo aceptas/i);
+    await expect(main).toContainText(/configurar cookies/i);
+    await expect(main).toContainText(/no usamos cookies de publicidad/i);
 
     // Y declara las que sí hay, en vez de callarlas.
     await expect(main).toContainText(/cookies necesarias para mantener la sesión/i);

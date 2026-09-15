@@ -90,13 +90,73 @@ Lo que exige la AEPD, en lo que afecta a esta historia:
 
 ## Checklist de tests (obligatorio antes de cerrar)
 
-- [ ] Unitarios: lectura y escritura de la elección (aceptado, rechazado, sin decidir,
+- [x] Unitarios: lectura y escritura de la elección (aceptado, rechazado, sin decidir,
       valor corrupto, almacenamiento bloqueado → nunca se da por aceptado)
-- [ ] E2E: un test por criterio de aceptación, comprobando en las peticiones de red que
+- [x] E2E: un test por criterio de aceptación, comprobando en las peticiones de red que
       no sale ninguna hacia Google antes de aceptar ni después de rechazar
-- [ ] E2E: la política declara la analítica; se corrige el test de HU-013
-- [ ] `/security-review` sin hallazgos críticos ni altos
+- [x] E2E: la política declara la analítica; se corrige el test de HU-013
+- [x] `/security-review` sin hallazgos críticos ni altos
 
 ## Estado
 
-`Abierta`
+`Terminada` (2026-09-15)
+
+## Notas de implementación
+
+- `src/lib/id-analitica.ts`: valida el identificador (`G-` y alfanuméricos). Va en un
+  módulo sin React porque lo leen el layout y el pie, que son de servidor; la primera
+  versión lo tenía junto al almacén con hooks y la compilación falló.
+- `src/lib/consentimiento.ts`: la elección en `localStorage`, validada al leer. Si el
+  almacenamiento falla al leer es «sin decidir»; lo decidido con él bloqueado vale solo
+  mientras dure la página. Se sincroniza entre pestañas.
+- `src/components/analitica.tsx`: no pinta nada hasta hidratar; después, aviso, script o
+  nada. Retirar el consentimiento activa `ga-disable-<id>` y borra las cookies `_ga`.
+  Los dos botones comparten una única clase CSS.
+- `src/components/configurar-cookies.tsx`, en el pie, solo si hay identificador.
+- `NEXT_PUBLIC_GA_ID` en `netlify.toml`; no en `.env.local`.
+
+### Por qué hay una segunda configuración de Playwright
+
+Los criterios con la analítica activa necesitan un servidor **con** identificador, y el
+de la suite normal va sin él a propósito (ese es otro criterio). No se pueden levantar
+dos `next dev` en la misma carpeta, así que `playwright.analitica.config.ts` compila y
+arranca en el puerto 3200 con `G-PRUEBA0000`, y las peticiones a Google se interceptan:
+nada llega a la propiedad real. Se ejecuta con `npm run test:e2e:analitica`.
+
+Reparto de criterios: los cuatro del aviso y el de sin JavaScript están en
+`e2e-analitica/`; el de la política en `e2e/legales.spec.ts`; el de local y tests en
+`e2e/analitica-sin-configurar.spec.ts`.
+
+### Resultado de los tests
+
+- Unitarios (`npm test`): 596 pasan, 26 nuevos.
+- E2E (`npx playwright test`): 201 pasan. La primera pasada dio 2 fallos en HU-050 que
+  eran un test mal planteado de esa historia, no de esta (anotado en HU-050).
+- E2E de la analítica (`npm run test:e2e:analitica`): 5 pasan.
+- Integración (`npm run test:integration`): 122 pasan. Una pasada anterior dio 3 fallos
+  por respuestas 503 de la API de Udemy, distintos en cada intento; una petición directa
+  confirmó que la API volvió a responder y la repetición pasó entera.
+
+Durante el cierre el NAS dejó de responder: al reiniciarlo se registró en Tailscale como
+un equipo nuevo con otra IP, y hubo que actualizar `.env.local` (no se commitea).
+
+### Revisión de seguridad
+
+Sin hallazgos críticos ni altos:
+
+- **Inyección en el script en línea**: el identificador acaba dentro de JavaScript. Solo
+  sale de una variable de compilación y se valida con una expresión estricta; los tests
+  unitarios prueban comillas, `</script>` y espacios.
+- **Consentimiento falsificable o asumido**: lo guardado solo vale si es exactamente
+  `aceptado` o `rechazado`; un fallo del almacenamiento nunca da «aceptado».
+- **Nada antes de consentir**: sin hidratar no se pinta el script; los e2e comprueban en
+  la red que no sale ninguna petición a Google antes de aceptar ni después de rechazar.
+- **Enlace externo** a la política de Google con `rel="noopener noreferrer"`.
+- **Datos**: la elección no sale del navegador; no hay entrada nueva al servidor.
+
+### Pendiente fuera de esta historia
+
+- Configurar retención y señales de Google en el panel de Google Analytics (fuera de
+  alcance).
+- Cambiar la contraseña de Postgres del NAS: se mostró por error en la sesión de trabajo
+  al revisar `.env.local` (no está en el repositorio).

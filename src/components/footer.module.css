@@ -16,8 +16,25 @@
   color: var(--ink-muted);
 }
 
-.enlaces a:hover {
+.enlaces a:hover,
+.boton:hover {
   color: var(--ink);
+}
+
+/* «Configurar cookies» (HU-051) es un botón —no navega— pero se ve como los
+   enlaces de al lado. */
+.boton {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.boton:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .nota {

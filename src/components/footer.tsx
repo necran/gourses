@@ -1,7 +1,12 @@
 import Link from "next/link";
 import { TITULAR } from "../lib/legal/titular";
 import { getUsuarioActual } from "../lib/supabase/session-client";
+import { idMedicionValido } from "../lib/id-analitica";
+import { ConfigurarCookies } from "./configurar-cookies";
 import styles from "./footer.module.css";
+
+// Solo hay algo que configurar si la analítica está activa (HU-051).
+const HAY_ANALITICA = idMedicionValido(process.env.NEXT_PUBLIC_GA_ID) !== null;
 
 // Va en el layout raíz: las páginas legales deben ser alcanzables desde
 // cualquier parte del sitio (HU-013), no solo desde la portada.
@@ -28,6 +33,7 @@ export async function Footer() {
         ) : (
           <Link href="/acceder">Acceder</Link>
         )}
+        {HAY_ANALITICA && <ConfigurarCookies className={styles.boton} />}
       </nav>
       <p className={styles.nota}>
         {TITULAR.sitio} compara cursos de plataformas externas y puede cobrar comisión por

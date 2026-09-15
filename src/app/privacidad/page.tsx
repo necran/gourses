@@ -5,7 +5,7 @@ import styles from "../legal.module.css";
 
 export const metadata: Metadata = {
   title: "Política de privacidad",
-  description: `Qué datos trata ${TITULAR.sitio} y cuáles no: sin analítica, sin rastreadores y sin ceder datos a nadie.`,
+  description: `Qué datos trata ${TITULAR.sitio} y cuáles no: analítica solo si la aceptas, sin publicidad y sin ceder datos a nadie.`,
 };
 
 export default function Privacidad() {
@@ -26,8 +26,8 @@ export default function Privacidad() {
 
       <h2>Lo que no hacemos</h2>
       <ul>
-        <li>No usamos herramientas de analítica ni rastreadores publicitarios.</li>
-        <li>No usamos cookies de publicidad ni de seguimiento entre sitios.</li>
+        <li>No usamos cookies de publicidad ni rastreadores publicitarios.</li>
+        <li>No activamos ninguna analítica sin que la aceptes antes.</li>
         <li>No pedimos nombre, apellidos, teléfono ni datos de pago.</li>
         <li>No vendemos ni cedemos datos personales a nadie con fines comerciales.</li>
         <li>No usamos tu correo para enviarte publicidad.</li>
@@ -86,6 +86,9 @@ export default function Privacidad() {
         <li>
           <strong>Resend</strong> envía el correo con tu enlace de acceso.
         </li>
+        <li>
+          <strong>Google</strong> presta la analítica, solo si la aceptas (ver más abajo).
+        </li>
       </ul>
 
       <h3>Cuánto tiempo, y cómo borrarlo</h3>
@@ -97,6 +100,36 @@ export default function Privacidad() {
       </p>
 
       <h2>Lo que sí ocurre</h2>
+
+      <h3 id="analitica">Analítica: Google Analytics, solo si lo aceptas</h3>
+      <p>
+        Usamos <strong>Google Analytics</strong> para saber cuántas personas visitan el sitio,
+        qué páginas se usan y desde qué tipo de dispositivo, y así decidir qué mejorar. Se
+        activa <strong>solo si lo aceptas</strong> en el aviso que aparece en tu primera visita;
+        si lo rechazas, o no contestas, no se carga nada de Google y el sitio funciona
+        exactamente igual.
+      </p>
+      <p>
+        Si lo aceptas, tu navegador descarga el script de Google y este instala las cookies{" "}
+        <strong>_ga</strong> y <strong>_ga_&lt;identificador&gt;</strong>, que distinguen visitas
+        de forma seudónima y duran hasta dos años. Google recibe tu dirección IP, tu navegador,
+        las páginas que visitas y la página de procedencia. Google Analytics 4 no guarda la
+        dirección IP completa. Google Ireland Limited es quien presta el servicio y puede
+        transferir datos a Estados Unidos, amparado en el Marco de Privacidad de Datos UE-EE.
+        UU. Se rige también por la{" "}
+        <a href="https://policies.google.com/privacy" rel="noopener noreferrer">
+          política de privacidad de Google
+        </a>
+        .
+      </p>
+      <p>
+        La base jurídica es tu <strong>consentimiento</strong> (artículo 6.1.a del RGPD y
+        artículo 22.2 de la LSSI). Puedes retirarlo cuando quieras, tan fácilmente como lo
+        diste, con el botón <strong>«Configurar cookies»</strong> del pie de cualquier página:
+        al rechazar se desactiva la analítica y se borran sus cookies. Tu elección se guarda en
+        el almacenamiento local de tu navegador, no en una cookie, y no se envía a nuestro
+        servidor.
+      </p>
 
       <h3>Imágenes servidas por las plataformas de origen</h3>
       <p>

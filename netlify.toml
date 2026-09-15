@@ -23,6 +23,11 @@
   # Ojo: NEXT_PUBLIC_ se resuelve al compilar, no al ejecutar. Cambiar esto
   # exige volver a publicar para que surta efecto.
   NEXT_PUBLIC_SITE_URL = "https://gourses.com"
+  # Google Analytics (HU-051). Solo aquí, en producción: sin esta variable no se
+  # carga ni el aviso ni el script, y así el tráfico de local y de los tests no
+  # llega a la propiedad real. No es un secreto —acaba en el navegador—, y el
+  # script solo se carga si la persona lo acepta.
+  NEXT_PUBLIC_GA_ID = "G-DGXS33BH5D"
 
 # Cabeceras de seguridad.
 [[headers]]

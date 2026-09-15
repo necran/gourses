@@ -11,6 +11,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "test:e2e:analitica": "playwright test --config playwright.analitica.config.ts",
     "check:supabase": "node --env-file=.env.local scripts/check-supabase-connection.mjs",
     "migrate": "node --env-file=.env.local scripts/apply-migrations.mjs",
     "ingest:coursera": "node --env-file=.env.local scripts/ingest-coursera.mjs",

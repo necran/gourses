@@ -1,0 +1,75 @@
+/* Aviso de analítica (HU-051). Fijo abajo y por encima de la barra de la cesta
+   (HU-040), que solo aparece cuando hay cursos marcados. */
+.aviso {
+  position: fixed;
+  left: clamp(0.75rem, 3vw, 1.5rem);
+  right: clamp(0.75rem, 3vw, 1.5rem);
+  bottom: clamp(0.75rem, 3vw, 1.5rem);
+  z-index: 30;
+  max-width: 44rem;
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.9rem 1.2rem;
+  padding: 1rem 1.2rem;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow-lg);
+}
+
+.texto {
+  flex: 1 1 18rem;
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.texto a {
+  color: var(--accent);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.botones {
+  display: flex;
+  gap: 0.6rem;
+  margin-left: auto;
+}
+
+/* Una sola clase para los dos botones, a propósito: rechazar y aceptar tienen
+   que verse exactamente igual. */
+.boton {
+  min-width: 7rem;
+  padding: 0.6rem 1.1rem;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-display), -apple-system, "Segoe UI", sans-serif;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.boton:hover {
+  background: var(--accent-soft);
+}
+
+.boton:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 30rem) {
+  .botones {
+    width: 100%;
+  }
+
+  .boton {
+    flex: 1;
+  }
+}
