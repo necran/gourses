@@ -17,6 +17,12 @@ import { enlaceTema, leerResumenTemas, temasEnlazables } from "../lib/courses/te
 import { RUTA_GUIA } from "../lib/courses/guia-plataformas";
 import { RUTA_GUIAS } from "../lib/courses/guias";
 import {
+  CATEGORIAS_EN_PORTADA,
+  TEMAS_EN_PORTADA,
+  primeros,
+  quedanMas,
+} from "../lib/courses/portada";
+import {
   fechaLegible,
   leerUltimasNovedades,
   mostrarNovedadesEnPortada,
@@ -138,7 +144,7 @@ export default async function Home() {
       <section className={styles.categorias}>
         <h2>Explora por categoría</h2>
         <ul className={styles.listaCategorias}>
-          {CATEGORIAS_DESTACADAS.map((categoria) => (
+          {primeros(CATEGORIAS_DESTACADAS, CATEGORIAS_EN_PORTADA).map((categoria) => (
             <li key={categoria}>
               {/* A la página de la categoría, no al buscador con un filtro puesto
                   (HU-046): es una dirección con su propio título y descripción, que
@@ -149,6 +155,12 @@ export default async function Home() {
             </li>
           ))}
         </ul>
+        {/* HU-070: las demás no se pierden, están en el índice. */}
+        {quedanMas(CATEGORIAS_DESTACADAS, CATEGORIAS_EN_PORTADA) && (
+          <p className={styles.verNovedades}>
+            <Link href="/categoria">Ver todas las categorías →</Link>
+          </p>
+        )}
         {/* HU-063: la guía con datos de las dos plataformas del catálogo. */}
         <p className={styles.verNovedades}>
           <Link href={RUTA_GUIA}>¿Udemy o Coursera? En qué se diferencian, con datos →</Link>
@@ -163,12 +175,18 @@ export default async function Home() {
         <section className={styles.categorias} aria-labelledby="temas-populares">
           <h2 id="temas-populares">Temas populares</h2>
           <ul className={styles.listaCategorias}>
-            {temas.map((tema) => (
+            {primeros(temas, TEMAS_EN_PORTADA).map((tema) => (
               <li key={tema}>
                 <Link href={enlaceTema(tema)}>{nombreTema(tema)}</Link>
               </li>
             ))}
           </ul>
+          {/* HU-070: el resto, en el índice de temas. */}
+          {quedanMas(temas, TEMAS_EN_PORTADA) && (
+            <p className={styles.verNovedades}>
+              <Link href="/cursos">Ver todos los temas →</Link>
+            </p>
+          )}
           {/* HU-059: los cursos recién publicados, junto a los temas porque es la
               otra forma de explorar el catálogo en español. */}
           <p className={styles.verNovedades}>

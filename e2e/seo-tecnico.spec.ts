@@ -89,12 +89,22 @@ test.describe("HU-056 — SEO técnico", () => {
     expect(elementos.at(-1)?.name).toBe(await page.getByRole("heading", { level: 1 }).textContent());
   });
 
-  test("la portada enlaza las once categorías", async ({ page }) => {
+  // Lo que HU-056 vino a arreglar es que ninguna categoría se quedara sin enlace
+  // en el sitio, descubrible solo por el sitemap. Desde HU-070 eso se cumple por
+  // otro camino: la portada enseña unas pocas y enlaza el índice, que las tiene
+  // todas. Se comprueba el recorrido entero, que es la garantía de verdad.
+  test("desde la portada se llega a las once categorías, por el índice", async ({ page }) => {
+    const enlaces = () =>
+      page
+        .locator('main a[href^="/categoria/"]')
+        .evaluateAll((as) => [...new Set(as.map((a) => a.getAttribute("href")))]);
+
     await page.goto("/");
-    const destinos = await page
-      .locator('main a[href^="/categoria/"]')
-      .evaluateAll((enlaces) => [...new Set(enlaces.map((a) => a.getAttribute("href")))]);
-    expect(destinos).toHaveLength(11);
+    expect((await enlaces()).length).toBeGreaterThan(0);
+
+    await page.getByRole("link", { name: "Ver todas las categorías →" }).click();
+    await expect(page).toHaveURL(/\/categoria$/);
+    expect(await enlaces()).toHaveLength(11);
   });
 
   test("las fichas del sitemap no declaran una fecha de modificación diaria", async ({ page }) => {

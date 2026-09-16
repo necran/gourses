@@ -17,17 +17,29 @@ async function temasDelSitemap(page: Page): Promise<string[]> {
 }
 
 test.describe("HU-060 — enlaces a las páginas de tema", () => {
-  test("la portada enlaza a las páginas de tema que superan el umbral, y solo a esas", async ({ page }) => {
+  // Desde HU-070 la portada enseña solo unos pocos temas, así que la garantía de
+  // HU-060 —que todos los que superan el umbral tienen enlace en el sitio, y no
+  // solo en el sitemap— la cumple ahora el índice. Se comprueba el recorrido
+  // entero, que es lo que de verdad importa.
+  test("los temas que superan el umbral se alcanzan desde la portada, por el índice", async ({ page }) => {
     await page.goto("/");
     const seccion = page.getByRole("region", { name: "Temas populares" });
     await expect(seccion).toBeVisible();
 
-    const enPortada = (await destinos(page, 'section[aria-labelledby="temas-populares"]')).sort();
-    // Las que superan el umbral son las que anuncia el sitemap (HU-058).
-    expect(enPortada).toEqual(await temasDelSitemap(page));
+    const enPortada = await destinos(page, 'section[aria-labelledby="temas-populares"]');
     expect(enPortada.length).toBeGreaterThan(0);
 
-    await seccion.getByRole("link", { name: "Python", exact: true }).click();
+    // Los que anuncia el sitemap son los que superan el umbral (HU-058); los de
+    // la portada son una muestra de esos, nunca uno que no lo supere.
+    const anunciados = await temasDelSitemap(page);
+    for (const href of enPortada) expect(anunciados, href).toContain(href);
+
+    await seccion.getByRole("link", { name: "Ver todos los temas →" }).click();
+    await expect(page).toHaveURL(/\/cursos$/);
+    // Y en el índice están todos, sin faltar ninguno.
+    expect((await destinos(page, "main")).sort()).toEqual(anunciados);
+
+    await page.getByRole("link", { name: "Python", exact: true }).click();
     await expect(page).toHaveURL(/\/cursos\/python$/);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Cursos de Python en español");
   });

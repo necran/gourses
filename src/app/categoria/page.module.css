@@ -1,0 +1,28 @@
+/* Índice de categorías (HU-070): las mismas pastillas que la portada, pero
+   todas y en una sola página. */
+.lista {
+  list-style: none;
+  padding: 0;
+  margin: 1.5rem 0 2rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.lista li {
+  margin: 0;
+}
+
+.lista a {
+  display: inline-block;
+  padding: 0.6rem 1.1rem;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-soft-ink);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.lista a:hover {
+  filter: brightness(1.05);
+}

@@ -89,7 +89,9 @@
 .compra {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  /* Arriba, alineados por su borde superior: el precio no se centra contra la
+     columna del botón principal, que es más alta por el aviso (HU-070). */
+  align-items: flex-start;
   justify-content: space-between;
   gap: 1.2rem;
   background: var(--surface);
@@ -150,12 +152,35 @@
    compartido con favoritos. Sigue siendo secundario a propósito: ir a la
    plataforma es la acción principal de la ficha. */
 
-/* Guardar y comparar, detrás del botón principal (HU-055). */
+/* Guardar y comparar, detrás del botón principal (HU-055).
+ *
+ * En su propia fila desde HU-070. Antes eran el tercer bloque de una fila con el
+ * precio y la columna alta del botón principal —botón más dos líneas de aviso—,
+ * así que se centraban contra ella y quedaban flotando a media altura, y al no
+ * caber cambiaban de sitio. Con `flex-basis: 100%` bajan a una segunda fila,
+ * alineados entre sí y a la izquierda, bajo una línea que separa las dos
+ * acciones secundarias de la principal.
+ */
 .secundarias {
+  flex-basis: 100%;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+}
+
+/* El botón de comparar trae su propio contenedor alineado a la derecha, pensado
+   para cuando colgaba de la columna del botón principal. Aquí manda la fila. */
+.secundarias > div {
+  align-items: flex-start;
+}
+
+/* Sin sesión, «favoritos» no es un botón sino una invitación a acceder. Se
+   alinea con el chip de comparar en vez de sentarse en otra línea base. */
+.secundarias p {
+  margin: 0;
 }
 
 /* HU-055. En el móvil el precio y «Ver curso» tienen que caber en la primera

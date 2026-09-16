@@ -26,6 +26,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const fijas: MetadataRoute.Sitemap = [
     { url: `${TITULAR.url}/`, changeFrequency: "daily", priority: 1 },
     { url: `${TITULAR.url}/buscar`, changeFrequency: "daily", priority: 0.8 },
+    // Los dos índices (HU-070): desde que la portada enseña solo unas pocas
+    // categorías y temas, son ellos los que enlazan a todos.
+    { url: `${TITULAR.url}/categoria`, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${TITULAR.url}/cursos`, changeFrequency: "weekly", priority: 0.7 },
     // El índice de guías y cada guía publicada (HU-069). Salen del registro de
     // `guias.ts`, así que publicar la próxima no exige acordarse de este fichero.
     { url: `${TITULAR.url}${RUTA_GUIAS}`, changeFrequency: "monthly", priority: 0.6 },

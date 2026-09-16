@@ -1,0 +1,35 @@
+/* Índice de temas (HU-070), agrupados por categoría. */
+
+/* El título de cada grupo es un enlace a su categoría, y medía 23 px de alto:
+   un píxel por debajo de los 24 que pide WCAG 2.2 AA (HU-062). Mismo recurso que
+   en el resto del sitio: relleno vertical con inline-block. */
+.grupo a {
+  display: inline-block;
+  padding-block: 0.15rem;
+}
+.lista {
+  list-style: none;
+  padding: 0;
+  margin: 0.6rem 0 1.6rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.lista li {
+  margin: 0;
+}
+
+.lista a {
+  display: inline-block;
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-soft-ink);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.lista a:hover {
+  filter: brightness(1.05);
+}

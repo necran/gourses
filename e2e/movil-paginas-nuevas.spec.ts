@@ -7,7 +7,18 @@ test.use({ viewport: { width: 400, height: 800 } });
 
 // La guía de HU-063 se añade aquí: su tabla tiene que desplazarse sola, sin que
 // la página se salga de la pantalla.
-const PAGINAS = ["/", "/categoria/desarrollo", "/cursos/python", "/novedades", "/privacidad", "/guias/udemy-o-coursera"];
+// Los índices de HU-070 entran aquí: son listas de pastillas que se pulsan con
+// el dedo, igual que las de la portada.
+const PAGINAS = [
+  "/",
+  "/categoria",
+  "/categoria/desarrollo",
+  "/cursos",
+  "/cursos/python",
+  "/novedades",
+  "/privacidad",
+  "/guias/udemy-o-coursera",
+];
 
 async function medir(page: Page) {
   return page.evaluate(() => {

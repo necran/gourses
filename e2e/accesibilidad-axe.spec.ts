@@ -49,6 +49,9 @@ async function paginasPublicas(): Promise<string[]> {
     "/",
     "/buscar",
     "/buscar?keyword=python",
+    // Los índices de categorías y temas (HU-070).
+    "/categoria",
+    "/cursos",
     `/curso/${udemy}`,
     `/curso/${coursera}`,
     `/comparar?ids=${udemy},${coursera}`,
