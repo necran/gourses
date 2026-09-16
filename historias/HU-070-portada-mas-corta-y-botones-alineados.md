@@ -128,3 +128,35 @@ Sin hallazgos. `/categoria` es estática y no lee nada; `/cursos` lee por el mis
 el resto (clave anónima y RLS de `courses`) y, si falla, ofrece salida en vez de romperse.
 Ninguna de las dos recibe parámetros. El JSON-LD pasa por `serializeStructuredData`. En la
 ficha solo cambia CSS.
+
+## Retoque: la portada seguía amontonada, y era culpa mía
+
+Al mirar una captura —no los tests— se vio que bajo «Explora por categoría» quedaban **tres
+líneas de enlaces apiladas**: «Ver todas las categorías», «¿Udemy o Coursera?» y «Ver todas las
+guías». Las dos últimas las fueron dejando ahí HU-063 y HU-069, y esta historia añadió la
+primera encima. Justo el amontonamiento del que se quejaba el usuario.
+
+Lo corregido:
+
+- **Una sola línea por sección**: categorías y temas, cada una con su «ver todos».
+- **Las guías, en su propio bloque** entre los destacados y «Cómo funciona». Colgaban de
+  «Temas populares», donde se leían como si fueran parte de los temas.
+- **Fuera el enlace de texto a las novedades** que vivía bajo los temas desde HU-059: desde
+  HU-067 la portada tiene una sección entera de novedades con su propio «Ver todas», que es
+  un camino mejor y más visible.
+
+Tres tests cambian de camino, **no de garantía**, como los de HU-056 y HU-060: el de HU-059
+llega a las novedades por la sección nueva, y los de HU-063 y HU-069 llegan a la guía por el
+índice.
+
+**Lección para el futuro**: los tests daban verde con la portada apilada. Un criterio de
+aceptación puede comprobar que un enlace existe y lleva donde debe, y no ver que la página se
+ha convertido en una lista de enlaces sueltos. Para lo visual, mirar la captura.
+
+### Cifras finales
+
+- Unitarios: 826 pasan. Integración: 162 pasan.
+- E2E, última pasada completa: 285 pasan y 2 fallan, los dos con la firma de siempre —un clic
+  que no cambia la URL en 5 s— con la máquina a **carga 22**. Relanzados esos dos ficheros por
+  duplicado: **30 de 30 en verde**. Las tandas dirigidas posteriores al retoque: 23 y 30 tests,
+  todas en verde.

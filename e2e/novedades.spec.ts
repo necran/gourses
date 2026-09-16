@@ -58,9 +58,16 @@ test.describe("HU-059 — cursos nuevos en español", () => {
     expect(await cabecera(page, 'link[rel="canonical"]', "href")).toMatch(/\/novedades\?pagina=2$/);
   });
 
+  // El enlace de texto que había bajo los temas desapareció en HU-070: desde
+  // HU-067 la portada tiene su propia sección de novedades, con las últimas y su
+  // «Ver todas». La garantía —que desde la portada se llega a las novedades— es
+  // la misma; el camino, mejor.
   test("la portada lleva a las novedades", async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("link", { name: "Ver los cursos nuevos en español →" }).click();
+    await page
+      .getByRole("region", { name: "Novedades en español" })
+      .getByRole("link", { name: "Ver todas →" })
+      .click();
     await expect(page).toHaveURL(/\/novedades$/);
   });
 

@@ -122,7 +122,7 @@ test.describe("HU-069 — índice de guías y guía de precios", () => {
     }
 
     await page.goto("/");
-    await page.getByRole("link", { name: /Ver todas las guías/ }).click();
+    await page.getByRole("link", { name: /Guías con datos del catálogo/ }).click();
     await expect(page).toHaveURL(new RegExp(`${RUTA_GUIAS}$`));
   });
 });

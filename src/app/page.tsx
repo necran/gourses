@@ -14,7 +14,6 @@ import { serializeStructuredData } from "../lib/courses/course-seo";
 import { datosEstructuradosSitio } from "../lib/seo/seo-sitio";
 import { nombreTema, type TemaId } from "../lib/courses/temas";
 import { enlaceTema, leerResumenTemas, temasEnlazables } from "../lib/courses/temas-datos";
-import { RUTA_GUIA } from "../lib/courses/guia-plataformas";
 import { RUTA_GUIAS } from "../lib/courses/guias";
 import {
   CATEGORIAS_EN_PORTADA,
@@ -161,14 +160,8 @@ export default async function Home() {
             <Link href="/categoria">Ver todas las categorías →</Link>
           </p>
         )}
-        {/* HU-063: la guía con datos de las dos plataformas del catálogo. */}
-        <p className={styles.verNovedades}>
-          <Link href={RUTA_GUIA}>¿Udemy o Coursera? En qué se diferencian, con datos →</Link>
-        </p>
-        {/* HU-069: y el resto de guías, que ya no dependen de caber en la portada. */}
-        <p className={styles.verNovedades}>
-          <Link href={RUTA_GUIAS}>Ver todas las guías con datos del catálogo →</Link>
-        </p>
+        {/* Las guías tienen su propio enlace bajo los temas: aquí se apilaban
+            tres líneas de enlaces seguidas y la portada se veía amontonada. */}
       </section>
 
       {temas.length > 0 && (
@@ -187,11 +180,9 @@ export default async function Home() {
               <Link href="/cursos">Ver todos los temas →</Link>
             </p>
           )}
-          {/* HU-059: los cursos recién publicados, junto a los temas porque es la
-              otra forma de explorar el catálogo en español. */}
-          <p className={styles.verNovedades}>
-            <Link href="/novedades">Ver los cursos nuevos en español →</Link>
-          </p>
+          {/* El enlace de texto a las novedades que vivía aquí desde HU-059 sobra
+              desde HU-067: la portada tiene su propia sección de novedades, con
+              su «Ver todas». */}
         </section>
       )}
 
@@ -298,6 +289,12 @@ export default async function Home() {
           </p>
         </section>
       )}
+
+      {/* Las guías, en su propio bloque. Colgaban de «Temas populares», y ahí se
+          leían como si fueran parte de los temas, que no lo son. */}
+      <p className={styles.verGuias}>
+        <Link href={RUTA_GUIAS}>Guías con datos del catálogo →</Link>
+      </p>
 
       <section className={styles.comoFunciona}>
         <h2>Cómo funciona</h2>

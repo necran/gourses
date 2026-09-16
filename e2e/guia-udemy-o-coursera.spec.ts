@@ -118,8 +118,12 @@ test.describe("HU-063 — guía «Udemy o Coursera»", () => {
     const sitemap = await (await request.get("/sitemap.xml")).text();
     expect(sitemap).toMatch(/<loc>[^<]*\/guias\/udemy-o-coursera<\/loc>/);
 
+    // Desde HU-070 la portada no enlaza cada guía suelta —se apilaban tres
+    // líneas de enlaces—, sino el índice, que es quien lleva a todas.
     await page.goto("/");
-    await page.getByRole("link", { name: /¿Udemy o Coursera\?/ }).click();
+    await page.getByRole("link", { name: /Guías con datos del catálogo/ }).click();
+    await expect(page).toHaveURL(/\/guias$/);
+    await page.getByRole("link", { name: /^Udemy o Coursera/ }).click();
     await expect(page).toHaveURL(/\/guias\/udemy-o-coursera$/);
   });
 });

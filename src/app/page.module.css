@@ -241,6 +241,26 @@
   font-weight: 600;
 }
 
+/* Las guías, en su propio bloque entre los destacados y «Cómo funciona»
+   (HU-070). Antes colgaban de «Temas populares», donde se leían como si fueran
+   parte de los temas. */
+.verGuias {
+  margin: 0 0 3rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.verGuias a {
+  display: inline-block;
+  padding-block: 0.3rem;
+  color: var(--accent);
+}
+
+.verGuias a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .comoFunciona h2 {
   font-size: 1.2rem;
   font-weight: 700;
