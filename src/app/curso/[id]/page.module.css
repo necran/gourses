@@ -282,8 +282,11 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.03em;
+  /* Sin `opacity: 0.75` (HU-068): con ella, axe medía 3,9:1 sobre el fondo del
+     recuadro y WCAG 1.4.3 pide 4,5:1. El color de por sí contrasta de sobra; la
+     etiqueta ya se distingue del resumen por el tamaño y las mayúsculas. Mismo
+     caso que la paginación inactiva en HU-064. */
   color: var(--accent-soft-ink);
-  opacity: 0.75;
   margin: 0;
 }
 

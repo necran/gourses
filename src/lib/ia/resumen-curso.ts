@@ -68,6 +68,31 @@ export interface CursoConEstadoResumen extends CursoParaResumir {
   resumenIADescripcionSha256: string | null;
 }
 
+// HU-068. Lo más corto que puede medir un resumen de 2-3 frases sin estar
+// cortado. Los 16 rotos de la base de desarrollo miden entre 37 y 73
+// caracteres; el más corto de los buenos pasa de 200.
+export const LONGITUD_MINIMA_RESUMEN = 120;
+
+/**
+ * Si un resumen guardado se cortó a medias (HU-068): demasiado corto, o sin
+ * terminar una frase («…hasta avanzados de»).
+ *
+ * El recorte de `limpiarResumen` acaba en «…», así que no se marca a sí mismo.
+ */
+export function resumenDefectuoso(resumen: string): boolean {
+  const limpio = resumen.trim();
+  return limpio.length < LONGITUD_MINIMA_RESUMEN || !/[.!?…]$/.test(limpio);
+}
+
+/**
+ * Si la API cortó la respuesta en vez de terminarla (HU-068). Sin esto, un
+ * fragmento se guardaba como si fuera el resumen: así se generaron los 16 rotos,
+ * con el modelo anterior, que se gastaba el presupuesto de salida razonando.
+ */
+export function respuestaCortada(finishReason: string | undefined): boolean {
+  return finishReason !== undefined && finishReason !== "STOP";
+}
+
 /** SHA-256 en hexadecimal; coincide con `encode(sha256(convert_to(t, 'UTF8')), 'hex')`. */
 export function huellaDescripcion(descripcion: string): string {
   return createHash("sha256").update(descripcion, "utf8").digest("hex");
@@ -82,6 +107,10 @@ export function huellaDescripcion(descripcion: string): string {
 export function necesitaResumen(curso: CursoConEstadoResumen): boolean {
   if (curso.description.length < LONGITUD_MINIMA_DESCRIPCION) return false;
   if (!curso.resumenIA || !curso.resumenIADescripcionSha256) return true;
+
+  // Un resumen cortado a media palabra no se arregla solo: su descripción sigue
+  // siendo la misma, así que la huella coincide y nunca se regeneraría (HU-068).
+  if (resumenDefectuoso(curso.resumenIA)) return true;
 
   // Si la descripción ya no es la que se resumió, el resumen habla de un texto
   // que no es el que se ve en la ficha.

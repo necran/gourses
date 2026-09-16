@@ -16,10 +16,20 @@ export function createPostgresResumenStore(client: Client | Pool): ResumenStore 
   return {
     async cursosConDescripcion() {
       const { rows } = await client.query(
+        // Primero lo roto, luego lo que falta (HU-068). Un resumen cortado a
+        // media palabra ya está publicado en su ficha y cuesta una llamada
+        // arreglarlo; con el español por delante, los 16 de la base quedaban
+        // detrás de 3.636 cursos y no se habrían rehecho en semanas.
+        //
+        // La condición repite `resumenDefectuoso` en SQL —menos de 120
+        // caracteres o sin cerrar la frase—, porque el orden lo pone Postgres.
+        // Un test de integración comprueba que las dos versiones coinciden.
         `select id, title, description, resumen_ia, resumen_ia_descripcion_sha256
          from courses
          where source in ('udemy', 'coursera') and description is not null
-         order by coalesce(language ilike 'es%', false) desc,
+         order by (resumen_ia is not null
+                   and (length(btrim(resumen_ia)) < 120 or btrim(resumen_ia) !~ '[.!?…]$')) desc,
+                  coalesce(language ilike 'es%', false) desc,
                   num_subscribers desc nulls last,
                   id`
       );

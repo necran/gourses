@@ -53,7 +53,11 @@ describe("runResumenJob", () => {
       curso({ id: "corto", description: "Muy corta." }),
       curso({
         id: "ya-resumido",
-        resumenIA: "Ya está.",
+        // Entero y de longitud normal: desde HU-068, un resumen de dos palabras
+        // se considera cortado y el job lo rehace.
+        resumenIA:
+          "Este curso enseña a programar en Python desde cero, con ejercicios prácticos en cada " +
+          "módulo. Cubre estructuras de datos, funciones y manejo de errores.",
         resumenIADescripcionSha256: huellaDescripcion(DESCRIPCION),
       }),
     ];

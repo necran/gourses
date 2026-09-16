@@ -4,6 +4,7 @@ import {
   construirPrompt,
   esCuotaDiariaAgotada,
   limpiarResumen,
+  respuestaCortada,
   type CursoParaResumir,
   type GeneradorDeResumen,
 } from "./resumen-curso.ts";
@@ -87,6 +88,15 @@ export function creaGeneradorDeResumenGemini(
       const motivo = error instanceof Error ? error.message : String(error);
       if (esCuotaDiariaAgotada(status, motivo)) throw new CuotaDiariaAgotadaError();
       throw new Error(`API de Gemini respondió ${status ?? "error"}: ${motivo}`);
+    }
+
+    // Una respuesta cortada no es un resumen: es media frase (HU-068). Se trata
+    // como un fallo cualquiera —el job lo reintenta y, si insiste, lo anota en
+    // fallidos— en vez de guardar el fragmento, que es como se colaron los 16
+    // resúmenes rotos del 8 y 9 de septiembre.
+    const motivo = respuesta.candidates?.[0]?.finishReason;
+    if (respuestaCortada(motivo)) {
+      throw new Error(`API de Gemini cortó la respuesta (${motivo})`);
     }
 
     const texto = respuesta.text;
