@@ -81,6 +81,14 @@ export function resumenNovedades(novedades: readonly Novedad[]): ResumenNovedade
   };
 }
 
+/**
+ * Si la portada enseña su sección de novedades (HU-067). Sin cursos nuevos no se
+ * enseña vacía: una sección con un hueco dice menos que no estar.
+ */
+export function mostrarNovedadesEnPortada(novedades: readonly Novedad[]): boolean {
+  return novedades.length > 0;
+}
+
 export function superaUmbralNovedades(resumen: ResumenNovedades): boolean {
   return resumen.total >= UMBRAL_NOVEDADES;
 }
@@ -124,6 +132,27 @@ interface FilaNovedad {
 const TOPE = 1000;
 
 export async function leerNovedades(client: SupabaseClient, ahora: Date = new Date()): Promise<Novedad[]> {
+  return leerNovedadesHasta(client, TOPE, ahora);
+}
+
+/**
+ * Las primeras novedades, para la sección de la portada (HU-067): traerse las
+ * 1.000 de `leerNovedades` para enseñar cuatro sería pagar la consulta entera en
+ * cada visita.
+ */
+export async function leerUltimasNovedades(
+  client: SupabaseClient,
+  limite: number,
+  ahora: Date = new Date()
+): Promise<Novedad[]> {
+  return leerNovedadesHasta(client, limite, ahora);
+}
+
+async function leerNovedadesHasta(
+  client: SupabaseClient,
+  limite: number,
+  ahora: Date
+): Promise<Novedad[]> {
   const { data, error } = await client
     .from("courses")
     .select(
@@ -133,7 +162,7 @@ export async function leerNovedades(client: SupabaseClient, ahora: Date = new Da
     .gte("publicado_en", inicioDelPlazo(ahora).toISOString())
     .order("publicado_en", { ascending: false })
     .order("id", { ascending: true })
-    .limit(TOPE);
+    .limit(limite);
 
   if (error) throw new Error(`Fallo al leer las novedades: ${error.message}`);
   return ((data ?? []) as FilaNovedad[]).map((f) => ({

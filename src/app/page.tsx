@@ -15,6 +15,12 @@ import { datosEstructuradosSitio } from "../lib/seo/seo-sitio";
 import { nombreTema, type TemaId } from "../lib/courses/temas";
 import { enlaceTema, leerResumenTemas, temasEnlazables } from "../lib/courses/temas-datos";
 import { RUTA_GUIA } from "../lib/courses/guia-plataformas";
+import {
+  fechaLegible,
+  leerUltimasNovedades,
+  mostrarNovedadesEnPortada,
+  type Novedad,
+} from "../lib/courses/novedades";
 import styles from "./page.module.css";
 
 // Las cifras vienen de la base de datos en cada carga, así que la portada no
@@ -31,6 +37,10 @@ const CATEGORIAS_DESTACADAS = COURSE_CATEGORIES;
 // necesitar scroll infinito ni estado de cliente, que romperían el principio
 // del sitio de que todo vive en la URL (HU-017).
 const CURSOS_DESTACADOS = 12;
+
+// Cuatro: una fila en escritorio con la misma rejilla que los destacados. La
+// lista completa está en /novedades (HU-067).
+const NOVEDADES_EN_PORTADA = 4;
 
 export default async function Home() {
   const client = createSupabaseServerClient();
@@ -64,6 +74,14 @@ export default async function Home() {
     temas = temasEnlazables(await leerResumenTemas(client));
   } catch {
     temas = [];
+  }
+
+  // HU-067. Como los temas: si falla, la portada sale sin la sección.
+  let novedades: Novedad[] = [];
+  try {
+    novedades = await leerUltimasNovedades(client, NOVEDADES_EN_PORTADA);
+  } catch {
+    novedades = [];
   }
 
   let destacados: CourseSearchResult[] = [];
@@ -151,6 +169,48 @@ export default async function Home() {
           <p className={styles.verNovedades}>
             <Link href="/novedades">Ver los cursos nuevos en español →</Link>
           </p>
+        </section>
+      )}
+
+      {/* HU-067: lo último publicado en español, con su fecha. Va antes de los
+          destacados porque es lo que cambia cada día. */}
+      {mostrarNovedadesEnPortada(novedades) && (
+        <section className={styles.destacados} aria-labelledby="novedades-portada">
+          <div className={styles.destacadosCabecera}>
+            <h2 id="novedades-portada">Novedades en español</h2>
+            <Link href="/novedades" className={styles.verTodos}>
+              Ver todas →
+            </Link>
+          </div>
+          <ul className={styles.rejillaDestacados}>
+            {novedades.map((course, posicion) => (
+              <li key={course.id} className={styles.tarjetaDestacada}>
+                {course.imageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={course.imageUrl}
+                    alt=""
+                    className={styles.miniatura}
+                    {...DIMENSIONES_MINIATURA}
+                    loading={cargaDeMiniatura(posicion)}
+                    decoding="async"
+                  />
+                ) : (
+                  <div className={styles.miniaturaVacia} aria-hidden="true">
+                    <span>{course.source === "udemy" ? "U" : "C"}</span>
+                  </div>
+                )}
+                <p className={styles.tarjetaCategoria}>{nombrePlataforma(course.source)}</p>
+                <h3>
+                  <Link href={`/curso/${course.id}`}>{course.title}</Link>
+                </h3>
+                <p className={styles.tarjetaMeta}>
+                  {course.source === "coursera" ? "Lanzado el " : "Publicado el "}
+                  <time dateTime={course.publicadoEn}>{fechaLegible(course.publicadoEn)}</time>
+                </p>
+              </li>
+            ))}
+          </ul>
         </section>
       )}
 

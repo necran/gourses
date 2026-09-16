@@ -29,17 +29,26 @@ describeIfConfigured("HU-007 — searchCourses", () => {
     supabase = createClient(supabaseUrl!, anonKey!);
 
     await pgClient.query(
+      // `publicado_en` en la fila de Rust: desde HU-067, Coursera se ordena por
+      // fecha de publicación y los cursos sin ella van al final. Esta ficha es
+      // anterior a que existieran las fechas (HU-059) y se quedaba detrás de
+      // todos los cursos reales que coinciden con «rust», fuera de los 100
+      // primeros. Todos los cursos reales de Coursera la traen, así que sin
+      // fecha el dato de prueba no representaba a ninguno.
       `insert into courses
-        (source, source_id, title, description, price_amount, price_currency, rating, language)
+        (source, source_id, title, description, price_amount, price_currency, rating, language, publicado_en)
        values
-        ('coursera', $1, 'Curso de prueba HU-007: introducción a Rust', 'aprende rust desde cero', 19.99, 'EUR', 4.5, 'en'),
-        ('coursera', $2, 'Curso de prueba HU-007: cocina italiana', 'pasta y pizza', 99.99, 'EUR', 3.0, 'es'),
-        ('coursera', $3, 'Curso de prueba HU-007: sin valoración ni precio', 'catálogo por suscripción', null, null, null, 'es'),
-        ('coursera', $4, 'Curso de prueba HU-057: zq9 100% práctico', 'sin comodines', null, null, null, 'es'),
-        ('coursera', $5, 'Curso de prueba HU-057: 100 x práctico', 'la descripción menciona zq9 de pasada', null, null, null, 'es'),
-        ('coursera', $6, 'Curso de prueba "HU-059": Godot, nivel (2026) C:\\ruta', 'con signos', null, null, null, 'es'),
-        ('coursera', $7, 'Curso de prueba HU-061: Diseño y Programación zqx', 'con tildes', null, null, null, 'es'),
-        ('coursera', $8, 'Curso de prueba HU-061: Diseno sin tildes zqy', 'escrito sin tildes', null, null, null, 'es')`,
+        ('coursera', $1, 'Curso de prueba HU-007: introducción a Rust', 'aprende rust desde cero', 19.99, 'EUR', 4.5, 'en', now() - interval '1 day'),
+        -- Las demás sin fecha a propósito: sus tests buscan por el marcador, así
+        -- que coinciden pocas filas y el orden no las deja fuera. Y una de ellas
+        -- sin fecha comprueba de paso que esos cursos siguen encontrándose.
+        ('coursera', $2, 'Curso de prueba HU-007: cocina italiana', 'pasta y pizza', 99.99, 'EUR', 3.0, 'es', null),
+        ('coursera', $3, 'Curso de prueba HU-007: sin valoración ni precio', 'catálogo por suscripción', null, null, null, 'es', null),
+        ('coursera', $4, 'Curso de prueba HU-057: zq9 100% práctico', 'sin comodines', null, null, null, 'es', null),
+        ('coursera', $5, 'Curso de prueba HU-057: 100 x práctico', 'la descripción menciona zq9 de pasada', null, null, null, 'es', null),
+        ('coursera', $6, 'Curso de prueba "HU-059": Godot, nivel (2026) C:\\ruta', 'con signos', null, null, null, 'es', null),
+        ('coursera', $7, 'Curso de prueba HU-061: Diseño y Programación zqx', 'con tildes', null, null, null, 'es', null),
+        ('coursera', $8, 'Curso de prueba HU-061: Diseno sin tildes zqy', 'escrito sin tildes', null, null, null, 'es', null)`,
       [`${MARKER}rust`, `${MARKER}cocina`, `${MARKER}sin-precio`, `${MARKER}porcentaje`, `${MARKER}sin-porcentaje`, `${MARKER}signos`, `${MARKER}tildes`, `${MARKER}sin-tildes`]
     );
   });

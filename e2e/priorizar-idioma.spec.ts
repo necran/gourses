@@ -22,10 +22,15 @@ async function sembrarParEnIdiomas(
   const client = new Client({ connectionString: databaseUrl });
   await client.connect();
   await client.query(
-    `insert into courses (source, source_id, title, description, price_amount, price_currency, rating, language)
+    // Con reseñas de sobra desde HU-067: el orden por defecto pone delante los
+    // cursos que superan las 50 reseñas, así que un 5,00 sin ninguna reseña —lo
+    // que sembraba esta ficha— se queda detrás de los 8.183 cursos respaldados
+    // y no llegaba a la muestra de la home. Es justo lo que esa historia busca;
+    // el dato de prueba era el que no representaba a un curso destacable.
+    `insert into courses (source, source_id, title, description, price_amount, price_currency, rating, num_reviews, language)
      values
-      ('udemy', $1, '${marker} inglés', 'x', 10, 'EUR', 5.0, 'en'),
-      ('udemy', $2, '${marker} español', 'x', 10, 'EUR', 5.0, 'es')`,
+      ('udemy', $1, '${marker} inglés', 'x', 10, 'EUR', 5.0, 900000, 'en'),
+      ('udemy', $2, '${marker} español', 'x', 10, 'EUR', 5.0, 900000, 'es')`,
     [`${marker}-en`, `${marker}-es`]
   );
   return async () => {

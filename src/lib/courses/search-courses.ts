@@ -348,17 +348,39 @@ export function paginarIntercalado(
   };
 }
 
+/**
+ * El orden por defecto de cada plataforma (HU-067), de más a menos importante.
+ * Todos descendentes y con los nulos al final; quien lo aplica remata con `id`.
+ *
+ * No es el mismo para las dos porque no publican los mismos datos:
+ *
+ * - **Udemy** publica valoración y reseñas. Ordenar solo por valoración sacaba
+ *   a los cursos con un 5,00 y once votos por delante de un 4,7 con doce mil,
+ *   que es premiar la falta de datos. Primero los que superan el umbral de
+ *   reseñas (`bien_valorado`, migración 0018) y dentro de cada grupo la
+ *   valoración; el número de reseñas desempata.
+ * - **Coursera** no publica ninguna de las dos (su API no las tiene, HU-006),
+ *   así que el orden lo acababa decidiendo la fecha de la última ingesta: azar.
+ *   Sí publica fecha de publicación, y esa sí dice algo.
+ */
+export function criteriosOrdenPorDefecto(source: CourseSource): string[] {
+  if (source === "coursera") return ["publicado_en", "updated_at"];
+  return ["bien_valorado", "rating", "num_reviews"];
+}
+
 async function searchCoursesFromSource(
   client: SupabaseClient,
   filters: CourseSearchFilters,
   source: CourseSource,
   limit: number
 ): Promise<ResultadoFuente> {
-  const query = aplicarFiltros(seleccionBase(client).eq("source", source), filters);
+  let query = aplicarFiltros(seleccionBase(client).eq("source", source), filters);
+
+  for (const columna of criteriosOrdenPorDefecto(source)) {
+    query = query.order(columna, { ascending: false, nullsFirst: false });
+  }
 
   const { data, error, count } = await query
-    .order("rating", { ascending: false, nullsFirst: false })
-    .order("updated_at", { ascending: false })
     // Desempate por un campo único, necesario desde que hay paginación
     // (HU-025). Los 4.000 cursos de Coursera tienen `rating` nulo y muchos
     // comparten `updated_at` porque entraron en la misma pasada, así que sin un

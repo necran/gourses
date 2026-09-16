@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  criteriosOrdenPorDefecto,
   interleaveBySource,
   paginarIntercalado,
   patronPalabraClave,
@@ -24,6 +25,25 @@ function curso(source: string, n: number, language: string | null = null): Cours
     duration: null,
   };
 }
+
+describe("criteriosOrdenPorDefecto (HU-067)", () => {
+  it("Udemy: primero los que superan el umbral de reseñas, luego valoración y reseñas", () => {
+    expect(criteriosOrdenPorDefecto("udemy")).toEqual(["bien_valorado", "rating", "num_reviews"]);
+  });
+
+  it("Coursera, que no publica valoración ni reseñas, va por fecha de publicación", () => {
+    const criterios = criteriosOrdenPorDefecto("coursera");
+    expect(criterios[0]).toBe("publicado_en");
+    expect(criterios).not.toContain("rating");
+    expect(criterios).not.toContain("num_reviews");
+  });
+
+  it("ninguna plataforma ordena por la fecha de ingesta como criterio principal", () => {
+    for (const source of ["udemy", "coursera"] as const) {
+      expect(criteriosOrdenPorDefecto(source)[0]).not.toBe("updated_at");
+    }
+  });
+});
 
 describe("priorizarIdioma (HU-032)", () => {
   it("sin idioma preferido, no cambia nada", () => {
