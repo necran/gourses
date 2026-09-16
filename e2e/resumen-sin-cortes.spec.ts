@@ -12,9 +12,16 @@ async function fichasConResumen(cuantas: number): Promise<Array<{ id: string; re
   await client.connect();
   try {
     // Los más cortos primero: si queda alguno cortado, está entre estos.
+    //
+    // Sin las filas que siembran otros tests (`zzz-`, `test-`): son temporales y
+    // sus resúmenes de mentira («Este curso enseña X e Y de forma práctica.») no
+    // salen del job, que es lo que esta historia comprueba. Corriendo en
+    // paralelo, una de esas filas se colaba aquí y hacía fallar el test.
     const { rows } = await client.query(
       `select id, resumen_ia from courses
         where resumen_ia is not null
+          and source_id not like 'zzz-%'
+          and source_id not like 'test-%'
         order by length(resumen_ia), id
         limit $1`,
       [cuantas]

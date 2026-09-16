@@ -86,8 +86,13 @@ test.describe("HU-063 — guía «Udemy o Coursera»", () => {
       const enlaces = [...categorias, ...(await seccion.locator('a[href^="/cursos/"]').evaluateAll((as) =>
         as.map((a) => a.getAttribute("href")!)
       ))];
-      for (const href of enlaces) {
-        expect((await request.get(href)).status(), href).toBe(200);
+      // En paralelo, no en serie: eran ocho idas y vueltas, y con el servidor de
+      // desarrollo cargado el test agotaba sus 30 s con la última respondiendo 200.
+      const estados = await Promise.all(
+        enlaces.map(async (href) => [href, (await request.get(href)).status()] as const)
+      );
+      for (const [href, estado] of estados) {
+        expect(estado, href).toBe(200);
       }
     }
     // Udemy tiene temas con cursos en español que superan el umbral.

@@ -1,0 +1,59 @@
+/* HU-069. Misma tabla que la guía de plataformas (HU-063): se desplaza sola en
+   el móvil y es enfocable con el teclado. */
+.tabla {
+  overflow-x: auto;
+  margin: 1rem 0 1.5rem;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: var(--surface);
+}
+
+.tabla:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.tabla table {
+  width: 100%;
+  min-width: 40rem;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.tabla th,
+.tabla td {
+  padding: 0.65rem 0.9rem;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--line);
+}
+
+.tabla tbody tr:last-child th,
+.tabla tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.tabla thead th {
+  font-family: var(--font-display), -apple-system, "Segoe UI", sans-serif;
+}
+
+.tabla tbody th {
+  font-weight: 600;
+}
+
+.tabla tbody th a {
+  display: inline-block;
+  padding-block: 0.15rem;
+  color: var(--accent);
+}
+
+.tabla tbody th a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.sinDato {
+  color: var(--ink-muted);
+  font-style: italic;
+}
