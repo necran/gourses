@@ -91,4 +91,32 @@ Un id con forma válida pero inexistente ahora dispara también la consulta del 
 
 ### Medición en producción
 
-Se anota al final, tras desplegar.
+Desplegado como `main@b71bfff` (49 s). Tiempo hasta recibir la cabecera de la respuesta, en
+milisegundos, con 10 peticiones seguidas por página, medido desde fuera de Netlify. Se repitió
+el «después» en dos tandas para ver cuánto ruido hay:
+
+| Página | Antes | Después, tanda 1 | Después, tanda 2 |
+|---|---|---|---|
+| **Portada** | mediana 2.077 (mín. 1.277) | **1.005** (mín. 605) | **577** (mín. 477) |
+| **Ficha** | 630 (mín. 437) | **363** (mín. 315) | **493** (mín. 303) |
+| Buscador (no tocado) | 605 | 673 | 756 |
+| Categoría (no tocada) | 653 | 756 | 814 |
+| Privacidad (control) | 210 | 202 | 215 |
+
+Lectura, sin adornar:
+
+- **La portada y la ficha mejoran**, y la mejora es mayor que el ruido: el mínimo de la portada
+  pasa de 1.277 a 477-605 ms, y su mediana entre un 50 % y un 70 % menos. La ficha, entre un
+  25 % y un 40 % menos.
+- **Las páginas que no se tocaron no mejoran**, como se esperaba, y su variación entre tandas
+  (100-150 ms) es el ruido de esta medición. La de privacidad, que no usa base de datos, se
+  queda quieta y sirve de control.
+- Medido en frío la primera petición tras un rato sin tráfico puede tardar más (arranque de la
+  función); las medianas de 10 peticiones lo amortiguan pero no lo eliminan.
+- **No se ha medido el gasto en créditos**, solo el tiempo. El efecto en créditos se ve en
+  *Usage & billing → Compute* con varios días de tráfico.
+
+Queda por debajo de lo que podría dar: el buscador y las categorías tardan entre 600 y 800 ms
+y no se han tocado. No parecen tener lecturas encadenadas evidentes (una o dos, ya en
+paralelo), así que su tiempo es sobre todo el de construir y enviar un HTML grande. No se
+persigue hasta ver en los créditos si merece la pena.
