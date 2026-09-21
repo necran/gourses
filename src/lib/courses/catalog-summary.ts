@@ -24,25 +24,24 @@ export async function getCatalogSummary(
   client: SupabaseClient
 ): Promise<CatalogSummary | null> {
   try {
-    const { count, error } = await client
-      .from("courses")
-      .select("id", { count: "exact", head: true });
+    // Los tres recuentos a la vez (HU-072). Antes se pedía primero el total y, solo
+    // después, uno por fuente: dos rondas seguidas, y cada ronda es un viaje de ida
+    // y vuelta entre las funciones de Netlify (Virginia) y Supabase (Irlanda). Los
+    // recuentos no dependen unos de otros.
+    const [total, ...porFuente] = await Promise.all([
+      client.from("courses").select("id", { count: "exact", head: true }),
+      ...COURSE_SOURCES.map((source) =>
+        client.from("courses").select("id", { count: "exact", head: true }).eq("source", source)
+      ),
+    ]);
 
-    if (error) return null;
+    if (total.error) return null;
 
     // Solo se cuentan las fuentes que hoy aportan cursos, no las que existen
     // en el código: prometer "2 plataformas" con una vacía sería falso.
-    const conteos = await Promise.all(
-      COURSE_SOURCES.map(async (source) => {
-        const { count: n, error: e } = await client
-          .from("courses")
-          .select("id", { count: "exact", head: true })
-          .eq("source", source);
-        return !e && (n ?? 0) > 0;
-      })
-    );
+    const conCursos = porFuente.filter((r) => !r.error && (r.count ?? 0) > 0).length;
 
-    return summarizeCatalog(count ?? null, conteos.filter(Boolean).length);
+    return summarizeCatalog(total.count ?? null, conCursos);
   } catch {
     return null;
   }

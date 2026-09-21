@@ -51,15 +51,6 @@ const NOVEDADES_EN_PORTADA = 4;
 export default async function Home() {
   const client = createSupabaseServerClient();
 
-  // Un fallo leyendo el resumen no debe tumbar la portada: es un dato
-  // decorativo, no el contenido (HU-012).
-  let resumen = null;
-  try {
-    resumen = await getCatalogSummary(client);
-  } catch {
-    resumen = null;
-  }
-
   // HU-032: se prioriza sin filtrar, así que un fallo leyendo la cabecera no
   // debería poder darse, pero si algún día lo hiciera, más vale mostrar el
   // orden normal que tumbar la portada por esto.
@@ -70,38 +61,29 @@ export default async function Home() {
     idiomaPreferido = null;
   }
 
-  // Sin filtros ni orden, searchCourses reparte a partes iguales entre
-  // plataformas (HU-007): así la portada no enseña solo Udemy, que es la que
-  // tiene valoración y ganaría cualquier otro orden.
-  // Temas que superan el umbral (HU-060), para enlazar sus páginas. Como el
-  // resumen del catálogo, es un añadido: si falla, la portada sale sin la sección.
-  let temas: TemaId[] = [];
-  try {
-    temas = temasEnlazables(await leerResumenTemas(client));
-  } catch {
-    temas = [];
-  }
-
-  // HU-067. Como los temas: si falla, la portada sale sin la sección.
-  let novedades: Novedad[] = [];
-  try {
-    novedades = await leerUltimasNovedades(client, NOVEDADES_EN_PORTADA);
-  } catch {
-    novedades = [];
-  }
-
-  let destacados: CourseSearchResult[] = [];
-  try {
-    const { resultados } = await searchCourses(
-      client,
-      parseCourseSearchFilters({}),
-      CURSOS_DESTACADOS,
-      idiomaPreferido
-    );
-    destacados = resultados;
-  } catch {
-    destacados = [];
-  }
+  // Las cuatro lecturas a la vez (HU-072). Iban una detrás de otra, y cada una es
+  // un viaje de ida y vuelta entre las funciones de Netlify (Virginia) y Supabase
+  // (Irlanda): la portada tardaba 1,6 s en responder, casi todo esperas
+  // encadenadas, porque las consultas en sí duran menos de 6 ms dentro de la base.
+  // Ninguna depende de otra; solo los destacados necesitan el idioma, que ya está.
+  //
+  // Cada una falla por separado y no tumba la portada:
+  // - El resumen del catálogo es un dato decorativo, no el contenido (HU-012).
+  // - Los temas que superan el umbral (HU-060) y las novedades (HU-067) son
+  //   añadidos: si fallan, la portada sale sin su sección.
+  // - Sin filtros ni orden, searchCourses reparte a partes iguales entre
+  //   plataformas (HU-007): así la portada no enseña solo Udemy, que es la que
+  //   tiene valoración y ganaría cualquier otro orden.
+  const [resumen, temas, novedades, destacados] = await Promise.all([
+    getCatalogSummary(client).catch(() => null),
+    leerResumenTemas(client)
+      .then(temasEnlazables)
+      .catch((): TemaId[] => []),
+    leerUltimasNovedades(client, NOVEDADES_EN_PORTADA).catch((): Novedad[] => []),
+    searchCourses(client, parseCourseSearchFilters({}), CURSOS_DESTACADOS, idiomaPreferido)
+      .then((r) => r.resultados)
+      .catch((): CourseSearchResult[] => []),
+  ]);
 
   return (
     <main className={styles.main}>

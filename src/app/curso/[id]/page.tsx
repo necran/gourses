@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "../../../components/enlace";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import { createSupabaseServerClient } from "../../../lib/supabase/server-client";
 import { getCourseById } from "../../../lib/courses/get-course";
 import { resolvePriceDisplay } from "../../../lib/courses/price-display";
@@ -30,13 +31,17 @@ interface CoursePageProps {
   params: Promise<{ id: string }>;
 }
 
+// El curso se lee una sola vez por petición (HU-072): `generateMetadata` y la
+// página lo necesitan los dos, y sin esto cada uno hacía su propia lectura.
+const leerCurso = cache((id: string) => getCourseById(createSupabaseServerClient(), id));
+
 // Cada ficha lleva su propio título y descripción: son la puerta de entrada
 // desde los buscadores y, si se repiten, Google no puede distinguirlas
 // (HU-016). Si el curso no existe, se devuelven metadatos neutros porque la
 // página resultante será la de "no encontrado".
 export async function generateMetadata({ params }: CoursePageProps): Promise<Metadata> {
   const { id } = await params;
-  const course = await getCourseById(createSupabaseServerClient(), id);
+  const course = await leerCurso(id);
 
   if (!course) return { title: "Curso no encontrado" };
 
@@ -60,7 +65,7 @@ function formatPrice(amount: number, currency: string | null): string {
 export default async function CoursePage({ params }: CoursePageProps) {
   const { id } = await params;
   const client = createSupabaseServerClient();
-  const course = await getCourseById(client, id);
+  const course = await leerCurso(id);
 
   // Un id inválido o inexistente lleva a la página de "no encontrado" de Next,
   // nunca a un error sin manejar.

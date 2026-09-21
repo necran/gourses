@@ -144,11 +144,18 @@ export async function getCourseById(
 ): Promise<CourseDetail | null> {
   if (!isValidCourseId(id)) return null;
 
-  const { data, error } = await client
-    .from("courses")
-    .select(CAMPOS_CURSO)
-    .eq("id", id)
-    .maybeSingle();
+  // El curso y su histórico a la vez (HU-072). El histórico se pide por el mismo id
+  // que ya se tiene, no por nada que salga de la fila del curso, así que no hay que
+  // esperar a la primera respuesta: eran dos viajes seguidos entre Netlify y
+  // Supabase por cada ficha. Si el curso no existe, el histórico se descarta.
+  const [{ data, error }, { data: historyData, error: historyError }] = await Promise.all([
+    client.from("courses").select(CAMPOS_CURSO).eq("id", id).maybeSingle(),
+    client
+      .from("course_price_history")
+      .select("price_amount, price_currency, captured_at")
+      .eq("course_id", id)
+      .order("captured_at", { ascending: true }),
+  ]);
 
   if (error) {
     throw new Error(`Fallo al leer el curso: ${error.message}`);
@@ -156,12 +163,6 @@ export async function getCourseById(
   if (!data) return null;
 
   const row = data as CourseRow;
-
-  const { data: historyData, error: historyError } = await client
-    .from("course_price_history")
-    .select("price_amount, price_currency, captured_at")
-    .eq("course_id", id)
-    .order("captured_at", { ascending: true });
 
   if (historyError) {
     throw new Error(`Fallo al leer el histórico de precio: ${historyError.message}`);
