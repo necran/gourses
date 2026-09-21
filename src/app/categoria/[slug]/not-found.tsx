@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "../../../components/enlace";
 
 // Se muestra cuando el identificador de la dirección no es una de las
 // categorías del catálogo (HU-046). Mismo trato que una ficha inexistente

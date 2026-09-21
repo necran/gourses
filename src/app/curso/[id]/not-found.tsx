@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "../../../components/enlace";
 
 // Se muestra cuando el id de la URL no es válido o no corresponde a ningún
 // curso (HU-008): mensaje claro, nunca un error sin manejar.

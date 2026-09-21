@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "./enlace";
 import { createSupabaseSessionClient } from "../lib/supabase/session-client";
 import { esFavorito } from "../lib/favorites/favorites";
 import { guardarEnFavoritos, quitarDeFavoritos } from "../app/favoritos/actions";

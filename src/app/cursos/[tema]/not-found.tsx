@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "../../../components/enlace";
 
 // Se muestra cuando el identificador de la dirección no es uno de los temas de la
 // lista cerrada (HU-058). Mismo trato que una categoría inexistente (HU-046): un

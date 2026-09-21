@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "../../components/enlace";
 import { TITULAR, titularCompleto } from "../../lib/legal/titular";
 import styles from "../legal.module.css";
 

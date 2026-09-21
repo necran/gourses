@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "./enlace";
 import { TITULAR } from "../lib/legal/titular";
 import { getUsuarioActual } from "../lib/supabase/session-client";
 import { idMedicionValido } from "../lib/id-analitica";

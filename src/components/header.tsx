@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "./enlace";
 import { getUsuarioActual } from "../lib/supabase/session-client";
 import styles from "./header.module.css";
 

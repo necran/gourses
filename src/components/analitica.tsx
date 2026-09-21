@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId } from "react";
-import Link from "next/link";
+import Link from "./enlace";
 import Script from "next/script";
 import { useHidratado } from "../lib/use-hidratado";
 import { almacenConsentimiento, useEleccionAnalitica } from "../lib/consentimiento";

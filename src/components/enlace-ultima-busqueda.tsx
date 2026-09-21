@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import Link from "next/link";
+import Link from "./enlace";
 import { useUltimaBusqueda } from "../lib/courses/ultima-busqueda";
 
 // Enlace a la última búsqueda de esta pestaña (HU-042). Se pinta en el

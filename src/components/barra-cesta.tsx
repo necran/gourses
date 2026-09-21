@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "./enlace";
 import { MAX_COMPARADOS, MIN_COMPARADOS } from "../lib/courses/compare";
 import {
   estaLlena,

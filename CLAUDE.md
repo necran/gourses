@@ -65,6 +65,27 @@ Antes de desplegar, comprobar los créditos que quedan en *Usage & billing*.
 Para ver los cambios sin gastar créditos está el entorno local (`npm run dev`), que es
 la misma aplicación contra la misma base de datos.
 
+### Lo que también consume: las peticiones, no solo los despliegues
+
+El 21 de septiembre de 2026 Netlify **pausó el sitio entero** (`503 usage_exceeded`) con
+330 de 300 créditos, y los despliegues eran solo el 18 %: el resto era tráfico (ejecución de
+funciones 45 %, ancho de banda 26 %, peticiones 12 %). Causa medida (HU-071): el layout lee
+las cookies, así que **ninguna página es estática**, y `next/link` prefetcha cada enlace que
+entra en pantalla, con lo que **una visita generaba entre 13 y 65 peticiones al servidor**,
+cada una ejecutando una función.
+
+Por eso:
+
+- **Los enlaces se importan de `src/components/enlace.tsx`, nunca de `next/link`.** Es el mismo
+  `Link` sin prefetch por defecto, y un test (`enlace.test.ts`) falla si alguien importa
+  `next/link` directamente.
+- El prefetch solo existe en producción, así que la suite normal (servidor de desarrollo) no
+  puede detectarlo: `npm run test:e2e:produccion` cuenta las peticiones de una visita sobre la
+  build de producción.
+- Al tocar el layout o la cabecera, recordar que **leer cookies ahí vuelve dinámica toda la
+  web** y ningún CDN puede cachearla.
+- Se puede mirar el consumo real en *Usage & billing → Credits* (por día y por concepto).
+
 ## Reglas modulares
 
 Reglas adicionales por área, cargadas solo cuando se tocan los ficheros correspondientes: ver `.claude/rules/`.

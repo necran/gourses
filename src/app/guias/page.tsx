@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "../../components/enlace";
 import { GUIAS, RUTA_GUIAS, descripcionIndiceGuias, tituloIndiceGuias } from "../../lib/courses/guias";
 import { serializeStructuredData } from "../../lib/courses/course-seo";
 import { OPEN_GRAPH_SITIO, migasDePan } from "../../lib/seo/seo-sitio";

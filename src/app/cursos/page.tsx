@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "../../components/enlace";
 import { createSupabaseServerClient } from "../../lib/supabase/server-client";
 import { CATEGORY_LABELS, COURSE_CATEGORIES } from "../../lib/courses/categories";
 import { enlaceCategoria } from "../../lib/courses/categoria-seo";

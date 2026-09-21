@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "../components/enlace";
 import styles from "./legal.module.css";
 
 // HU-064. La página 404 por defecto de Next.js no tiene `<main>`: quien navega

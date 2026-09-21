@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "../../components/enlace";
 import { createSupabaseServerClient } from "../../lib/supabase/server-client";
 import { getCoursesByIds } from "../../lib/courses/get-course";
 import {

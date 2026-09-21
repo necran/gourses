@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "../../../components/enlace";
 import { esTokenBaja } from "../../../lib/boletin/contenido";
 import legal from "../../legal.module.css";
 import styles from "./page.module.css";

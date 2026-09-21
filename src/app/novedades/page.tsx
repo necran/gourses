@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "../../components/enlace";
 import { cache } from "react";
 import { createSupabaseServerClient } from "../../lib/supabase/server-client";
 import { parseCourseSearchFilters } from "../../lib/courses/search-filters";
