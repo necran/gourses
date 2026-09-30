@@ -3,6 +3,7 @@
 import { Client } from "pg";
 import { runCourseraIngestJob } from "../src/lib/ingesta/coursera/job.ts";
 import { createPostgresCourseStore } from "../src/lib/ingesta/postgres-course-store.ts";
+import { almacenPareceRoto, mensajeAlmacenRoto } from "../src/lib/ingesta/comun/almacen-roto.ts";
 
 const databaseUrl = process.env.DATABASE_URL;
 const baseUrl = process.env.COURSERA_CATALOG_API_BASE_URL;
@@ -27,6 +28,14 @@ try {
   console.log(`Procesados: ${result.processed}, guardados: ${result.saved}`);
   if (result.failedCourses.length > 0) {
     console.warn(`Cursos fallidos (${result.failedCourses.length}):`, result.failedCourses);
+  }
+
+  // HU-073: mismo cuidado que en Udemy. Aquí el `Client` único conecta al
+  // principio y ya haría fallar el job si la base estuviera mal desde el
+  // arranque, pero no cubre que se rompiera a media ejecución.
+  if (almacenPareceRoto(result)) {
+    console.error(mensajeAlmacenRoto(result));
+    process.exitCode = 1;
   }
 } finally {
   await client.end();

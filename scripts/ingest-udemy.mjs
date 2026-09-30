@@ -7,6 +7,7 @@
 import { Pool } from "pg";
 import { runUdemyIngestJob } from "../src/lib/ingesta/udemy/job.ts";
 import { createPostgresCourseStore } from "../src/lib/ingesta/postgres-course-store.ts";
+import { almacenPareceRoto, mensajeAlmacenRoto } from "../src/lib/ingesta/comun/almacen-roto.ts";
 
 const databaseUrl = process.env.DATABASE_URL;
 const baseUrl = process.env.UDEMY_AFFILIATE_API_BASE_URL;
@@ -74,6 +75,16 @@ try {
   );
   if (result.failedCourses.length > 0) {
     console.warn(`Cursos fallidos (${result.failedCourses.length}):`, result.failedCourses.slice(0, 10));
+  }
+
+  // HU-073. Cada curso se guarda en su propio try/catch para que uno mal
+  // formado no tumbe el resto, pero eso mismo escondió durante dos semanas
+  // (17 de septiembre a 30 de septiembre de 2026) que la base de datos entera
+  // rechazaba las escrituras: el job terminaba "con éxito" habiendo guardado
+  // cero cursos, y nadie se enteró hasta que la ingesta llevaba parada 13 días.
+  if (almacenPareceRoto(result)) {
+    console.error(mensajeAlmacenRoto(result));
+    process.exitCode = 1;
   }
 } finally {
   await client.end();
