@@ -29,11 +29,13 @@ concurrency:
 jobs:
   ingesta-es:
     runs-on: ubuntu-latest
-    # Sin medir todavía contra una ejecución completa real (a diferencia del
-    # tope de ingesta.yml, que sí está basado en una medición). Mismo tope de
-    # partida por prudencia; ajustar en cuanto haya una primera ejecución real
-    # que dé un número, como se hizo con la pasada en inglés (HU-023).
-    timeout-minutes: 90
+    # Medido contra ejecuciones reales (HU-074): la única que no se cortó duró
+    # 84,7 min, y las otras cuatro de esa misma semana se cancelaron justo al
+    # llegar a los 90 — un tope que viene de antes de tener nunca un dato real
+    # (ver el historial de este comentario). Mismo motivo que ya obligó a subir
+    # el de ingesta.yml en HU-023: estaba puesto por prudencia, no por medición,
+    # y la ejecución de verdad ya no cabía.
+    timeout-minutes: 150
 
     env:
       DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}

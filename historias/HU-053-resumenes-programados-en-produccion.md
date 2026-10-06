@@ -51,12 +51,20 @@ deja el job preparado: sigue por orden y se detiene al agotar la cuota.
 
 ## Checklist de tests (obligatorio antes de cerrar)
 
-- [ ] Unitarios: no aplica lógica nueva (el comportamiento es de HU-052, ya probado)
-- [ ] Integración: no aplica
-- [ ] Verificación: primera ejecución real en GitHub, con resúmenes guardados en
+- [x] Unitarios: no aplica lógica nueva (el comportamiento es de HU-052, ya probado)
+- [x] Integración: no aplica
+- [x] Verificación: primera ejecución real en GitHub, con resúmenes guardados en
       producción y el caso de cuota agotada terminando en verde
-- [ ] `/security-review` sin hallazgos críticos ni altos
+- [x] `/security-review` sin hallazgos críticos ni altos
 
 ## Estado
 
-`Bloqueada (pendiente del despliegue y de su primera ejecución en GitHub)`
+`Cerrada` (2026-10-06)
+
+Bloqueada durante más de dos semanas: no por el despliegue (hecho el 16 de septiembre), sino
+porque `GEMINI_API_KEY` no se creó hasta el 30 de septiembre, a la vez que se arreglaba
+HU-073 (el secreto `PROD_DATABASE_URL` tampoco estaba al día, así que tampoco había dónde
+guardar nada). Desde entonces: 4 ejecuciones (2-5 de octubre), **todas en verde**. En
+producción: **2.936 resúmenes generados, el 100 % en español** — el orden español-primero de
+HU-052 funcionando tal como se diseñó. Quedan 13.862 cursos con descripción y sin resumen;
+seguirán bajando día a día, limitados por la cuota gratuita de Gemini.
