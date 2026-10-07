@@ -97,3 +97,16 @@ Sin hallazgos:
   harían, se quedan fuera a propósito.
 - Acciones fijadas a versión mayor (`actions/checkout@v4`, `actions/setup-node@v4`),
   igual que en los workflows de ingesta ya existentes.
+
+### Retoque (2026-10-07)
+
+El paso «Compilación» llevaba roto en `main` desde el 16 de septiembre, sin que nadie se
+hubiera fijado: `/acceder` lanzaba `Faltan NEXT_PUBLIC_SUPABASE_URL o
+NEXT_PUBLIC_SUPABASE_ANON_KEY en el entorno` al generarse en build, porque
+`createSupabaseSessionClient()` (`src/lib/supabase/session-client.ts`) comprobaba esas
+variables **antes** de llamar a `cookies()` — y es `cookies()` quien le dice a Next.js que
+la página es dinámica. Al lanzar antes de esa llamada, Next intentaba generar `/acceder`
+como página estática (sin entorno real) y el build entero fallaba, aunque en producción
+Netlify sí tiene esas variables y nunca llegó a notarse ahí. Arreglado reordenando: primero
+`cookies()`, después la comprobación. No afecta a Netlify (que compila con sus propias
+variables), solo a este workflow, que llevaba siendo ruido desde hacía tres semanas.

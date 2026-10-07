@@ -10,6 +10,14 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 // alcanzable desde una página: saltaría la RLS por completo
 // (ver .claude/rules/seguridad.md).
 export async function createSupabaseSessionClient(): Promise<SupabaseClient> {
+  // `cookies()` va primero y antes de cualquier posible `throw`: es la llamada
+  // que le dice a Next.js que esta página es dinámica. Si el error de las
+  // variables de entorno se lanzara antes, Next intentaría generar la página
+  // en build (sin cookies ni entorno de verdad) y el build entero fallaría
+  // (visto en `/acceder`, HU-044: la comprobación de CI lleva rota desde el
+  // 16 de septiembre por este motivo, sin relación con lo que se tocase ese día).
+  const almacen = await cookies();
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -18,8 +26,6 @@ export async function createSupabaseSessionClient(): Promise<SupabaseClient> {
       "Faltan NEXT_PUBLIC_SUPABASE_URL o NEXT_PUBLIC_SUPABASE_ANON_KEY en el entorno."
     );
   }
-
-  const almacen = await cookies();
 
   return createServerClient(url, anonKey, {
     // @supabase/ssr trae `httpOnly: false` por defecto, pensando en apps que
