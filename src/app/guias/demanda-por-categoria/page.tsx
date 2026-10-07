@@ -22,6 +22,11 @@ import styles from "./page.module.css";
 // Guía «qué categoría tiene más demanda, por alumnos inscritos» (HU-076). Las
 // cifras se calculan al servir la página, como las otras guías: nada escrito
 // a mano que se quede viejo.
+//
+// `force-dynamic`: sin esto, Next intenta generar la página en build, donde no
+// hay variables de entorno reales, y el build entero falla (HU-044).
+export const dynamic = "force-dynamic";
+
 const leer = cache(async () => leerDemandaPorCategoria(createSupabaseServerClient()));
 
 export async function generateMetadata(): Promise<Metadata> {

@@ -25,6 +25,12 @@ import styles from "./page.module.css";
 
 // Las cifras cambian con cada ingesta: se calculan al servir la página (HU-063),
 // una sola vez para metadatos y contenido.
+//
+// `force-dynamic`: sin esto, Next intenta generar la página en build, donde no
+// hay variables de entorno reales, y el build entero falla (visto en HU-044,
+// que lo destapó en las cuatro guías a la vez al arreglar un fallo parecido).
+export const dynamic = "force-dynamic";
+
 const leer = cache(async () => leerGuia(createSupabaseServerClient()));
 
 export async function generateMetadata(): Promise<Metadata> {

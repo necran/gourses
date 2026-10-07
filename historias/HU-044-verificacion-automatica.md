@@ -110,3 +110,14 @@ como página estática (sin entorno real) y el build entero fallaba, aunque en p
 Netlify sí tiene esas variables y nunca llegó a notarse ahí. Arreglado reordenando: primero
 `cookies()`, después la comprobación. No afecta a Netlify (que compila con sus propias
 variables), solo a este workflow, que llevaba siendo ruido desde hacía tres semanas.
+
+Arreglado ese, el build llegó más lejos y destapó un segundo problema del mismo tipo, esta
+vez en las cuatro guías (`/guias/*`): ninguna declaraba `export const dynamic =
+"force-dynamic"`, así que Next las trataba como rutas estáticas de contenido fijo (como
+`/` o `/cursos`, que sí lo declaran) e intentaba generarlas en build, donde tampoco hay
+entorno real. Comprobado reproduciendo el build real sin `.env.local` en vez de solo con
+`env -i` (que no sirve: `next build` lee `.env.local` del disco igualmente). Con las cuatro
+guías arregladas, el build completo pasa sin ninguna variable de entorno.
+
+El primer fallo (tipografía de Google no resuelta en el runner) fue ruido de red puntual:
+desapareció al reintentar el mismo job sin tocar nada.

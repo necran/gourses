@@ -20,6 +20,11 @@ import styles from "./page.module.css";
 
 // Guía «cuánto dura un curso según su nivel» (HU-075). Las cifras se calculan
 // al servir la página, como las otras guías: nada escrito a mano que se quede viejo.
+//
+// `force-dynamic`: sin esto, Next intenta generar la página en build, donde no
+// hay variables de entorno reales, y el build entero falla (HU-044).
+export const dynamic = "force-dynamic";
+
 const leer = cache(async () => leerDuracionPorNivel(createSupabaseServerClient()));
 
 export async function generateMetadata(): Promise<Metadata> {

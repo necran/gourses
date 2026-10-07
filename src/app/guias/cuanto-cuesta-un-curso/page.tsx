@@ -22,6 +22,11 @@ import styles from "./page.module.css";
 
 // Guía «cuánto cuesta un curso» (HU-069). Las cifras se calculan al servir la
 // página, como en la guía de plataformas: nada escrito a mano que se quede viejo.
+//
+// `force-dynamic`: sin esto, Next intenta generar la página en build, donde no
+// hay variables de entorno reales, y el build entero falla (HU-044).
+export const dynamic = "force-dynamic";
+
 const leer = cache(async () => leerPreciosPorCategoria(createSupabaseServerClient()));
 
 export async function generateMetadata(): Promise<Metadata> {
