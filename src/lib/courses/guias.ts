@@ -1,6 +1,7 @@
 import { RUTA_GUIA as RUTA_GUIA_PLATAFORMAS, tituloGuia as tituloGuiaPlataformas } from "./guia-plataformas.ts";
 import { RUTA_GUIA_PRECIOS, tituloGuiaPrecios } from "./guia-precios.ts";
 import { RUTA_GUIA_NIVEL, tituloGuiaNivel } from "./guia-nivel.ts";
+import { RUTA_GUIA_DEMANDA, tituloGuiaDemanda } from "./guia-demanda.ts";
 
 // El índice de guías (HU-069). Las guías se declaran **aquí y solo aquí**: la
 // página `/guias`, el sitemap y los enlaces del sitio leen de esta lista, así
@@ -36,6 +37,13 @@ export const GUIAS: readonly Guia[] = [
     resumen:
       "Cuánto dura de mediana un curso de Udemy en español según su nivel: Principiante, " +
       "Intermedio, Experto y Todos los niveles.",
+  },
+  {
+    ruta: RUTA_GUIA_DEMANDA,
+    titulo: tituloGuiaDemanda(),
+    resumen:
+      "Qué categoría tiene más alumnos inscritos por curso de mediana, que no es lo mismo " +
+      "que cuántos cursos tiene: el número de cursos no mide la demanda real.",
   },
 ];
 

@@ -3,10 +3,11 @@ import { GUIAS, RUTA_GUIAS, descripcionIndiceGuias, tituloIndiceGuias } from "./
 import { RUTA_GUIA } from "./guia-plataformas";
 import { RUTA_GUIA_PRECIOS } from "./guia-precios";
 import { RUTA_GUIA_NIVEL } from "./guia-nivel";
+import { RUTA_GUIA_DEMANDA } from "./guia-demanda";
 
 describe("índice de guías (HU-069)", () => {
   it("las guías publicadas se declaran en un solo sitio", () => {
-    expect(GUIAS.map((g) => g.ruta)).toEqual([RUTA_GUIA, RUTA_GUIA_PRECIOS, RUTA_GUIA_NIVEL]);
+    expect(GUIAS.map((g) => g.ruta)).toEqual([RUTA_GUIA, RUTA_GUIA_PRECIOS, RUTA_GUIA_NIVEL, RUTA_GUIA_DEMANDA]);
   });
 
   it("cada guía tiene título y una frase de qué contesta", () => {
