@@ -60,6 +60,85 @@ Todo el desarrollo corre en local hasta que se decida explícitamente pasar a pr
 
 El alojamiento web de IONOS (plan Plus) se evaluó y **no sirve para la app**: soporta PHP, Perl y Python, pero no Node.js, que es lo que necesita el renderizado en servidor. Se aprovecha solo como registrador del dominio.
 
+## Estrategia de tráfico orgánico (2026-10-07)
+
+### El diagnóstico, con datos de Search Console (13 sep – 4 oct)
+
+| Métrica | Valor |
+|---|---|
+| Clics totales | 5 |
+| Impresiones totales | 316 |
+| Posición media | 12,7 |
+| Enlaces externos | **0** |
+| Enlaces internos | 898 |
+
+Tres semanas es poco, pero el reparto de esos números ya dice algo importante:
+
+- **4 de los 5 clics vienen de fichas de curso sueltas**, no de categorías ni temas.
+- **Las páginas de categoría concentran dos tercios de las impresiones y cero clics**:
+  `/categoria/it-y-software` (121 impresiones), `/categoria/desarrollo-personal` (90). Salen
+  en la búsqueda, pero tan abajo que nadie llega a pulsar — «cursos de desarrollo personal» es
+  un término por el que compiten Udemy y Coursera mismos, con años de autoridad. Un sitio
+  nuevo no va a ganar esa pelea con contenido, por bueno que sea.
+- **0 enlaces externos.** Ningún otro sitio enlaza a gourses.com todavía. Es la causa de fondo
+  de lo anterior: Google pondera mucho la autoridad de enlaces entrantes, y sin ninguno
+  cualquier término con competencia se queda fuera de la primera página por mucho contenido
+  que haya.
+- Lo que sí funciona: el tema **«Liderazgo»** ya trae impresiones por búsquedas reales
+  («cursos de liderazgo», «formación en liderazgo»…) — es un término más concreto, con menos
+  competidores pelándoselo de frente.
+
+**Conclusión que manda sobre el resto:** esto no se arregla solo escribiendo más código. Hace
+falta contenido más específico (donde si se puede competir) y, sobre todo, que algún sitio
+externo empiece a enlazar — las dos cosas a la vez, no una sin la otra.
+
+### Dónde sí se puede competir: lo específico, no lo genérico
+
+Con 0 enlaces entrantes, perseguir términos amplios («cursos online», «cursos de marketing»)
+es gastar esfuerzo en una pelea ya perdida. Lo que un comparador puede ganar, incluso sin
+autoridad, es la **búsqueda concreta** que ningún agregador genérico contesta mejor:
+
+- Temas muy específicos, no categorías: hoy hay 28 páginas de tema indexables (umbral de 20
+  cursos en español). Cuantos más temas por debajo del radar de la competencia («Power BI»,
+  «SQL», «edición de vídeo»…) tengan su propia página, más oportunidades de aparecer en una
+  búsqueda que nadie más contesta con datos reales.
+- Guías con cifras propias (HU-063, HU-069): siguen siendo la pieza más defendible, porque
+  nadie más tiene los dos catálogos medidos con los mismos campos. Quedan ideas ya identificadas
+  y aparcadas:
+  - «¿Es buen momento para comprar?» con el histórico de precios (datos ya existen, HU-021).
+  - Guías por duración o por nivel, con el mismo patrón de tabla + texto calculado.
+- Los resúmenes con IA en español (HU-053/068) siguen generándose solos cada día: cuantas más
+  fichas tengan texto propio en vez de solo la descripción copiada de la plataforma, más
+  páginas dejan de parecer contenido duplicado a ojos de Google.
+
+### Lo que no se arregla con código: conseguir los primeros enlaces
+
+Con cero enlaces externos, el orden que más suele funcionar para un sitio nuevo sin
+presupuesto de difusión:
+
+1. **Comunidades donde la pregunta ya se hace.** Subreddits de aprendizaje online
+   (r/learnprogramming y similares), foros de la categoría de cada tema. Enlazar la guía
+   «Udemy o Coursera» o la de precios cuando encaje de verdad en la conversación — nunca
+   como spam ni enlazando en masa a la vez.
+2. **Directorios y listados del sector** (herramientas de comparación, agregadores de
+   «startups» o side-projects, Product Hunt): varios aceptan altas gratuitas y son el tipo de
+   enlace más fácil de conseguir para un sitio nuevo.
+3. **El propio dominio en sitios donde ya se tiene presencia** (perfil de GitHub de este
+   mismo repo, si es público; cualquier perfil profesional del titular).
+
+Esto no lo puede ejecutar nadie por el usuario: son altas y publicaciones que exigen una
+cuenta y una voz humana, no algo automatizable desde el código.
+
+### Qué no hacer
+
+- **No competir de frente por categorías amplias.** Con autoridad cero, perder ahí el tiempo
+  no mueve nada; ver el diagnóstico de arriba.
+- **No un blog genérico** («los mejores cursos de X»): ya se descartó por buenos motivos
+  (contenido duplicado, sin autoridad para competir, y es el patrón que Google vigila como
+  *scaled content abuse*). Las guías con datos propios son la alternativa que sí funciona.
+- **No pedir o comprar enlaces en bloque.** Un perfil de enlaces que crece de golpe y desde
+  sitios sin relación con el tema es más señal de penalización que de ayuda.
+
 ## Regla de cierre de una historia de usuario
 
 Una historia de usuario no se marca como terminada hasta que, en este orden:
