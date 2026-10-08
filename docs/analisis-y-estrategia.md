@@ -92,6 +92,28 @@ Tres semanas es poco, pero el reparto de esos números ya dice algo importante:
 falta contenido más específico (donde si se puede competir) y, sobre todo, que algún sitio
 externo empiece a enlazar — las dos cosas a la vez, no una sin la otra.
 
+### Actualización (2026-10-08): el pico de impresiones ya se apagó
+
+El acumulado de arriba (121 y 90 impresiones en `it-y-software` y `desarrollo-personal`)
+escondía algo importante: mirado día a día, no es un nivel sostenido, es un **pico puntual el
+19 de septiembre** (~45 impresiones ese día en cada página) que se desplomó a casi 0/día
+desde entonces y sigue así. Comprobado también que la caída coincide con una alerta de la
+propia Search Console («esta página ha recibido un 93 % menos de impresiones de lo
+habitual»).
+
+Lectura: es el patrón típico de un dominio nuevo sin autoridad — Google «prueba» una página
+recién indexada durante un par de semanas para ver si genera interés (clics, tiempo en
+página, enlaces) y, si no encuentra esas señales, la retira a posiciones invisibles. Sin
+autoridad que lo sostenga, esa ventana de prueba se cierra sola.
+
+**Consecuencia práctica: no sirve de nada pulir el título o la descripción de una página
+cuyo pico de visibilidad ya pasó** — no hay impresiones sobre las que ganar clics. Y es de
+esperar que a cada guía nueva (HU-063, HU-069, HU-075, HU-076) le pase lo mismo: un repunte
+inicial al indexarse y luego una caída, salvo que algo externo (un enlace, un repunte de
+clics real) sostenga el interés antes de que se cierre la ventana. Esto hace más urgente, no
+menos, conseguir los primeros enlaces (ver más abajo): es lo único visto hasta ahora que
+podría evitar que una página nueva se apague a las pocas semanas.
+
 ### Dónde sí se puede competir: lo específico, no lo genérico
 
 Con 0 enlaces entrantes, perseguir términos amplios («cursos online», «cursos de marketing»)
